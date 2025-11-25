@@ -65,19 +65,19 @@
         
         /* Custom PRO Button Gradient and Shadow */
         .pro-button-gradient {
-            background-image: linear-gradient(to right, #C72600, #FA471B);
+            background-image: linear-gradient(to right, #c60505ff, #d40404ff);
             transition: all 0.3s ease;
         }
         
         .pro-button-gradient:hover {
             /* Shadow eka poddak loku karanawa hover karaddi */
-            box-shadow: 0 0 15px rgba(250, 71, 27, 0.8), 0 0 30px rgba(250, 71, 27, 0.5);
+            box-shadow: 0 0 15px rgba(217, 30, 5, 0.8), 0 0 30px rgba(250, 71, 27, 0.5);
             transform: scale(1.05); /* Poddak loku wenawa */
         }
         
         /* PRO button for mobile menu */
         .pro-button-mobile {
-            background-color: #FA471B; /* Darker red/orange for consistency */
+            background-color: #fa1b1bff; /* Darker red/orange for consistency */
             transition: background-color 0.3s ease;
         }
         .pro-button-mobile:hover {
@@ -204,9 +204,9 @@
 
                 <!-- 1. Logo and Main Links (Left Side) -->
                 <div class="flex-shrink-0 flex items-center">
-                    <span class="text-3xl font-extrabold text-primary-red tracking-wider cursor-pointer text-glow-red mr-6">
-                        Movie Lab
-                    </span>
+                    <a  href="../Site/index.php"class="text-3xl font-extrabold text-primary-red tracking-wider cursor-pointer text-glow-red mr-6">
+                        Movie Lab 
+    </a>
                     <!-- Primary Desktop Links (Home + Dropdowns) -->
                     <!-- *** TV Series dropdown eka lagata ewith, gap eka nathi karala thiyenawa (space-x-4) *** -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-4 lg:space-x-6 items-center">
@@ -374,15 +374,16 @@
                             </svg>
                         </button>
                         
-                        <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
-                        <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-full transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
-                            PRO
-                        </button>
+                        
 
                         <!-- Sign In Link -->
-                        <a href="../Site/login.php" class="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-primary-red text-white rounded-full transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
+                        <a href="" class="inline-flex items-center px-3 py-1.5 text-sm font-medium  text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
                             Sign In
                         </a>
+                        <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
+                        <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
+                            PRO
+                        </button>
                         <!-- Sign Up CTA Button - REMOVED -->
                     </div>
                     
