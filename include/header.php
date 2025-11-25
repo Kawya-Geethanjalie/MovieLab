@@ -1,3 +1,6 @@
+<header>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -377,7 +380,7 @@
                         </button>
 
                         <!-- Sign In Link -->
-                        <a href="#" class="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-primary-red text-white rounded-full transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
+                        <a href="../Site/login.php" class="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-primary-red text-white rounded-full transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
                             Sign In
                         </a>
                         <!-- Sign Up CTA Button - REMOVED -->
@@ -603,3 +606,7 @@
 
 </body>
 </html>
+ </header>
+
+
+<div class="mid_container" style="height:800px;">
