@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isolated Movie Site Navigation Bar with Pro Subscription Modal</title>
+    <title>Movie Lab</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -609,4 +609,4 @@
  </header>
 
 
-<div class="mid_container" style="height:800px;">
+<div class="mid_container" style="height:auto;">
