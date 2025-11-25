@@ -71,7 +71,7 @@
 
                 <!-- Column 2: Quick Links -->
                 <div>
-                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-gray-700 pb-2">Quick Links</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b mr-6 border-gray-700 pb-2">Quick Links</h3>
                     <ul class="space-y-3">
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Home</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Movies</a></li>
@@ -82,7 +82,7 @@
 
                 <!-- Column 3: Legal & Support -->
                 <div>
-                    <h3 class="text-lg font-semibold text-white mb-4 border-b border-gray-700 pb-2">Help & Legal</h3>
+                    <h3 class="text-lg font-semibold text-white mb-4 border-b mr-6 border-gray-700 pb-2">Help & Legal</h3>
                     <ul class="space-y-3">
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">FAQ</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Privacy Policy</a></li>
