@@ -8,6 +8,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 'Inter' font for modern web apps */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0d0d; /* Slightly off-black background */
+        }
+        /* Custom glow effect for red text/elements (applied to the logo) */
+        .text-glow-red {
+            /* Enhanced glow effect for a more vivid neon look */
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.9),
+                         0 0 25px rgba(229, 9, 20, 0.7),
+                         0 0 40px rgba(229, 9, 20, 0.4);
+        }
+
+        /* --- Custom CSS for Underline Hover Effect (For Navigation Links) --- */
+        .nav-link-underline {
+            position: relative;
+            /* Ensures the text remains white */
+            color: #FFFFFF; 
+            transition: color 0.3s ease;
+        }
+
+        /* Create the pseudo-element for the underline */
+        .nav-link-underline::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px; /* Thickness of the underline */
+            bottom: -8px; /* Position the underline slightly below the text */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #E50914; /* Primary Red Color */
+            /* Smooth transition for the width property and shadow */
+            transition: width 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 9999px; /* Fully rounded ends */
+            box-shadow: none; /* Default no shadow */
+        }
+
+        /* Expand the underline and apply RED GLOW on hover/focus */
+        .nav-link-underline:hover::after,
+        .nav-link-underline:focus::after {
+            width: 100%;
+            /* Lassana red color glow eka meken enawa */
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.8), 0 0 20px rgba(229, 9, 20, 0.5);
+        }
+
+        /* Apply the same underline effect to the dropdown buttons */
+        .nav-dropdown-btn:hover .nav-link-underline::after,
+        .nav-dropdown-btn:focus .nav-link-underline::after {
+            width: 100%;
+            /* Lassana red color glow eka meken enawa */
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.8), 0 0 20px rgba(229, 9, 20, 0.5);
+        }
+        
+        /* Custom PRO Button Gradient and Shadow */
+        .pro-button-gradient {
+            background-image: linear-gradient(to right, #c60505ff, #d40404ff);
+            transition: all 0.3s ease;
+        }
+        
+        .pro-button-gradient:hover {
+            /* Shadow eka poddak loku karanawa hover karaddi */
+            box-shadow: 0 0 15px rgba(217, 30, 5, 0.8), 0 0 30px rgba(250, 71, 27, 0.5);
+            transform: scale(1.05); /* Poddak loku wenawa */
+        }
+        
+        /* PRO button for mobile menu */
+        .pro-button-mobile {
+            background-color: #fa1b1bff; /* Darker red/orange for consistency */
+            transition: background-color 0.3s ease;
+        }
+        .pro-button-mobile:hover {
+            background-color: #C72600;
+        }
+
+        /* Search bar animation */
+        .search-bar {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -260,10 +340,14 @@
                             </svg>
                         </button>
                         
+                        
+
+                        <!-- Sign In Link -->
                         <a href="" class="inline-flex items-center px-3 py-1.5 text-sm font-medium  text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
                             Sign In
                         </a>
-                        <button onclick="openProModal()" class="px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex bg-gradient-to-r from-[#C60505] to-[#D40404] hover:scale-105 hover:shadow-[0_0_15px_rgba(217,30,5,0.8),0_0_30px_rgba(250,71,27,0.5)]">
+                        <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
+                        <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
                             PRO
                         </button>
                     </div>
@@ -310,7 +394,14 @@
                     GET PRO ACCESS 
                 </button>
                 <a href="#" class="bg-dark-card text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
-                <a href="#" class="text-white bg-primary-red block px-3 py-2 rounded-md text-base font-medium transition duration-150 hover:bg-red-600"> Sign In </a>
+                
+                <!-- Sign In Mobile Link -->
+                <a href="#" class="text-white bg-primary-red block px-3 py-2 rounded-md text-base font-medium transition duration-150 hover:bg-red-600">
+                    Sign In
+                </a>
+                <!-- Sign Up Mobile Link - REMOVED -->
+
+                <!-- Notifications Mobile Link (Bell Icon) with primary-red hover -->
                 <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium">
                     <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -450,7 +541,11 @@
             </div>
         </div>
     </div>
-    </body>
+    <!-- PRO SUBSCRIPTION MODAL END -->
+
+   
+
+</body>
 </html>
  </header>
 
