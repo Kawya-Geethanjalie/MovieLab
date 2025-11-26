@@ -658,8 +658,8 @@
 
         <!-- EMAIL LOGIN FORM -->
         <div id="emailLogin">
-            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email or Phone Number</label>
-            <input type="email" placeholder="Enter Email or Phone Number" class="input-field">
+            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
+            <input type="email" placeholder="Enter Username or Email" class="input-field">
             <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
             <input type="password" placeholder="Enter Password" class="input-field">
         </div>
@@ -723,8 +723,10 @@
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
         
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
-        <input type="text" placeholder="Enter Full Name" class="input-field">
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+        <input type="text" placeholder="Enter First Name" class="input-field">
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+        <input type="text" placeholder="Enter Last Name" class="input-field">
          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
         <input type="email" placeholder="Enter Email" class="input-field">
         <!-- <input type="text" placeholder="Phone Number" class="input-field"> -->
