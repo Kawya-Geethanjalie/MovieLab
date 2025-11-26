@@ -88,7 +88,35 @@
         .search-bar {
             transition: all 0.3s ease-in-out;
         }
+         .input-field {
+            width: 100%;
+            margin-top: 6px;
+            margin-bottom: 14px;
+            background-color: #0d0d0d;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            outline: none;
+        }
+        
+        .input-field:focus {
+            border-color: #E50914;
+            box-shadow: 0 0 6px #E50914;
+        }
+        /* Custom reCAPTCHA UI box */
+        .recaptcha-box {
+            background: #f9f9f9;
+            border: 1px solid #d3d3d3;
+            padding: 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
     </style>
+
+    
     <script>
         tailwind.config = {
             theme: {
@@ -376,10 +404,12 @@
                         
                         
 
-                        <!-- Sign In Link -->
-                        <a href="" class="inline-flex items-center px-3 py-1.5 text-sm font-medium  text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
-                            Sign In
-                        </a>
+                     <!-- Sign In Link (FIXED → modal now opens) -->
+                    <button onclick="openLoginModal()" 
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
+                        Sign In
+                    </button>
+
                         <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
                         <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
                             PRO
@@ -438,9 +468,11 @@
                 <a href="#" class="bg-dark-card text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
                 
                 <!-- Sign In Mobile Link -->
-                <a href="#" class="text-white bg-primary-red block px-3 py-2 rounded-md text-base font-medium transition duration-150 hover:bg-red-600">
+                 <!-- SIGN IN BUTTON -->
+                <button onclick="openLoginModal()"
+                    class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md">
                     Sign In
-                </a>
+                </button>
                 <!-- Sign Up Mobile Link - REMOVED -->
 
                 <!-- Notifications Mobile Link (Bell Icon) with primary-red hover -->
@@ -603,6 +635,173 @@
     </div>
     <!-- PRO SUBSCRIPTION MODAL END -->
 
+    
+
+<!-- ============================================= -->
+<!--                 LOGIN MODAL                   -->
+<!-- ============================================= -->
+
+<div id="login-modal"
+     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[200] flex items-center justify-center p-4"
+     onclick="closeLoginModal(event)">
+
+    <div onclick="event.stopPropagation()"
+     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
+     max-h-[90vh] overflow-y-auto">
+
+
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Sign In</h2>
+            <button onclick="closeLoginModal()" class="text-gray-400 hover:text-primary-red">✖</button>
+        </div>
+
+        <!-- EMAIL / PHONE SWITCH BUTTONS -->
+        <!-- <div class="flex mb-4 gap-2">
+            <button id="emailTab" onclick="switchToEmail()"
+                    class="w-1/2 py-2 rounded-lg bg-primary-red text-white font-semibold">
+                Email
+            </button>
+            <button id="phoneTab" onclick="switchToPhone()"
+                    class="w-1/2 py-2 rounded-lg bg-dark-bg text-gray-300 border border-gray-500">
+                Phone
+            </button>
+        </div> -->
+
+        <!-- EMAIL LOGIN FORM -->
+        <div id="emailLogin">
+            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email or Phone Number</label>
+            <input type="email" placeholder="Enter Email or Phone Number" class="input-field">
+            <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <input type="password" placeholder="Enter Password" class="input-field">
+        </div>
+
+       
+        <p class="text-gray-400 mt-2 text-center">
+            Forgot Password?
+            <button onclick="openForgotModal()" class="text-primary-red">Reset</button>
+        </p>
+
+        <!-- BEAUTIFUL RECAPTCHA UI -->
+        <div class="recaptcha-box mt-3 mb-4">
+            <input type="checkbox" class="w-3 h-3">
+            <span class="text-gray-900 text-sm">I'm not a robot</span>
+            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" class="ml-auto w-5">
+        </div>
+
+        <!-- LOGIN BUTTON -->
+        <button class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
+            Log In
+        </button>
+            <!-- Separator -->
+            <div class="flex items-center my-6">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">Or continue with</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+
+        <!-- Social Logins -->
+            <div class="space-y-3">
+                <button onclick="mockSocialLogin('Google')" class="w-full bg-gray-700 text-white py-3 rounded-lg flex items-center justify-center hover:bg-gray-600 transition duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.0003 4.75C14.0315 4.75 15.6888 5.41875 16.9453 6.64937L19.5378 4.0975C17.5028 2.1975 14.9082 1 12.0003 1C7.81708 1 4.2325 3.4475 2.55344 6.9425L5.75354 9.4975C6.55938 7.07812 9.00698 4.75 12.0003 4.75Z" fill="#EA4335"/><path d="M23.6382 12.0001C23.6382 11.3283 23.5852 10.6783 23.4756 10.0461H12.0003V14.6296H18.4239C18.1565 16.0967 17.3484 17.2917 16.2084 18.0641V21.1077H20.0898C22.2537 19.0601 23.6382 16.1437 23.6382 12.0001Z" fill="#4285F4"/><path d="M5.75344 14.5026C5.58984 14.0049 5.50036 13.5025 5.50036 12.9999C5.50036 12.4973 5.58984 11.9949 5.75344 11.4971V8.4534L2.55344 5.90156C1.94052 7.18562 1.59973 8.56781 1.59973 9.9999C1.59973 11.432 1.94052 12.8142 2.55344 14.0983L5.75344 14.5026Z" fill="#FBBC05"/><path d="M12.0003 23.0002C15.0005 23.0002 17.6975 21.9213 19.7431 20.1585L16.2084 18.0641C15.1793 18.7308 13.7845 19.1668 12.0003 19.1668C9.00698 19.1668 6.55938 17.0211 5.75354 14.5027L2.55354 17.0578C4.2325 20.5528 7.81708 23.0002 12.0003 23.0002Z" fill="#34A853"/></svg>
+                    Continue with Google
+                </button>
+                <button onclick="mockSocialLogin('Facebook')" class="w-full bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center hover:bg-blue-600 transition duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33V22C18.343 21.128 22 16.991 22 12z"/></svg>
+                    Continue with Facebook
+                </button>
+            </div>
+
+        <p class="text-gray-300 text-center mt-4">
+            Don’t have an account?
+            <button onclick="openRegisterModal()" class="text-primary-red">Register</button>
+        </p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!--             REGISTER MODAL                    -->
+<!-- ============================================= -->
+<div id="register-modal"
+     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
+     onclick="closeRegisterModal(event)">
+
+    <div onclick="event.stopPropagation()"
+         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40">
+
+          
+         <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
+        <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
+        </div>
+
+        <input type="text" placeholder="Full Name" class="input-field">
+        <input type="email" placeholder="Email" class="input-field">
+        <input type="text" placeholder="Phone Number" class="input-field">
+        <input type="password" placeholder="Password" class="input-field">
+
+        <!-- Terms Checkbox -->
+                    <div class="flex items-start">
+                        <input id="terms-check" type="checkbox" class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
+                        <label for="terms-check" class="ml-2 text-gray-400 text-sm">
+                            I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> and Privacy Policy.
+                        </label>
+                    </div>
+
+        <button class="w-full bg-primary-red mt-3 py-3 rounded-lg font-bold text-white">Register</button>
+
+        <p class="text-center text-gray-300 mt-4">
+            Already have an account?
+            <button onclick="openLoginModal()" class="text-primary-red">Sign In</button>
+        </p>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!--            FORGOT PASSWORD MODAL              -->
+<!-- ============================================= -->
+<div id="forgot-modal"
+     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[220] flex items-center justify-center p-4"
+     onclick="closeForgotModal(event)">
+
+    <div onclick="event.stopPropagation()"
+         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40">
+
+        <h2 class="text-xl font-bold text-white mb-4">Reset Password</h2>
+
+        <input type="email" class="input-field" placeholder="Enter Email">
+
+        <button class="w-full bg-primary-red py-3 rounded-lg font-bold text-white">Send Reset Link</button>
+    </div>
+</div>
+
+<!-- ============================================= -->
+<!--                JAVASCRIPT                     -->
+<!-- ============================================= -->
+
+<script>
+function openLoginModal(){ document.getElementById("login-modal").classList.remove("hidden"); }
+function closeLoginModal(e){ if(!e || e.target.id==="login-modal") document.getElementById("login-modal").classList.add("hidden"); }
+
+function openRegisterModal(){ closeLoginModal(); document.getElementById("register-modal").classList.remove("hidden"); }
+function closeRegisterModal(e){ if(!e || e.target.id==="register-modal") document.getElementById("register-modal").classList.add("hidden"); }
+
+function openForgotModal(){ closeLoginModal(); document.getElementById("forgot-modal").classList.remove("hidden"); }
+function closeForgotModal(e){ if(!e || e.target.id==="forgot-modal") document.getElementById("forgot-modal").classList.add("hidden"); }
+
+/* SWITCH Tabs */
+function switchToEmail(){
+    document.getElementById("emailLogin").classList.remove("hidden");
+    document.getElementById("phoneLogin").classList.add("hidden");
+    emailTab.classList.add("bg-primary-red","text-white");
+    phoneTab.classList.remove("bg-primary-red","text-white");
+}
+function switchToPhone(){
+    document.getElementById("emailLogin").classList.add("hidden");
+    document.getElementById("phoneLogin").classList.remove("hidden");
+    phoneTab.classList.add("bg-primary-red","text-white");
+    emailTab.classList.remove("bg-primary-red","text-white");
+}
+</script>
    
 
 </body>
