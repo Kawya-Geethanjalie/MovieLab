@@ -596,7 +596,6 @@
                     </div>
                 </div>
                 
-                <!-- Adding some padding below the cards for better scroll margin on mobile -->
                 <div class="h-4 md:hidden"></div> 
             </div>
         </div>
