@@ -714,18 +714,46 @@
      class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
      onclick="closeRegisterModal(event)">
 
-    <div onclick="event.stopPropagation()"
-         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40">
+   <div onclick="event.stopPropagation()"
+     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
+     max-h-[90vh] overflow-y-auto">
 
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
         
-        <input type="text" placeholder="Full Name" class="input-field">
-        <input type="email" placeholder="Email" class="input-field">
-        <input type="text" placeholder="Phone Number" class="input-field">
-        <input type="password" placeholder="Password" class="input-field">
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+        <input type="text" placeholder="Enter Full Name" class="input-field">
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+        <input type="email" placeholder="Enter Email" class="input-field">
+        <!-- <input type="text" placeholder="Phone Number" class="input-field"> -->
+          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+         <input type="text" placeholder="Enter Usename" class="input-field">
+          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
+         <input type="date" placeholder="Birthday" class="input-field">
+
+          <!-- Country Selector -->
+            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Country</label>
+        <select class="input-field">
+            <option value="" disabled selected>Select Country</option>
+            <option value="Sri Lanka">Sri Lanka</option>
+            <option value="India">India</option>
+            <option value="Pakistan">Pakistan</option>
+            <option value="Bangladesh">Bangladesh</option>
+            <option value="Nepal">Nepal</option>
+            <option value="USA">United States</option>
+            <option value="UK">United Kingdom</option>
+            <option value="Australia">Australia</option>
+            <option value="Canada">Canada</option>
+        </select>
+
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input type="password" placeholder="Enter Password" class="input-field">
+         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+        <input type="password" placeholder="Confirm Password" class="input-field">
+
+       
 
         <!-- Terms Checkbox -->
                     <div class="flex items-start">
