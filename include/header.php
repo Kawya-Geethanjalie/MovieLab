@@ -714,50 +714,84 @@
      class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
      onclick="closeRegisterModal(event)">
 
-   <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
+    <div onclick="event.stopPropagation()"
+     class="bg-dark-card w-full max-w-2xl p-6 rounded-xl shadow-xl border border-primary-red/40 
      max-h-[90vh] overflow-y-auto">
 
-          <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
-        
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-        <input type="text" placeholder="Enter First Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-        <input type="text" placeholder="Enter Last Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-        <input type="email" placeholder="Enter Email" class="input-field">
-        <!-- <input type="text" placeholder="Phone Number" class="input-field"> -->
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
-         <input type="text" placeholder="Enter Usename" class="input-field">
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
-         <input type="date" placeholder="Birthday" class="input-field">
 
-          <!-- Country Selector -->
-          <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
-        <select id="countrySelect" class="input-field">
-        <option value="" disabled selected>Select Country</option>
-        </select>
+        <!-- GRID START -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+            <!-- First Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                <input type="text" placeholder="Enter First Name" class="input-field">
+            </div>
 
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-        <input type="password" placeholder="Enter Password" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-        <input type="password" placeholder="Confirm Password" class="input-field">
+            <!-- Last Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                <input type="text" placeholder="Enter Last Name" class="input-field">
+            </div>
 
-       
+            <!-- Email -->
+            <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <input type="email" placeholder="Enter Email" class="input-field">
+            </div>
 
-        <!-- Terms Checkbox -->
-                    <div class="flex items-start">
-                        <input id="terms-check" type="checkbox" class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
-                        <label for="terms-check" class="ml-2 text-gray-400 text-sm">
-                            I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> and Privacy Policy.
-                        </label>
-                    </div>
+            <!-- Username -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                <input type="text" placeholder="Enter Username" class="input-field">
+            </div>
 
-        <button class="w-full bg-primary-red mt-3 py-3 rounded-lg font-bold text-white">Register</button>
+            <!-- Birthday -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
+                <input type="date" class="input-field">
+            </div>
+
+            <!-- Country -->
+            <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
+                <select id="countrySelect" class="input-field">
+                    <option value="" disabled selected>Select Country</option>
+                </select>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                <input type="password" placeholder="Enter Password" class="input-field">
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+                <input type="password" placeholder="Confirm Password" class="input-field">
+            </div>
+        </div>
+        <!-- GRID END -->
+
+        <!-- Terms -->
+        <div class="flex items-start mt-4">
+            <input id="terms-check" type="checkbox"
+                class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
+            <label for="terms-check" class="ml-2 text-gray-400 text-sm">
+                I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
+                and Privacy Policy.
+            </label>
+        </div>
+
+    <button id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white">
+    Register
+    </button>
+
 
         <p class="text-center text-gray-300 mt-4">
             Already have an account?
@@ -765,6 +799,7 @@
         </p>
     </div>
 </div>
+
 
 <!-- ============================================= -->
 <!--            FORGOT PASSWORD MODAL              -->
@@ -849,6 +884,41 @@ countries.forEach(country => {
     option.textContent = country;
     select.appendChild(option);
 });
+
+// document.getElementById("registerBtn").addEventListener("click", function () {
+
+
+//     let inputs = document.querySelectorAll("#register-modal .input-field");
+
+//     let data = new FormData();
+//     data.append("first_name", inputs[0].value);
+//     data.append("last_name", inputs[1].value);
+//     data.append("email", inputs[2].value);
+//     data.append("username", inputs[3].value);
+//     data.append("birthday", inputs[4].value);
+//     data.append("country", document.getElementById("countrySelect").value);
+//     data.append("password", inputs[5].value);
+//     data.append("confirm_password", inputs[6].value);
+
+//     let agree = document.getElementById("terms-check").checked ? "on" : "";
+//     data.append("agree", agree);
+
+//     fetch("registerBackend.php", {
+//         method: "POST",
+//         body: data
+//     })
+//     .then(res => res.json())
+//     .then(data => {
+//         alert(data.message);
+
+//         if (data.status === "success") {
+//             closeRegisterModal();
+//             openLoginModal();
+//         }
+//     });
+// });
+
+
 
 
 </script>
