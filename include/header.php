@@ -15,7 +15,7 @@
         /* 'Inter' font for modern web apps */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d0d0d; /* Slightly off-black background */
+            background-color: #0d0d0d; overflow-x: hidden;/* Slightly off-black background */
         }
         /* Custom glow effect for red text/elements (applied to the logo) */
         .text-glow-red {
@@ -586,7 +586,7 @@
 
         <!-- 4. Mobile Menu (Flattened Navigation) -->
         <div class="sm:hidden hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1">
+            <div class="pt-2 pb-3 space-y-1 bg-dark-bg border-t border-primary-red/10 max-h-[calc(100vh-4rem)] overflow-y-auto">
                 <!-- PRO Button for Mobile - Using the new theme color -->
                 <button onclick="openProModal()" class="pro-button-mobile w-full px-3 py-2 text-base font-bold text-white rounded-md transition duration-300 hover:bg-red-700 hover:shadow-lg uppercase tracking-widest sm:hidden">
                     GET PRO ACCESS
