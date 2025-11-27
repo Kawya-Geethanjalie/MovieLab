@@ -42,9 +42,15 @@
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-8">
                 
                 <div class="col-span-2 md:col-span-1 pr-4">
-                    <a href="#" class="text-3xl font-extrabold text-white">
-                        <span class="text-primary-red">Movie Lab</span>
-                    </a>
+
+                    <div class=" top-8 left-8  items-center gap-2 ms-1">
+                            <a href="../Site/index.php" class="text-glow-red">
+                         <i class="fas fa-film text-red-600 text-3xl" > </i>
+                         </a>
+
+                    <a  href="../Site/index.php"class="text-3xl font-extrabold text-primary-red tracking-wider cursor-pointer text-glow-red mr-6">
+                    <span class="text-primary-red">Movie Lab</span>
+                    </a></div>
                     <p class="mt-4 text-sm text-gray-400">
                         Watch your favorite movies, songs and series all in one place.
                     </p>
