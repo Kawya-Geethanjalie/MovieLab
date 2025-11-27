@@ -9,6 +9,8 @@
     <title>Movie Lab</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 for beautiful notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* 'Inter' font for modern web apps */
         body {
@@ -98,12 +100,32 @@
             border-radius: 8px;
             border: 1px solid #444;
             outline: none;
+            transition: all 0.3s ease;
         }
         
         .input-field:focus {
             border-color: #E50914;
             box-shadow: 0 0 6px #E50914;
+            transform: translateY(-1px);
         }
+
+        .input-field.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .input-field.success {
+            border-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
         /* Custom reCAPTCHA UI box */
         .recaptcha-box {
             background: #f9f9f9;
@@ -113,6 +135,101 @@
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+
+        /* Loading animation for buttons */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal animations */
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+
+        .modal-exit {
+            animation: modalExit 0.3s ease-in;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes modalExit {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+        }
+
+        /* Validation message styles */
+        .validation-message {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .validation-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .validation-message.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .validation-message.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 
@@ -657,7 +774,7 @@
 
     <div onclick="event.stopPropagation()"
      class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto">
+     max-h-[90vh] overflow-y-auto modal-enter">
 
 
         <div class="flex justify-between items-center mb-4">
@@ -711,7 +828,7 @@
             </div>
 
         <p class="text-gray-300 text-center mt-4">
-            Don’t have an account?
+            Don't have an account?
             <button onclick="openRegisterModal()" class="text-primary-red">Register</button>
         </p>
     </div>
@@ -724,57 +841,110 @@
      class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
      onclick="closeRegisterModal(event)">
 
-   <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto">
+    <div onclick="event.stopPropagation()"
+     class="bg-dark-card w-full max-w-2xl p-6 rounded-xl shadow-xl border border-primary-red/40 
+     max-h-[90vh] overflow-y-auto modal-enter">
 
-          <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
-        
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-        <input type="text" placeholder="Enter First Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-        <input type="text" placeholder="Enter Last Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-        <input type="email" placeholder="Enter Email" class="input-field">
-        <!-- <input type="text" placeholder="Phone Number" class="input-field"> -->
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
-         <input type="text" placeholder="Enter Usename" class="input-field">
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
-         <input type="date" placeholder="Birthday" class="input-field">
 
-          <!-- Country Selector -->
-          <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
-        <select id="countrySelect" class="input-field">
-        <option value="" disabled selected>Select Country</option>
-        </select>
+        <!-- GRID START -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+            <!-- First Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                <input id="first_name" type="text" placeholder="Enter First Name" class="input-field" onblur="validateField(this, 'first_name')">
+                <div id="first_name_message" class="validation-message"></div>
+            </div>
 
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-        <input type="password" placeholder="Enter Password" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-        <input type="password" placeholder="Confirm Password" class="input-field">
+            <!-- Last Name -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                <input id="last_name" type="text" placeholder="Enter Last Name" class="input-field" onblur="validateField(this, 'last_name')">
+                <div id="last_name_message" class="validation-message"></div>
+            </div>
 
-       
+            <!-- Email -->
+            <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <input id="email" type="email" placeholder="Enter Email" class="input-field" onblur="validateField(this, 'email')">
+                <div id="email_message" class="validation-message"></div>
+            </div>
 
-        <!-- Terms Checkbox -->
-                    <div class="flex items-start">
-                        <input id="terms-check" type="checkbox" class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
-                        <label for="terms-check" class="ml-2 text-gray-400 text-sm">
-                            I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> and Privacy Policy.
-                        </label>
-                    </div>
+            <!-- Username -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                <input id="username" type="text" placeholder="Enter Username" class="input-field" onblur="validateField(this, 'username')">
+                <div id="username_message" class="validation-message"></div>
+            </div>
 
-        <button class="w-full bg-primary-red mt-3 py-3 rounded-lg font-bold text-white">Register</button>
+            <!-- Birthday -->
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
+                <input id="birthday" type="date" class="input-field" onblur="validateField(this, 'birthday')">
+                <div id="birthday_message" class="validation-message"></div>
+            </div>
+
+            <!-- Country -->
+            <div class="sm:col-span-2">
+                <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
+                <select id="countrySelect"
+            class="w-full mt-2 mb-4 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')">
+                </select>
+                <div id="country_message" class="validation-message"></div>
+            </div>
+
+            <!-- Password -->
+            
+
+        <div class="relative">
+    <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+    <input id="password" type="password" placeholder="Enter Password" class="input-field pr-10" onblur="validateField(this, 'password')">
+    <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+        👁
+    </button>
+    <div id="password_message" class="validation-message"></div>
+    </div>
+
+<!-- Confirm Password -->
+
+<div class="relative">
+    <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+    <input id="confirm_password" type="password" placeholder="Confirm Password" class="input-field pr-10" onblur="validateField(this, 'confirm_password')">
+    <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-2 top-1/2 w-5 transform -translate-y-1/2 text-gray-400">
+        👁
+    </button>
+    <div id="confirm_password_message" class="validation-message"></div>
+</div>
+</div>
+
+        <!-- GRID END -->
+
+        <!-- Terms -->
+        <div class="flex items-start mt-4">
+            <input id="terms-check" type="checkbox"
+                class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
+            <label for="terms-check" class="ml-2 text-gray-400 text-sm">
+                I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
+                and Privacy Policy.
+            </label>
+        </div>
+
+    <button id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
+    Register
+    </button>
+
 
         <p class="text-center text-gray-300 mt-4">
             Already have an account?
             <button onclick="openLoginModal()" class="text-primary-red">Sign In</button>
         </p>
-    </div>
+    
 </div>
+
 
 <!-- ============================================= -->
 <!--            FORGOT PASSWORD MODAL              -->
@@ -784,7 +954,7 @@
      onclick="closeForgotModal(event)">
 
     <div onclick="event.stopPropagation()"
-         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40">
+         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40 modal-enter">
 
         <h2 class="text-xl font-bold text-white mb-4">Reset Password</h2>
 
@@ -799,32 +969,161 @@
 <!-- ============================================= -->
 
 <script>
-function openLoginModal(){ document.getElementById("login-modal").classList.remove("hidden"); }
-function closeLoginModal(e){ if(!e || e.target.id==="login-modal") document.getElementById("login-modal").classList.add("hidden"); }
-
-function openRegisterModal(){ closeLoginModal(); document.getElementById("register-modal").classList.remove("hidden"); }
-function closeRegisterModal(e){ if(!e || e.target.id==="register-modal") document.getElementById("register-modal").classList.add("hidden"); }
-
-function openForgotModal(){ closeLoginModal(); document.getElementById("forgot-modal").classList.remove("hidden"); }
-function closeForgotModal(e){ if(!e || e.target.id==="forgot-modal") document.getElementById("forgot-modal").classList.add("hidden"); }
-
-/* SWITCH Tabs */
-function switchToEmail(){
-    document.getElementById("emailLogin").classList.remove("hidden");
-    document.getElementById("phoneLogin").classList.add("hidden");
-    emailTab.classList.add("bg-primary-red","text-white");
-    phoneTab.classList.remove("bg-primary-red","text-white");
+function openLoginModal(){ 
+    const modal = document.getElementById("login-modal");
+    modal.classList.remove("hidden"); 
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
 }
-function switchToPhone(){
-    document.getElementById("emailLogin").classList.add("hidden");
-    document.getElementById("phoneLogin").classList.remove("hidden");
-    phoneTab.classList.add("bg-primary-red","text-white");
-    emailTab.classList.remove("bg-primary-red","text-white");
+
+function closeLoginModal(e){ 
+    if(!e || e.target.id==="login-modal") {
+        const modal = document.getElementById("login-modal");
+        modal.classList.add("hidden"); 
+    }
+}
+
+function openRegisterModal(){ 
+    closeLoginModal(); 
+    const modal = document.getElementById("register-modal");
+    modal.classList.remove("hidden");
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
+}
+
+function closeRegisterModal(e){ 
+    if(!e || e.target.id==="register-modal") {
+        const modal = document.getElementById("register-modal");
+        modal.classList.add("hidden");
+    }
+}
+
+function openForgotModal(){ 
+    closeLoginModal(); 
+    const modal = document.getElementById("forgot-modal");
+    modal.classList.remove("hidden");
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
+}
+
+function closeForgotModal(e){ 
+    if(!e || e.target.id==="forgot-modal") {
+        const modal = document.getElementById("forgot-modal");
+        modal.classList.add("hidden");
+    }
+}
+
+// Validation Functions
+function validateField(input, fieldType) {
+    const value = input.value.trim();
+    const messageEl = document.getElementById(fieldType + '_message');
+    let isValid = true;
+    let message = '';
+
+    // Clear previous styles
+    input.classList.remove('error', 'success');
+    messageEl.classList.remove('show', 'error', 'success');
+
+    switch(fieldType) {
+        case 'first_name':
+        case 'last_name':
+            if (!value) {
+                message = 'This field is required';
+                isValid = false;
+            } else if (!/^[a-zA-Z]{2,30}$/.test(value)) {
+                message = 'Name must contain only letters (2-30 characters)';
+                isValid = false;
+            } else {
+                message = 'Looks good!';
+            }
+            break;
+
+        case 'email':
+            if (!value) {
+                message = 'Email is required';
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                message = 'Please enter a valid email address';
+                isValid = false;
+            } else {
+                message = 'Valid email format!';
+            }
+            break;
+
+        case 'username':
+            if (!value) {
+                message = 'Username is required';
+                isValid = false;
+            } else if (value.length < 5) {
+                message = 'Username must be at least 5 characters long';
+                isValid = false;
+            } else {
+                message = 'Username looks good!';
+            }
+            break;
+
+        case 'birthday':
+            if (!value) {
+                message = 'Birthday is required';
+                isValid = false;
+            } else {
+                const dob = new Date(value);
+                const now = new Date();
+                const age = now.getFullYear() - dob.getFullYear();
+                if (age < 13) {
+                    message = 'You must be at least 13 years old';
+                    isValid = false;
+                } else {
+                    message = 'Age verified!';
+                }
+            }
+            break;
+
+        case 'country':
+            if (!value || value === 'Select Country') {
+                message = 'Please select your country';
+                isValid = false;
+            } else {
+                message = 'Country selected!';
+            }
+            break;
+
+        case 'password':
+            if (!value) {
+                message = 'Password is required';
+                isValid = false;
+            } else if (value.length < 8) {
+                message = 'Password must be at least 8 characters long';
+                isValid = false;
+            } else {
+                message = 'Strong password!';
+            }
+            break;
+
+        case 'confirm_password':
+            const password = document.getElementById('password').value;
+            if (!value) {
+                message = 'Please confirm your password';
+                isValid = false;
+            } else if (value !== password) {
+                message = 'Passwords do not match';
+                isValid = false;
+            } else {
+                message = 'Passwords match!';
+            }
+            break;
+    }
+
+    // Apply styles and show message
+    if (value) { // Only show validation if user has entered something
+        input.classList.add(isValid ? 'success' : 'error');
+        messageEl.textContent = message;
+        messageEl.classList.add('show', isValid ? 'success' : 'error');
+    }
+
+    return isValid;
 }
 
 
 const countries = [
-    "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
+    "Select Country","Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
     "Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
     "Belize","Benin","Bhutan","Bolivia","Bosnia & Herzegovina","Botswana","Brazil","Brunei",
     "Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde",
@@ -860,6 +1159,164 @@ countries.forEach(country => {
     select.appendChild(option);
 });
 
+document.getElementById("registerBtn").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    // Add loading state
+    const btn = this;
+    btn.classList.add('btn-loading');
+    btn.textContent = '';
+
+    let inputs = document.querySelectorAll("#register-modal .input-field");
+
+    // Validate all fields before submission
+    let allValid = true;
+    const fieldsToValidate = ['first_name', 'last_name', 'email', 'username', 'birthday', 'password', 'confirm_password'];
+    
+    fieldsToValidate.forEach(fieldId => {
+        const input = document.getElementById(fieldId);
+        if (!validateField(input, fieldId)) {
+            allValid = false;
+        }
+    });
+
+    // Validate country
+    const countrySelect = document.getElementById("countrySelect");
+    if (!validateField(countrySelect, 'country')) {
+        allValid = false;
+    }
+
+    // Check terms agreement
+    const termsCheck = document.getElementById("terms-check");
+    if (!termsCheck.checked) {
+        allValid = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Terms Required',
+            text: 'You must agree to the Terms of Service and Privacy Policy',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+        return;
+    }
+
+    if (!allValid) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please fix the errors in the form before submitting',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+        return;
+    }
+
+    let data = new FormData();
+    data.append("first_name", inputs[0].value);
+    data.append("last_name", inputs[1].value);
+    data.append("email", inputs[2].value);
+    data.append("username", inputs[3].value);
+    data.append("birthday", inputs[4].value);
+    data.append("country", document.getElementById("countrySelect").value);
+    data.append("password", inputs[5].value);
+    data.append("confirm_password", inputs[6].value);
+
+    let agree = document.getElementById("terms-check").checked ? "on" : "";
+    data.append("agree", agree);
+
+    fetch("../library/registerBackend.php", {
+        method: "POST",
+        body: data
+    })
+    .then(res => res.text())
+    .then(text => {
+        console.log("RAW:", text);
+
+        let data;
+        try { data = JSON.parse(text); }
+        catch (e) {
+            Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: "Invalid server response. Please try again.",
+                confirmButtonColor: "#E50914"
+            });
+            return;
+        }
+
+        if (data.status === "success") {
+            Swal.fire({
+                icon: "success",
+                title: "Registration Successful! 🎉",
+                text: data.message,
+                confirmButtonColor: "#E50914",
+                confirmButtonText: "Continue to Login"
+            }).then(() => {
+                // Clear form
+                inputs.forEach(i => i.value = "");
+                document.getElementById("countrySelect").value = "Select Country";
+                document.getElementById("terms-check").checked = false;
+                
+                // Clear all validation messages
+                document.querySelectorAll('.validation-message').forEach(msg => {
+                    msg.classList.remove('show', 'error', 'success');
+                });
+                document.querySelectorAll('.input-field').forEach(input => {
+                    input.classList.remove('error', 'success');
+                });
+
+                closeRegisterModal();
+                
+                // Open login modal with a slight delay for smooth transition
+                setTimeout(() => {
+                    openLoginModal();
+                }, 300);
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Registration Failed",
+                text: data.message,
+                confirmButtonColor: "#E50914"
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: "error",
+            title: "Network Error",
+            text: "Could not reach server. Please check your connection and try again.",
+            confirmButtonColor: "#E50914"
+        });
+        console.error(err);
+    })
+    .finally(() => {
+        // Remove loading state
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+    });
+});
+
+// Mock social login function
+function mockSocialLogin(provider) {
+    Swal.fire({
+        icon: 'info',
+        title: `${provider} Login`,
+        text: `${provider} login integration coming soon!`,
+        confirmButtonColor: "#E50914"
+    });
+}
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}
 
 </script>
    
@@ -870,3 +1327,4 @@ countries.forEach(country => {
 
 
 <div class="mid_container" style="height:auto;">
+    
