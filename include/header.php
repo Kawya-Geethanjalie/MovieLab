@@ -464,7 +464,7 @@
             }
         }
 
-        // Logout function
+        // Logout Function
         function logout() {
             fetch('../library/logoutBackend.php', {
                 method: 'POST'
