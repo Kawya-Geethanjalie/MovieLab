@@ -1,0 +1,127 @@
+/* Responsive Design for MovieLab */
+
+/* Mobile First Approach */
+@media (max-width: 640px) {
+    /* Navigation adjustments */
+    .nav-link-underline {
+        font-size: 0.875rem;
+    }
+    
+    /* Profile image smaller on mobile */
+    .profile-image {
+        width: 32px;
+        height: 32px;
+    }
+    
+    /* Modal adjustments */
+    .modal-enter {
+        margin: 1rem;
+        max-width: calc(100vw - 2rem);
+    }
+    
+    /* Form adjustments */
+    .input-field {
+        padding: 10px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Image preview smaller on mobile */
+    .image-preview {
+        width: 80px;
+        height: 80px;
+    }
+    
+    /* Grid adjustments */
+    .grid.grid-cols-1.sm\:grid-cols-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .profile-image {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .nav-link-underline {
+        font-size: 0.9rem;
+    }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1025px) {
+    .profile-image {
+        width: 40px;
+        height: 40px;
+    }
+    
+    /* Better dropdown positioning */
+    .profile-dropdown {
+        right: 0;
+        top: 3rem;
+    }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .profile-image {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Dark mode preferences */
+@media (prefers-color-scheme: dark) {
+    .recaptcha-box {
+        background: #2d2d2d;
+        border-color: #444;
+    }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .modal-enter,
+    .profile-dropdown,
+    .nav-link-underline::after {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .fixed,
+    .sticky,
+    nav,
+    .modal-enter,
+    .profile-dropdown {
+        display: none !important;
+    }
+}
+
+/* Focus styles for accessibility */
+.input-field:focus,
+.profile-image:focus,
+button:focus {
+    outline: 2px solid #E50914;
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.btn-loading {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Success animations */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.success-animation {
+    animation: successPulse 0.6s ease-in-out;
+}
