@@ -13,6 +13,45 @@ $password    = trim($_POST['password'] ?? "");
 $confirm     = trim($_POST['confirm_password'] ?? "");
 $agree       = trim($_POST['agree'] ?? ""); 
 
+// Handle profile image upload
+$profile_image = null;
+$upload_error = null;
+
+if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+    $allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    $max_size = 5 * 1024 * 1024; // 5MB
+    
+    $file_type = $_FILES['profile_image']['type'];
+    $file_size = $_FILES['profile_image']['size'];
+    $file_tmp = $_FILES['profile_image']['tmp_name'];
+    
+    if (!in_array($file_type, $allowed_types)) {
+        echo json_encode(["status"=>"error","message"=>"Invalid image type. Only JPEG, JPG, PNG, and GIF are allowed."]);
+        exit;
+    }
+    
+    if ($file_size > $max_size) {
+        echo json_encode(["status"=>"error","message"=>"Image size too large. Maximum 5MB allowed."]);
+        exit;
+    }
+    
+    // Create uploads directory if it doesn't exist
+    $upload_dir = "../uploads/profile_images/";
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
+    
+    // Generate unique filename
+    $file_extension = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
+    $profile_image = uniqid('profile_') . '.' . $file_extension;
+    $upload_path = $upload_dir . $profile_image;
+    
+    if (!move_uploaded_file($file_tmp, $upload_path)) {
+        echo json_encode(["status"=>"error","message"=>"Failed to upload profile image."]);
+        exit;
+    }
+}
+
 // Basic validation
 if (!$first_name || !$last_name || !$email || !$username || !$birthday || !$country || !$password || !$confirm) {
     echo json_encode(["status"=>"error","message"=>"All fields are required"]);
@@ -102,13 +141,17 @@ try {
 // Hash password
 $password_hash = password_hash($password, PASSWORD_BCRYPT);
 
-// Insert user
+// Insert user with profile image
 try {
-    $stmt = $pdo->prepare("INSERT INTO users (username,email,password_hash,first_name,last_name,birthday,user_type,country,is_active,created_at) VALUES (?,?,?,?,?,?, 'normal', ?,1,NOW())");
-    $success = $stmt->execute([$username,$email,$password_hash,$first_name,$last_name,$birthday,$country]);
+    $stmt = $pdo->prepare("INSERT INTO users (username,email,password_hash,first_name,last_name,birthday,user_type,country,profile_image,is_active,created_at) VALUES (?,?,?,?,?,?, 'normal', ?,?,1,NOW())");
+    $success = $stmt->execute([$username,$email,$password_hash,$first_name,$last_name,$birthday,$country,$profile_image]);
     
     if ($success) {
-        echo json_encode(["status"=>"success","message"=>"Registration successful"]);
+        echo json_encode([
+            "status"=>"success",
+            "message"=>"Congratulations! You have successfully registered with MovieLab!",
+            "profile_image" => $profile_image
+        ]);
     } else {
         echo json_encode(["status"=>"error","message"=>"Failed to create account"]);
     }

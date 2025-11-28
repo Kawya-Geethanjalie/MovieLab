@@ -1,6 +1,5 @@
 <header class="sticky top-0 z-50">
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -231,6 +230,52 @@
                 transform: translateY(0);
             }
         }
+
+        /* Profile dropdown styles */
+        .profile-dropdown {
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .profile-dropdown.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Profile image styles */
+        .profile-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #E50914;
+        }
+
+        /* Image preview styles */
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #E50914;
+            margin: 10px auto;
+            display: none;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .profile-image {
+                width: 32px;
+                height: 32px;
+            }
+        }
     </style>
 
     
@@ -247,6 +292,10 @@
                 }
             }
         }
+
+        // Global variables for user state
+        let currentUser = null;
+        let isLoggedIn = false;
 
         // JavaScript for mobile menu toggle and dropdowns
         function toggleMenu() {
@@ -267,6 +316,12 @@
             dropdown.classList.toggle('hidden');
         }
 
+        // Toggle profile dropdown
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('show');
+        }
+
         // Close dropdown when clicking outside (on the window)
         window.onclick = function(event) {
             // Close all dropdowns if click is not on a dropdown button
@@ -274,6 +329,11 @@
                 document.querySelectorAll('div.absolute[id$="-dropdown"]').forEach(d => {
                     d.classList.add('hidden');
                 });
+                // Close profile dropdown
+                const profileDropdown = document.getElementById('profile-dropdown');
+                if (profileDropdown) {
+                    profileDropdown.classList.remove('show');
+                }
             }
         }
         
@@ -338,6 +398,103 @@
                 // For example: window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
             }
         }
+
+        // Check user session on page load
+        function checkUserSession() {
+            fetch('../library/checkSession.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'logged_in') {
+                        currentUser = data.user;
+                        isLoggedIn = true;
+                        updateNavbarForLoggedInUser();
+                    } else {
+                        isLoggedIn = false;
+                        updateNavbarForGuest();
+                    }
+                })
+                .catch(error => {
+                    console.error('Session check error:', error);
+                    isLoggedIn = false;
+                    updateNavbarForGuest();
+                });
+        }
+
+        // Update navbar for logged in user
+        function updateNavbarForLoggedInUser() {
+            const signInBtn = document.getElementById('sign-in-btn');
+            const mobileSignInBtn = document.getElementById('mobile-sign-in-btn');
+            const userProfileSection = document.getElementById('user-profile-section');
+            
+            if (signInBtn) signInBtn.style.display = 'none';
+            if (mobileSignInBtn) mobileSignInBtn.style.display = 'none';
+            if (userProfileSection) {
+                userProfileSection.style.display = 'flex';
+                updateUserProfileDisplay();
+            }
+        }
+
+        // Update navbar for guest user
+        function updateNavbarForGuest() {
+            const signInBtn = document.getElementById('sign-in-btn');
+            const mobileSignInBtn = document.getElementById('mobile-sign-in-btn');
+            const userProfileSection = document.getElementById('user-profile-section');
+            
+            if (signInBtn) signInBtn.style.display = 'inline-flex';
+            if (mobileSignInBtn) mobileSignInBtn.style.display = 'block';
+            if (userProfileSection) userProfileSection.style.display = 'none';
+        }
+
+        // Update user profile display
+        function updateUserProfileDisplay() {
+            const profileImg = document.getElementById('user-profile-img');
+            const userName = document.getElementById('user-name-display');
+            
+            if (currentUser) {
+                if (profileImg) {
+                    if (currentUser.profile_image) {
+                        profileImg.src = '../uploads/profile_images/' + currentUser.profile_image;
+                    } else {
+                        profileImg.src = 'https://via.placeholder.com/40x40/E50914/FFFFFF?text=' + currentUser.first_name.charAt(0);
+                    }
+                }
+                if (userName) {
+                    userName.textContent = currentUser.first_name;
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            fetch('../library/logoutBackend.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentUser = null;
+                    isLoggedIn = false;
+                    updateNavbarForGuest();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Logged Out',
+                        text: 'You have been successfully logged out!',
+                        confirmButtonColor: '#E50914'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserSession();
+        });
     </script>
 </head>
 <body class="min-h-screen">
@@ -529,13 +686,37 @@
                             </svg>
                         </button>
                         
-                        
 
                      <!-- Sign In Link (FIXED → modal now opens) -->
-                    <button onclick="openLoginModal()" 
+                    <button id="sign-in-btn" onclick="openLoginModal()" 
                         class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
                         Sign In
                     </button>
+
+                    <!-- User Profile Section (Hidden by default) -->
+                    <div id="user-profile-section" class="relative hidden items-center space-x-3">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center space-x-2 text-white hover:text-primary-red transition duration-300">
+                            <img id="user-profile-img" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="Profile" class="profile-image">
+                            <span id="user-name-display" class="hidden sm:inline text-sm font-medium">User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-user mr-2"></i>Update Profile
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <hr class="border-gray-600 my-1">
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+                            </button>
+                        </div>
+                    </div>
 
                         <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
                         <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
@@ -596,7 +777,7 @@
                 
                 <!-- Sign In Mobile Link -->
                  <!-- SIGN IN BUTTON -->
-                <button onclick="openLoginModal()"
+                <button id="mobile-sign-in-btn" onclick="openLoginModal()"
                     class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md">
                     Sign In
                 </button>
@@ -784,12 +965,12 @@
 
 
         <!-- EMAIL LOGIN FORM -->
-        <div id="emailLogin">
+        <form id="login-form">
             <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
-            <input type="email" placeholder="Enter Username or Email" class="input-field">
+            <input id="login-identifier" type="text" placeholder="Enter Username or Email" class="input-field" required>
             <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-            <input type="password" placeholder="Enter Password" class="input-field">
-        </div>
+            <input id="login-password" type="password" placeholder="Enter Password" class="input-field" required>
+        </form>
 
        
         <p class="text-gray-400 mt-2 text-center">
@@ -805,7 +986,7 @@
         </div>
 
         <!-- LOGIN BUTTON -->
-        <button class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
+        <button id="login-btn" class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
             Log In
         </button>
             <!-- Separator -->
@@ -850,92 +1031,111 @@
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
 
-        <!-- GRID START -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            <!-- First Name -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-                <input id="first_name" type="text" placeholder="Enter First Name" class="input-field" onblur="validateField(this, 'first_name')">
-                <div id="first_name_message" class="validation-message"></div>
+        <form id="register-form" enctype="multipart/form-data">
+            <!-- Profile Image Upload -->
+            <div class="text-center mb-6">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Profile Image</label>
+                <div class="relative">
+                    <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    <label for="profile_image" class="cursor-pointer block">
+                        <div class="w-24 h-24 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Click to upload</p>
+                    </label>
+                    <img id="image-preview" class="image-preview" alt="Preview">
+                </div>
             </div>
 
-            <!-- Last Name -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-                <input id="last_name" type="text" placeholder="Enter Last Name" class="input-field" onblur="validateField(this, 'last_name')">
-                <div id="last_name_message" class="validation-message"></div>
-            </div>
+            <!-- GRID START -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-            <!-- Email -->
-            <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                <input id="email" type="email" placeholder="Enter Email" class="input-field" onblur="validateField(this, 'email')">
-                <div id="email_message" class="validation-message"></div>
-            </div>
+                <!-- First Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                    <input id="first_name" name="first_name" type="text" placeholder="Enter First Name" class="input-field" onblur="validateField(this, 'first_name')" required>
+                    <div id="first_name_message" class="validation-message"></div>
+                </div>
 
-            <!-- Username -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
-                <input id="username" type="text" placeholder="Enter Username" class="input-field" onblur="validateField(this, 'username')">
-                <div id="username_message" class="validation-message"></div>
-            </div>
+                <!-- Last Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                    <input id="last_name" name="last_name" type="text" placeholder="Enter Last Name" class="input-field" onblur="validateField(this, 'last_name')" required>
+                    <div id="last_name_message" class="validation-message"></div>
+                </div>
 
-            <!-- Birthday -->
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
-                <input id="birthday" type="date" class="input-field" onblur="validateField(this, 'birthday')">
-                <div id="birthday_message" class="validation-message"></div>
-            </div>
+                <!-- Email -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                    <input id="email" name="email" type="email" placeholder="Enter Email" class="input-field" onblur="validateField(this, 'email')" required>
+                    <div id="email_message" class="validation-message"></div>
+                </div>
 
-            <!-- Country -->
-            <div class="sm:col-span-2">
-                <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
-                <select id="countrySelect"
-            class="w-full mt-2 mb-4 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')">
-                </select>
-                <div id="country_message" class="validation-message"></div>
-            </div>
+                <!-- Username -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                    <input id="username" name="username" type="text" placeholder="Enter Username" class="input-field" onblur="validateField(this, 'username')" required>
+                    <div id="username_message" class="validation-message"></div>
+                </div>
 
-            <!-- Password -->
-            
+                <!-- Birthday -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
+                    <input id="birthday" name="birthday" type="date" class="input-field" onblur="validateField(this, 'birthday')" required>
+                    <div id="birthday_message" class="validation-message"></div>
+                </div>
 
-        <div class="relative">
-    <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-    <input id="password" type="password" placeholder="Enter Password" class="input-field pr-10" onblur="validateField(this, 'password')">
-    <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-        👁
-    </button>
-    <div id="password_message" class="validation-message"></div>
-    </div>
+                <!-- Country -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
+                    <select id="countrySelect" name="country"
+                class="w-full mt-2 mb-4 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')" required>
+                    </select>
+                    <div id="country_message" class="validation-message"></div>
+                </div>
 
-<!-- Confirm Password -->
+                <!-- Password -->
+                
 
-<div class="relative">
-    <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-    <input id="confirm_password" type="password" placeholder="Confirm Password" class="input-field pr-10" onblur="validateField(this, 'confirm_password')">
-    <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-2 top-1/2 w-5 transform -translate-y-1/2 text-gray-400">
-        👁
-    </button>
-    <div id="confirm_password_message" class="validation-message"></div>
-</div>
-</div>
-
-        <!-- GRID END -->
-
-        <!-- Terms -->
-        <div class="flex items-start mt-4">
-            <input id="terms-check" type="checkbox"
-                class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
-            <label for="terms-check" class="ml-2 text-gray-400 text-sm">
-                I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
-                and Privacy Policy.
-            </label>
+            <div class="relative">
+        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter Password" class="input-field pr-10" onblur="validateField(this, 'password')" required>
+        <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+            👁
+        </button>
+        <div id="password_message" class="validation-message"></div>
         </div>
 
-    <button id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
-    Register
-    </button>
+    <!-- Confirm Password -->
+
+    <div class="relative">
+        <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+        <input id="confirm_password" name="confirm_password" type="password" placeholder="Confirm Password" class="input-field pr-10" onblur="validateField(this, 'confirm_password')" required>
+        <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-2 top-1/2 w-5 transform -translate-y-1/2 text-gray-400">
+            👁
+        </button>
+        <div id="confirm_password_message" class="validation-message"></div>
+    </div>
+    </div>
+
+            <!-- GRID END -->
+
+            <!-- Terms -->
+            <div class="flex items-start mt-4">
+                <input id="terms-check" name="agree" type="checkbox"
+                    class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1" required>
+                <label for="terms-check" class="ml-2 text-gray-400 text-sm">
+                    I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
+                    and Privacy Policy.
+                </label>
+            </div>
+
+        <button type="submit" id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
+        Register
+        </button>
+        </form>
 
 
         <p class="text-center text-gray-300 mt-4">
@@ -1007,6 +1207,23 @@ function closeForgotModal(e){
     if(!e || e.target.id==="forgot-modal") {
         const modal = document.getElementById("forgot-modal");
         modal.classList.add("hidden");
+    }
+}
+
+// Image preview function
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const file = input.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.add('show');
+        }
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.remove('show');
     }
 }
 
@@ -1159,11 +1376,12 @@ countries.forEach(country => {
     select.appendChild(option);
 });
 
-document.getElementById("registerBtn").addEventListener("click", function (e) {
+// Register form submission
+document.getElementById("register-form").addEventListener("submit", function (e) {
     e.preventDefault();
 
     // Add loading state
-    const btn = this;
+    const btn = document.getElementById("registerBtn");
     btn.classList.add('btn-loading');
     btn.textContent = '';
 
@@ -1213,18 +1431,8 @@ document.getElementById("registerBtn").addEventListener("click", function (e) {
         return;
     }
 
-    let data = new FormData();
-    data.append("first_name", inputs[0].value);
-    data.append("last_name", inputs[1].value);
-    data.append("email", inputs[2].value);
-    data.append("username", inputs[3].value);
-    data.append("birthday", inputs[4].value);
-    data.append("country", document.getElementById("countrySelect").value);
-    data.append("password", inputs[5].value);
-    data.append("confirm_password", inputs[6].value);
-
-    let agree = document.getElementById("terms-check").checked ? "on" : "";
-    data.append("agree", agree);
+    // Create FormData for file upload
+    let data = new FormData(this);
 
     fetch("../library/registerBackend.php", {
         method: "POST",
@@ -1249,15 +1457,18 @@ document.getElementById("registerBtn").addEventListener("click", function (e) {
         if (data.status === "success") {
             Swal.fire({
                 icon: "success",
-                title: "Registration Successful! 🎉",
+                title: "🎉 Congratulations!",
                 text: data.message,
                 confirmButtonColor: "#E50914",
-                confirmButtonText: "Continue to Login"
+                confirmButtonText: "Continue to Login",
+                showClass: {
+                    popup: 'animate__animated animate__fadeInUp'
+                }
             }).then(() => {
                 // Clear form
-                inputs.forEach(i => i.value = "");
+                document.getElementById("register-form").reset();
                 document.getElementById("countrySelect").value = "Select Country";
-                document.getElementById("terms-check").checked = false;
+                document.getElementById("image-preview").classList.remove('show');
                 
                 // Clear all validation messages
                 document.querySelectorAll('.validation-message').forEach(msg => {
@@ -1296,6 +1507,104 @@ document.getElementById("registerBtn").addEventListener("click", function (e) {
         // Remove loading state
         btn.classList.remove('btn-loading');
         btn.textContent = 'Register';
+    });
+});
+
+// Login form submission
+document.getElementById("login-btn").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    // Add loading state
+    const btn = this;
+    btn.classList.add('btn-loading');
+    btn.textContent = '';
+
+    const identifier = document.getElementById("login-identifier").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!identifier || !password) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please enter both username/email and password',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Log In';
+        return;
+    }
+
+    let data = new FormData();
+    data.append("identifier", identifier);
+    data.append("password", password);
+
+    fetch("../library/logingBackend.php", {
+        method: "POST",
+        body: data
+    })
+    .then(res => res.text())
+    .then(text => {
+        console.log("RAW:", text);
+
+        let data;
+        try { data = JSON.parse(text); }
+        catch (e) {
+            Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: "Invalid server response. Please try again.",
+                confirmButtonColor: "#E50914"
+            });
+            return;
+        }
+
+        if (data.status === "success") {
+            // Update global user state
+            currentUser = data.user;
+            isLoggedIn = true;
+            
+            Swal.fire({
+                icon: "success",
+                title: "🎬 Welcome to MovieLab!",
+                text: data.message,
+                confirmButtonColor: "#E50914",
+                confirmButtonText: "Let's Go!",
+                showClass: {
+                    popup: 'animate__animated animate__fadeInUp'
+                }
+            }).then(() => {
+                // Clear form
+                document.getElementById("login-identifier").value = "";
+                document.getElementById("login-password").value = "";
+                
+                closeLoginModal();
+                updateNavbarForLoggedInUser();
+                
+                // Redirect to home page
+                window.location.href = "../Site/index.php";
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Login Failed",
+                text: data.message,
+                confirmButtonColor: "#E50914"
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: "error",
+            title: "Network Error",
+            text: "Could not reach server. Please check your connection and try again.",
+            confirmButtonColor: "#E50914"
+        });
+        console.error(err);
+    })
+    .finally(() => {
+        // Remove loading state
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Log In';
     });
 });
 

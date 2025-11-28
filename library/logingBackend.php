@@ -57,8 +57,8 @@ try {
         sendError("Database connection error. Please try again later.");
     }
 
-    // Check if user exists by email or username
-    $stmt = $pdo->prepare("SELECT user_id, username, email, password_hash, first_name, last_name, user_type, is_active FROM users WHERE email = ? OR username = ?");
+    // Check if user exists by email or username and get profile image
+    $stmt = $pdo->prepare("SELECT user_id, username, email, password_hash, first_name, last_name, user_type, profile_image, is_active FROM users WHERE email = ? OR username = ?");
     
     if (!$stmt) {
         error_log("Prepare statement failed: " . implode(", ", $pdo->errorInfo()));
@@ -95,6 +95,7 @@ try {
     $_SESSION['first_name'] = $user['first_name'];
     $_SESSION['last_name'] = $user['last_name'];
     $_SESSION['user_type'] = $user['user_type'];
+    $_SESSION['profile_image'] = $user['profile_image'];
     $_SESSION['logged_in'] = true;
     $_SESSION['login_time'] = time();
 
@@ -107,11 +108,12 @@ try {
         "first_name" => $user['first_name'],
         "last_name" => $user['last_name'],
         "username" => $user['username'],
-        "user_type" => $user['user_type']
+        "user_type" => $user['user_type'],
+        "profile_image" => $user['profile_image']
     ];
 
     error_log("Login successful for user: " . $user['username']);
-    sendSuccess("Login successful! Welcome back, " . $user['first_name'] . "!", $userData);
+    sendSuccess("Welcome back to MovieLab, " . $user['first_name'] . "! 🎬", $userData);
 
 } catch (PDOException $e) {
     error_log("Login PDO Error: " . $e->getMessage());
