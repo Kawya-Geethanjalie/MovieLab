@@ -310,7 +310,7 @@ class MovieLabAuth {
     }
 }
 
-// Initialize the authentication system when DOM is loaded
+// Initialize the Authentication System when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     window.movieLabAuth = new MovieLabAuth();
 });
