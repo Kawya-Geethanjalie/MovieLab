@@ -92,11 +92,11 @@
         }
          .input-field {
             width: 100%;
-            margin-top: 4px;
-            margin-bottom: 8px;
+            margin-top: 6px;
+            margin-bottom: 14px;
             background-color: #0d0d0d;
             color: white;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #444;
             outline: none;
@@ -130,13 +130,11 @@
         .recaptcha-box {
             background: #f9f9f9;
             border: 1px solid #d3d3d3;
-            padding: 10px;
+            padding: 14px;
             border-radius: 8px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 6px;
-            margin-bottom: 6px;
+            gap: 15px;
         }
 
         /* Loading animation for buttons */
@@ -199,9 +197,9 @@
 
         /* Validation message styles */
         .validation-message {
-            font-size: 0.75rem;
-            margin-top: 0.125rem;
-            padding: 0.25rem;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            padding: 0.5rem;
             border-radius: 0.375rem;
             display: none;
         }
@@ -685,10 +683,11 @@
     <div id="pro-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 overflow-y-auto" onclick="closeProModal(event)">
         
         <!-- Modal Content Container: Added flex-col and removed internal overflow -->
-        <!-- The flex-col structure makes the header stick to the top and the body take up the remaining vertical space -->
-        <div class="bg-dark-bg rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-4xl transform transition-all duration-300 scale-100 border border-primary-red/50 max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+        <!-- The flex-col structure makes the header stick to the top and the body take up the rest of the available height -->
+        <div class="bg-dark-bg rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-4xl transform transition-all duration-300 scale-100 border border-primary-red/50 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
             
             <!-- Header and Close Button (FIXED PART: shrink-0 ensures it doesn't shrink when content scrolls) -->
+            <!-- The horizontal padding (p-6/p-8) of the container applies to this header -->
             <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4 shrink-0">
                 <h2 class="text-3xl font-bold text-white text-glow-red">
                     Unlock <span class="text-theme-orange">PRO</span> Features
@@ -775,7 +774,7 @@
 
     <div onclick="event.stopPropagation()"
      class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[80vh] modal-enter">
+     max-h-[90vh] overflow-y-auto modal-enter">
 
 
         <div class="flex justify-between items-center mb-4">
@@ -783,36 +782,34 @@
             <button onclick="closeLoginModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
 
-        <form id="login-form">
-            <!-- EMAIL LOGIN FORM -->
-            <div id="emailLogin">
-                <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
-                <input type="text" name="identifier" id="login-identifier" placeholder="Enter Username or Email" class="input-field" required>
-                <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-                <input type="password" name="password" id="login-password" placeholder="Enter Password" class="input-field" required>
-            </div>
 
-           
-            <p class="text-gray-400 mt-2 text-center">
-                Forgot Password?
-                <button type="button" onclick="openForgotModal()" class="text-primary-red">Reset</button>
-            </p>
+        <!-- EMAIL LOGIN FORM -->
+        <div id="emailLogin">
+            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
+            <input type="email" placeholder="Enter Username or Email" class="input-field">
+            <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <input type="password" placeholder="Enter Password" class="input-field">
+        </div>
 
-            <!-- BEAUTIFUL RECAPTCHA UI -->
-            <div class="recaptcha-box">
-                <input type="checkbox" class="w-3 h-3">
-                <span class="text-gray-900 text-sm">I'm not a robot</span>
-                <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" class="ml-auto w-5">
-            </div>
+       
+        <p class="text-gray-400 mt-2 text-center">
+            Forgot Password?
+            <button onclick="openForgotModal()" class="text-primary-red">Reset</button>
+        </p>
 
-            <!-- LOGIN BUTTON -->
-            <button type="submit" class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
-                Log In
-            </button>
-        </form>
+        <!-- BEAUTIFUL RECAPTCHA UI -->
+        <div class="recaptcha-box mt-3 mb-4">
+            <input type="checkbox" class="w-3 h-3">
+            <span class="text-gray-900 text-sm">I'm not a robot</span>
+            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" class="ml-auto w-5">
+        </div>
 
+        <!-- LOGIN BUTTON -->
+        <button class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
+            Log In
+        </button>
             <!-- Separator -->
-            <div class="flex items-center my-4">
+            <div class="flex items-center my-6">
                 <div class="flex-grow border-t border-gray-700"></div>
                 <span class="flex-shrink mx-4 text-gray-500 text-sm">Or continue with</span>
                 <div class="flex-grow border-t border-gray-700"></div>
@@ -846,15 +843,15 @@
 
     <div onclick="event.stopPropagation()"
      class="bg-dark-card w-full max-w-2xl p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[80vh] modal-enter">
+     max-h-[90vh] overflow-y-auto modal-enter">
 
-        <div class="flex justify-between items-center mb-3">
-            <h2 class="text-xl font-bold text-white mb-2">Create Account</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
 
         <!-- GRID START -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <!-- First Name -->
             <div>
@@ -895,7 +892,7 @@
             <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
                 <select id="countrySelect"
-            class="w-full mt-1 mb-2 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')">
+            class="w-full mt-2 mb-4 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')">
                 </select>
                 <div id="country_message" class="validation-message"></div>
             </div>
@@ -927,7 +924,7 @@
         <!-- GRID END -->
 
         <!-- Terms -->
-        <div class="flex items-start mt-3">
+        <div class="flex items-start mt-4">
             <input id="terms-check" type="checkbox"
                 class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
             <label for="terms-check" class="ml-2 text-gray-400 text-sm">
@@ -936,12 +933,12 @@
             </label>
         </div>
 
-    <button id="registerBtn" class="w-full bg-primary-red mt-3 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
+    <button id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
     Register
     </button>
 
 
-        <p class="text-center text-gray-300 mt-3">
+        <p class="text-center text-gray-300 mt-4">
             Already have an account?
             <button onclick="openLoginModal()" class="text-primary-red">Sign In</button>
         </p>
@@ -1321,135 +1318,6 @@ function togglePassword(fieldId) {
     }
 }
 
-// Add this function to handle login form submission
-function handleLogin(event) {
-    event.preventDefault();
-    
-    const identifier = document.querySelector('#login-identifier').value.trim();
-    const password = document.querySelector('#login-password').value.trim();
-    
-    // Basic client-side validation
-    if (!identifier || !password) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Validation Error',
-            text: 'Please enter both username/email and password',
-            confirmButtonColor: "#E50914"
-        });
-        return;
-    }
-
-    // Add loading state to login button
-    const loginBtn = document.querySelector('#login-modal button[type="submit"]');
-    const originalText = loginBtn.textContent;
-    loginBtn.classList.add('btn-loading');
-    loginBtn.textContent = '';
-    loginBtn.disabled = true;
-
-    let data = new FormData();
-    data.append("identifier", identifier);
-    data.append("password", password);
-
-    fetch("../library/loginBackend.php", {
-        method: "POST",
-        body: data
-    })
-    .then(res => res.text())
-    .then(text => {
-        console.log("RAW LOGIN RESPONSE:", text);
-
-        let data;
-        try { 
-            data = JSON.parse(text); 
-        } catch (e) {
-            Swal.fire({
-                icon: "error",
-                title: "Server Error",
-                text: "Invalid server response. Please try again.",
-                confirmButtonColor: "#E50914"
-            });
-            return;
-        }
-
-        if (data.status === "success") {
-            Swal.fire({
-                icon: "success",
-                title: "Login Successful! 🎉",
-                text: data.message,
-                confirmButtonColor: "#E50914",
-                confirmButtonText: "Continue"
-            }).then(() => {
-                // Clear form
-                document.querySelector('#login-identifier').value = "";
-                document.querySelector('#login-password').value = "";
-                
-                closeLoginModal();
-                
-                // Update UI to show logged-in state
-                updateUIAfterLogin(data.user);
-                
-                // Redirect or reload page
-                window.location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "Login Failed",
-                text: data.message,
-                confirmButtonColor: "#E50914"
-            });
-        }
-    })
-    .catch(err => {
-        Swal.fire({
-            icon: "error",
-            title: "Network Error",
-            text: "Could not reach server. Please check your connection and try again.",
-            confirmButtonColor: "#E50914"
-        });
-        console.error(err);
-    })
-    .finally(() => {
-        // Remove loading state
-        loginBtn.classList.remove('btn-loading');
-        loginBtn.textContent = originalText;
-        loginBtn.disabled = false;
-    });
-}
-
-// Function to update UI after successful login
-function updateUIAfterLogin(user) {
-    // Replace Sign In button with user profile
-    const signInBtn = document.querySelector('button[onclick="openLoginModal()"]');
-    if (signInBtn) {
-        signInBtn.outerHTML = `
-            <div class="flex items-center space-x-3">
-                <span class="text-white text-sm">Welcome, ${user.first_name}!</span>
-                <button onclick="logout()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600">
-                    Logout
-                </button>
-            </div>
-        `;
-    }
-}
-
-// Logout function
-function logout() {
-    fetch("../library/logout.php", {
-        method: "POST"
-    })
-    .then(() => {
-        window.location.reload();
-    })
-    .catch(err => {
-        console.error("Logout error:", err);
-        window.location.reload();
-    });
-}
-
-// Update the login form to use the new handler
-document.querySelector('#login-form').addEventListener('submit', handleLogin);
-
 </script>
    
 
@@ -1459,3 +1327,4 @@ document.querySelector('#login-form').addEventListener('submit', handleLogin);
 
 
 <div class="mid_container" style="height:auto;">
+    
