@@ -8,12 +8,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
     // Validate inputs
     if (empty($username)) {
-        header('Location: ../admin/pages/login.php?error=User_Name');
+        header('Location: ../pages/login.php?error=User_Name');
         exit();
     }
 
     if (empty($password)) {
-        header('Location: ../admin/pages/login.php?error=Password');
+        header('Location: ../pages/login.php?error=Password');
         exit();
     }
 
@@ -44,28 +44,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $_SESSION['admin_logged_in'] = true;
                     
                     // Redirect to admin dashboard
-                    header('Location: ../admin/pages/dashboard.php');
+                    header('Location: ../include/header.php');
                     exit();
                 } else {
-                    header('Location: ../admin/pages/login.php?error=account_error');
+                    header('Location: ../pages/login.php?error=account_error');
                     exit();
                 }
             } else {
-                header('Location: ../admin/pages/login.php?error=login_error');
+                header('Location: ../pages/login.php?error=login_error');
                 exit();
             }
         } else {
-            header('Location: ../admin/pages/login.php?error=login_error');
+            header('Location: ../pages/login.php?error=login_error');
             exit();
         }
         
     } catch (PDOException $e) {
         error_log("Login error: " . $e->getMessage());
-        header('Location: ../admin/pages/login.php?error=login_error');
+        header('Location: ../pages/login.php?error=login_error');
         exit();
     }
 } else {
-    header('Location: ../admin/pages/login.php');
+    header('Location: ../pages/login.php');
     exit();
 }
 ?>
