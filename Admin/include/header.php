@@ -1,3 +1,26 @@
+<?php 
+// Check if session is not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: login.php');
+    exit();
+}
+
+// Session timeout (30 minutes)
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+    session_unset();
+    session_destroy();
+    header('Location: login.php?error=session_expired');
+    exit();
+}
+$_SESSION['last_activity'] = time();
+
+$admin_username = $_SESSION['admin_username'] ?? 'Admin';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -215,31 +238,6 @@
             font-family: monospace;
         }
 
-        .content {
-            flex: 1;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .content h1 {
-            font-size: 36px;
-            margin-bottom: 16px;
-            background: linear-gradient(90deg, #fff 0%, #E50914 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .content p {
-            font-size: 18px;
-            color: #aaa;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
         .mobile-toggle {
             display: none;
             position: fixed;
@@ -274,10 +272,6 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-            }
-            
-            .content {
-                padding: 80px 20px 40px;
             }
         }
 
@@ -325,7 +319,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="" class="nav-item">
+                    <a href="../pages/content_management.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-video"></i>
                         </div>
@@ -333,7 +327,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="user-management.html" class="nav-item">
+                    <a href="../pages/User_management.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-users"></i>
                         </div>
@@ -341,7 +335,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="subscriptions-payments.html" class="nav-item active">
+                    <a href="../pages/Subscriptions.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-credit-card"></i>
                         </div>
@@ -349,11 +343,11 @@
                     </a>
                 </li>
                 <li>
-                    <a href="genre-tools.html" class="nav-item">
+                    <a href="Categories.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-tags"></i>
                         </div>
-                        <div class="nav-text">Genre/Category Tools</div>
+                        <div class="nav-text">Category Tools</div>
                     </a>
                 </li>
             </ul>
@@ -362,7 +356,7 @@
         <div class="nav-section">
             <ul class="nav-items">
                 <li>
-                    <a href="profile.html" class="nav-item">
+                    <a href="profile.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-user"></i>
                         </div>
@@ -370,7 +364,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="settings.html" class="nav-item">
+                    <a href="Setting.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-cog"></i>
                         </div>
@@ -383,44 +377,24 @@
         <div class="divider"></div>
 
         <div class="auth-section">
-            <a href="logout.html" class="logout-btn">
+            <a href="logout.php" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
             <div class="auth-status">Authenticated</div>
-            <div class="user-id">User ID: ADMIN-ML-001</div>
-        </div>
-    </div>
-
-    <div class="content">
-        <h1>Movie Lab Admin Dashboard</h1>
-        <p>Select a menu item from the sidebar to manage different aspects of your Movie Lab platform.</p>
-        <p style="margin-top: 20px; color: #E50914; font-size: 16px;">Current Section: <strong>Subscriptions & Payments</strong></p>
-        <div style="margin-top: 30px; padding: 20px; background: rgba(229, 9, 20, 0.1); border-radius: 10px; max-width: 500px;">
-            <h3 style="margin-bottom: 15px; color: #E50914;">Navigation Links Added</h3>
-            <p style="font-size: 14px; color: #ccc;">Each category now has a proper href link pointing to its respective page:</p>
-            <ul style="text-align: left; margin-top: 15px; font-size: 14px; color: #ccc;">
-                <li>Dashboard → dashboard.html</li>
-                <li>Content Management → content-management.html</li>
-                <li>User Management → user-management.html</li>
-                <li>Subscriptions & Payments → subscriptions-payments.html</li>
-                <li>Genre/Category Tools → genre-tools.html</li>
-                <li>Profile → profile.html</li>
-                <li>Settings → settings.html</li>
-                <li>Logout → logout.html</li>
-            </ul>
+            <div class="user-id">User ID: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
         </div>
     </div>
 
     <script>
-        // Mobile toggle functionaliTy
+        // Mobile toggle functionality
         document.getElementById('mobileToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('open');
         });
 
         // Navigation item selection
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function() {
                 // Remove active class from all items
                 document.querySelectorAll('.nav-item').forEach(nav => {
                     nav.classList.remove('active');
@@ -429,18 +403,10 @@
                 // Add active class to clicked item
                 this.classList.add('active');
                 
-                // Update content based on selection
-                const sectionName = this.querySelector('.nav-text').textContent;
-                document.querySelector('.content p:last-child').innerHTML = `Current Section: <strong>${sectionName}</strong>`;
-                
                 // Close sidebar on mobile after selection
                 if (window.innerWidth <= 768) {
                     document.getElementById('sidebar').classList.remove('open');
                 }
-                
-                // In a real application, the page would navigate to the href
-                // For this demo, we'll prevent default to stay on the same page
-                e.preventDefault();
             });
         });
 
@@ -455,6 +421,19 @@
                 sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
             }
+        });
+
+        // Set initial active item based on current page
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPage = window.location.pathname.split('/').pop();
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (href === currentPage) {
+                    item.classList.add('active');
+                }
+            });
         });
     </script>
 </body>

@@ -1608,16 +1608,6 @@ document.getElementById("login-btn").addEventListener("click", function (e) {
     });
 });
 
-// Mock social login function
-function mockSocialLogin(provider) {
-    Swal.fire({
-        icon: 'info',
-        title: `${provider} Login`,
-        text: `${provider} login integration coming soon!`,
-        confirmButtonColor: "#E50914"
-    });
-}
-
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
     if (field.type === "password") {

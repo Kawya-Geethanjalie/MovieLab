@@ -221,6 +221,8 @@
                         'Password' => 'Password is required!',
                         'account_error' => 'Admin access only!',
                         'login_error' => 'Invalid credentials!',
+                        'server_error' => 'Server connection error!',
+                        'session_expired' => 'Session expired. Please login again.',
                         default => 'An error occurred!',
                     };
                 } else {
@@ -249,12 +251,15 @@
                     <p class="text-xs text-gray-500">
                         <i class="fas fa-shield-alt mr-1 text-red-500"></i>Secure Admin Access
                     </p>
+                    <p class="text-xs text-gray-600 mt-2">
+                        Default: admin / password
+                    </p>
                 </div>
             </section>
         </main>
         
         <div class="text-center mt-6">
-            <p class="text-gray-600 text-sm">© 202 MovieLab. All rights reserved.</p>
+            <p class="text-gray-600 text-sm">© 2025 MovieLab. All rights reserved.</p>
         </div>
     </div>
 
