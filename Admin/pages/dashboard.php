@@ -1,4 +1,24 @@
-<!DOCTYPE html>
+<?php
+session_start();
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: login.php');
+    exit();
+}
+
+// Session timeout (30 minutes)
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+    session_unset();
+    session_destroy();
+    header('Location: login.php?error=session_expired');
+    exit();
+}
+$_SESSION['last_activity'] = time();
+
+$admin_username = $_SESSION['admin_username'] ?? 'Admin';
+?>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">

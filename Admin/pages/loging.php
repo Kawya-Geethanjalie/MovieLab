@@ -177,7 +177,7 @@
                     <p class="text-gray-400 text-sm">Enter your credentials to access the dashboard</p>
                 </div>
 
-                <form class="space-y-5" action="../lib/login-backend.php" method="post">
+                <form class="space-y-5" action="../library/login-backend.php" method="post">
                     <div class="space-y-2">
                         <label for="username" class="block text-sm font-medium text-gray-300">
                             <i class="fas fa-user mr-2 text-red-500"></i>Username or Email
@@ -221,6 +221,8 @@
                         'Password' => 'Password is required!',
                         'account_error' => 'Admin access only!',
                         'login_error' => 'Invalid credentials!',
+                        'server_error' => 'Server connection error!',
+                        'session_expired' => 'Session expired. Please login again.',
                         default => 'An error occurred!',
                     };
                 } else {
@@ -249,12 +251,15 @@
                     <p class="text-xs text-gray-500">
                         <i class="fas fa-shield-alt mr-1 text-red-500"></i>Secure Admin Access
                     </p>
+                    <p class="text-xs text-gray-600 mt-2">
+                        Default: admin / password
+                    </p>
                 </div>
             </section>
         </main>
         
         <div class="text-center mt-6">
-            <p class="text-gray-600 text-sm">© 2023 MovieLab. All rights reserved.</p>
+            <p class="text-gray-600 text-sm">© 2025 MovieLab. All rights reserved.</p>
         </div>
     </div>
 
