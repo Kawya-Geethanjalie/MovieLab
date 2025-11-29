@@ -413,7 +413,7 @@
     </div>
 
     <script>
-        // Mobile toggle functionality
+        // Mobile toggle functionaliTy
         document.getElementById('mobileToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('open');
         });
