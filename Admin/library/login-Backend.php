@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             if (password_verify($password, $user['password_hash'])) {
                 // Check if user is admin
                 if ($user['user_type'] === 'admin') {
-                    // Regenerate session ID for security
+                    // Regenerate session ID for Security
                     session_regenerate_id(true);
                     
                     // Set session variables
