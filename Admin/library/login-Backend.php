@@ -5,7 +5,7 @@ session_start();
 $connection_path = dirname(__DIR__) . '/include/connection.php';
 if (!file_exists($connection_path)) {
     error_log("Connection file not found at: " . $connection_path);
-    header('Location: ../admin/pages/login.php?error=server_error');
+    header('Location: ../pages/loging.php?error=server_error');
     exit();
 }
 
@@ -17,12 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
     // Validate inputs
     if (empty($username)) {
-        header('Location: ../admin/pages/login.php?error=User_Name');
+        header('Location: ../pages/loging.php?error=User_Name');
         exit();
     }
 
     if (empty($password)) {
-        header('Location: ../admin/pages/login.php?error=Password');
+        header('Location: ../pages/loging.php?error=Password');
         exit();
     }
 
@@ -61,28 +61,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $update_stmt->execute([':user_id' => $user['user_id']]);
                     
                     // Redirect to admin dashboard
-                    header('Location: ../admin/pages/dashboard.php');
+                    header('Location: ../pages/dashboard.php');
                     exit();
                 } else {
-                    header('Location: ../admin/pages/login.php?error=account_error');
+                    header('Location: ../pages/loging.php?error=account_error');
                     exit();
                 }
             } else {
-                header('Location: ../admin/pages/login.php?error=login_error');
+                header('Location: ../pages/loging.php?error=login_error');
                 exit();
             }
         } else {
-            header('Location: ../admin/pages/login.php?error=login_error');
+            header('Location: ../pages/loging.php?error=login_error');
             exit();
         }
         
     } catch (PDOException $e) {
         error_log("Login error: " . $e->getMessage());
-        header('Location: ../admin/pages/login.php?error=login_error');
+        header('Location: ../pages/loging.php?error=login_error');
         exit();
     }
 } else {
-    header('Location: ../admin/pages/login.php');
+    header('Location: ../pages/loging.php');
     exit();
 }
 ?>
