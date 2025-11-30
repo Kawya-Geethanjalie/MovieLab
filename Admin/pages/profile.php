@@ -482,12 +482,12 @@ if ($admin_id) {
         </div>
 
         <!-- Debug Information -->
-        <div class="debug-info">
+        <!-- <div class="debug-info">
             <strong>Debug Info:</strong> User ID: <?= $admin_data['user_id'] ?> | 
             Profile Image: <?= $admin_data['profile_image'] ?> | 
             Image Path: ../uploads/profile_images/<?= $admin_data['profile_image'] ?> |
             File Exists: <?= (!empty($admin_data['profile_image']) && file_exists('../uploads/profile_images/' . $admin_data['profile_image'])) ? 'YES' : 'NO' ?>
-        </div>
+        </div> -->
 
         <!-- Alert Messages -->
         <div id="alert-success" class="alert alert-success">

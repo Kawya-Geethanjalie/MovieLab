@@ -510,10 +510,11 @@ $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
                 </a>
             </div>
 
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+            <a href="logout.php" class="logout-btn" onclick="return confirm('Are you sure you want to logout?');">
+                <i class='bx bx-log-out'></i>
+                <span class="links_name">Logout</span>
             </a>
+
             <div class="auth-status">Authenticated</div>
             <div class="user-id">Username: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
         </div>
