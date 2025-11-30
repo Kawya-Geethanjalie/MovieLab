@@ -20,6 +20,11 @@ if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 
 $_SESSION['last_activity'] = time();
 
 $admin_username = $_SESSION['admin_username'] ?? 'Admin';
+
+// Get admin profile data (you can modify this to fetch from database)
+$admin_profile_image = $_SESSION['admin_profile_image'] ?? '/images/AdminProfile.jpg';
+$admin_full_name = $_SESSION['admin_full_name'] ?? $admin_username;
+$admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -203,6 +208,94 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
             padding: 0 24px;
         }
 
+        /* Profile Section Styles */
+        .profile-section {
+            background: rgba(229, 9, 20, 0.05);
+            border: 1px solid rgba(229, 9, 20, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-section:hover {
+            background: rgba(229, 9, 20, 0.1);
+            border-color: rgba(229, 9, 20, 0.4);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-image-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+
+        .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #E50914;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+        }
+
+        .profile-image-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #E50914 0%, #B80710 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #E50914;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+            color: white;
+            font-size: 20px;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .profile-email {
+            font-size: 11px;
+            color: #E50914;
+            font-family: monospace;
+        }
+
+        .profile-edit-btn {
+            background: none;
+            border: 1px solid rgba(229, 9, 20, 0.3);
+            color: #E50914;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .profile-edit-btn:hover {
+            background: rgba(229, 9, 20, 0.1);
+            border-color: #E50914;
+        }
+
         .logout-btn {
             display: flex;
             align-items: center;
@@ -272,6 +365,23 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
                 display: flex;
                 align-items: center;
                 justify-content: center;
+            }
+
+            .profile-section {
+                padding: 12px;
+            }
+
+            .profile-image, .profile-image-placeholder {
+                width: 40px;
+                height: 40px;
+            }
+
+            .profile-name {
+                font-size: 13px;
+            }
+
+            .profile-email {
+                font-size: 10px;
             }
         }
 
@@ -356,7 +466,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
         <div class="nav-section">
             <ul class="nav-items">
                 <li>
-                    <a href="profile.php" class="nav-item">
+                    <a href="../pages/profile.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-user"></i>
                         </div>
@@ -377,6 +487,29 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
         <div class="divider"></div>
 
         <div class="auth-section">
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <div class="profile-header">
+                    <div class="profile-image-container">
+                        <?php if (!empty($admin_profile_image) && file_exists($admin_profile_image)): ?>
+                            <img src="<?php echo htmlspecialchars($admin_profile_image); ?>" alt="Profile" class="profile-image">
+                        <?php else: ?>
+                            <div class="profile-image-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name"><?php echo htmlspecialchars($admin_full_name); ?></div>
+                        <div class="profile-email"><?php echo htmlspecialchars($admin_email); ?></div>
+                    </div>
+                </div>
+                <a href="../pages/profile.php" class="profile-edit-btn">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+
             <a href="logout.php" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
