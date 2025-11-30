@@ -515,7 +515,7 @@ $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
                 <span>Logout</span>
             </a>
             <div class="auth-status">Authenticated</div>
-            <div class="user-id">User ID: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
+            <div class="user-id">Username: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
         </div>
     </div>
 

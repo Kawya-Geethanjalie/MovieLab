@@ -2,6 +2,10 @@
 include '../include/header.php';
 include '../include/connection.php';
 
+// Debug: Check session data
+error_log("Session admin_id: " . ($_SESSION['admin_id'] ?? 'NOT SET'));
+error_log("Session admin_username: " . ($_SESSION['admin_username'] ?? 'NOT SET'));
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = ['success' => false, 'message' => ''];
@@ -13,8 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $first_name = trim($_POST['first_name']);
                     $last_name = trim($_POST['last_name']);
                     $email = trim($_POST['email']);
-                    $phone = trim($_POST['phone']);
-                    $bio = trim($_POST['bio']);
                     
                     // Validate inputs
                     if (empty($first_name) || empty($last_name) || empty($email)) {
@@ -25,15 +27,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('Please enter a valid email address.');
                     }
                     
-                    // Update session data (you can modify this to update database)
-                    $_SESSION['admin_first_name'] = $first_name;
-                    $_SESSION['admin_last_name'] = $last_name;
-                    $_SESSION['admin_email'] = $email;
-                    $_SESSION['admin_phone'] = $phone;
-                    $_SESSION['admin_bio'] = $bio;
+                    // Update database
+                    $admin_id = $_SESSION['admin_id'];
+                    $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, updated_at = NOW() WHERE user_id = ?");
+                    $success = $stmt->execute([$first_name, $last_name, $email, $admin_id]);
                     
-                    $response['success'] = true;
-                    $response['message'] = 'Profile updated successfully!';
+                    if ($success) {
+                        // Update session data
+                        $_SESSION['admin_first_name'] = $first_name;
+                        $_SESSION['admin_last_name'] = $last_name;
+                        $_SESSION['admin_email'] = $email;
+                        $_SESSION['admin_full_name'] = $first_name . ' ' . $last_name;
+                        
+                        $response['success'] = true;
+                        $response['message'] = 'Profile updated successfully!';
+                    } else {
+                        throw new Exception('Failed to update profile.');
+                    }
                     break;
                     
                 case 'update_password':
@@ -54,15 +64,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('New password must be at least 6 characters long.');
                     }
                     
-                    // Here you would verify current password and update in database
-                    // For now, we'll just show success message
-                    $response['success'] = true;
-                    $response['message'] = 'Password updated successfully!';
+                    // Verify current password
+                    $admin_id = $_SESSION['admin_id'];
+                    $stmt = $pdo->prepare("SELECT password_hash FROM users WHERE user_id = ?");
+                    $stmt->execute([$admin_id]);
+                    $user = $stmt->fetch();
+                    
+                    if (!$user || !password_verify($current_password, $user['password_hash'])) {
+                        throw new Exception('Current password is incorrect.');
+                    }
+                    
+                    // Update password
+                    $new_password_hash = password_hash($new_password, PASSWORD_BCRYPT);
+                    $stmt = $pdo->prepare("UPDATE users SET password_hash = ?, updated_at = NOW() WHERE user_id = ?");
+                    $success = $stmt->execute([$new_password_hash, $admin_id]);
+                    
+                    if ($success) {
+                        $response['success'] = true;
+                        $response['message'] = 'Password updated successfully!';
+                    } else {
+                        throw new Exception('Failed to update password.');
+                    }
                     break;
                     
                 case 'upload_image':
                     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) {
-                        $upload_dir = '../assets/profiles/';
+                        $upload_dir = '../uploads/profile_images/';
                         
                         // Create directory if it doesn't exist
                         if (!is_dir($upload_dir)) {
@@ -86,13 +113,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
                             // Remove old profile image if exists
-                            if (!empty($_SESSION['admin_profile_image']) && file_exists($_SESSION['admin_profile_image'])) {
-                                unlink($_SESSION['admin_profile_image']);
+                            $admin_id = $_SESSION['admin_id'];
+                            $stmt = $pdo->prepare("SELECT profile_image FROM users WHERE user_id = ?");
+                            $stmt->execute([$admin_id]);
+                            $old_user = $stmt->fetch();
+                            
+                            if ($old_user && !empty($old_user['profile_image']) && file_exists('../uploads/profile_images/' . $old_user['profile_image'])) {
+                                unlink('../uploads/profile_images/' . $old_user['profile_image']);
                             }
                             
-                            $_SESSION['admin_profile_image'] = $upload_path;
-                            $response['success'] = true;
-                            $response['message'] = 'Profile image updated successfully!';
+                            // Update database
+                            $stmt = $pdo->prepare("UPDATE users SET profile_image = ?, updated_at = NOW() WHERE user_id = ?");
+                            $success = $stmt->execute([$new_filename, $admin_id]);
+                            
+                            if ($success) {
+                                $_SESSION['admin_profile_image'] = $new_filename;
+                                $response['success'] = true;
+                                $response['message'] = 'Profile image updated successfully!';
+                            } else {
+                                throw new Exception('Failed to update profile image in database.');
+                            }
                         } else {
                             throw new Exception('Failed to upload image.');
                         }
@@ -114,16 +154,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Get current admin data
+// Get current admin data from database using user_id
 $admin_data = [
+    'user_id' => '',
     'username' => $_SESSION['admin_username'] ?? 'Admin',
-    'first_name' => $_SESSION['admin_first_name'] ?? $_SESSION['admin_username'] ?? 'Admin',
-    'last_name' => $_SESSION['admin_last_name'] ?? 'Admin',
-    'email' => $_SESSION['admin_email'] ?? 'admin@movielab.com',
-    'phone' => $_SESSION['admin_phone'] ?? '',
-    'bio' => $_SESSION['admin_bio'] ?? '',
-    'profile_image' => $_SESSION['admin_profile_image'] ?? ''
+    'first_name' => 'Admin',
+    'last_name' => 'User',
+    'email' => 'admin@movielab.com',
+    'profile_image' => ''
 ];
+
+// First, try to get admin_id from session, if not available, get it from username
+$admin_id = null;
+if (isset($_SESSION['admin_id'])) {
+    $admin_id = $_SESSION['admin_id'];
+} elseif (isset($_SESSION['admin_username'])) {
+    // Get user_id from username
+    try {
+        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE username = ? AND user_type = 'admin'");
+        $stmt->execute([$_SESSION['admin_username']]);
+        $user = $stmt->fetch();
+        if ($user) {
+            $admin_id = $user['user_id'];
+            $_SESSION['admin_id'] = $admin_id; // Store for future use
+        }
+    } catch (PDOException $e) {
+        error_log("Error getting admin_id: " . $e->getMessage());
+    }
+}
+
+if ($admin_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT user_id, username, first_name, last_name, email, profile_image FROM users WHERE user_id = ?");
+        $stmt->execute([$admin_id]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            $admin_data = [
+                'user_id' => $user['user_id'],
+                'username' => $user['username'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'],
+                'email' => $user['email'],
+                'profile_image' => $user['profile_image']
+            ];
+            
+            // Update session data
+            $_SESSION['admin_id'] = $user['user_id'];
+            $_SESSION['admin_first_name'] = $user['first_name'];
+            $_SESSION['admin_last_name'] = $user['last_name'];
+            $_SESSION['admin_email'] = $user['email'];
+            $_SESSION['admin_profile_image'] = $user['profile_image'];
+            $_SESSION['admin_full_name'] = $user['first_name'] . ' ' . $user['last_name'];
+            
+            // Debug log
+            error_log("Profile image from DB: " . $user['profile_image']);
+            error_log("Image file exists: " . (file_exists('../uploads/profile_images/' . $user['profile_image']) ? 'YES' : 'NO'));
+        }
+    } catch (PDOException $e) {
+        error_log("Profile data fetch error: " . $e->getMessage());
+    }
+}
 ?>
 
 <style>
@@ -201,6 +292,8 @@ $admin_data = [
         object-fit: cover;
         border: 4px solid #E50914;
         box-shadow: 0 0 20px rgba(229, 9, 20, 0.3);
+        margin: 0 auto;
+        display: block;
     }
 
     .profile-image-placeholder-large {
@@ -349,6 +442,16 @@ $admin_data = [
         color: #ef4444;
     }
 
+    .debug-info {
+        background: rgba(255, 255, 0, 0.1);
+        border: 1px solid rgba(255, 255, 0, 0.3);
+        color: #ffff00;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-size: 12px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .main-content {
@@ -378,6 +481,14 @@ $admin_data = [
             <p class="page-subtitle">Manage your profile information and settings</p>
         </div>
 
+        <!-- Debug Information -->
+        <div class="debug-info">
+            <strong>Debug Info:</strong> User ID: <?= $admin_data['user_id'] ?> | 
+            Profile Image: <?= $admin_data['profile_image'] ?> | 
+            Image Path: ../uploads/profile_images/<?= $admin_data['profile_image'] ?> |
+            File Exists: <?= (!empty($admin_data['profile_image']) && file_exists('../uploads/profile_images/' . $admin_data['profile_image'])) ? 'YES' : 'NO' ?>
+        </div>
+
         <!-- Alert Messages -->
         <div id="alert-success" class="alert alert-success">
             <i class="fas fa-check-circle"></i>
@@ -397,8 +508,8 @@ $admin_data = [
                 </h2>
                 <div class="profile-image-section">
                     <div class="current-image-container">
-                        <?php if (!empty($admin_data['profile_image']) && file_exists($admin_data['profile_image'])): ?>
-                            <img src="<?php echo htmlspecialchars($admin_data['profile_image']); ?>" alt="Profile" class="current-profile-image" id="currentImage">
+                        <?php if (!empty($admin_data['profile_image']) && file_exists('../uploads/profile_images/' . $admin_data['profile_image'])): ?>
+                            <img src="../uploads/profile_images/<?= htmlspecialchars($admin_data['profile_image']) ?>" alt="Profile Image" class="current-profile-image" id="currentImage">
                         <?php else: ?>
                             <div class="profile-image-placeholder-large" id="imagePlaceholder">
                                 <i class="fas fa-user"></i>
@@ -419,7 +530,7 @@ $admin_data = [
                             <br>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i>
-                                Upload Image
+                                Update Image
                             </button>
                         </form>
                         <p style="font-size: 12px; color: #888; margin-top: 10px;">
@@ -438,9 +549,16 @@ $admin_data = [
                 <form id="profileForm">
                     <input type="hidden" name="action" value="update_profile">
                     
+                    <!-- <div class="form-group">
+                        <label class="form-label">User ID (Read Only)</label>
+                        <input type="text" name="user_id" class="form-input" 
+                        value="<?php echo htmlspecialchars($admin_data['user_id']); ?>" readonly>
+                    </div> -->
+                    
                     <div class="form-group">
-                        <label class="form-label">Username *</label>
-                        <input type="text" class="form-input" value="<?php echo htmlspecialchars($admin_data['username']); ?>" required>
+                        <label class="form-label">Username (Read Only)</label>
+                        <input type="text" name="username" class="form-input" 
+                        value="<?php echo htmlspecialchars($admin_data['username']); ?>" readonly>
                     </div>
 
                     <div class="form-group">
@@ -457,16 +575,6 @@ $admin_data = [
                         <label class="form-label">Email Address *</label>
                         <input type="email" name="email" class="form-input" value="<?php echo htmlspecialchars($admin_data['email']); ?>" required>
                     </div>
-
-                    <!-- <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" name="phone" class="form-input" value="<?php echo htmlspecialchars($admin_data['phone']); ?>">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Bio</label>
-                        <textarea name="bio" class="form-textarea" placeholder="Tell us about yourself..."><?php echo htmlspecialchars($admin_data['bio']); ?></textarea>
-                    </div> -->
 
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i>
@@ -542,9 +650,9 @@ document.getElementById('profileForm').addEventListener('submit', function(e) {
 // Handle Password Form Submission
 document.getElementById('passwordForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(this);
-    
+
     fetch('profile.php', {
         method: 'POST',
         headers: {
@@ -556,13 +664,13 @@ document.getElementById('passwordForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             showAlert('success', data.message);
-            this.reset(); // Clear form on success
+            document.getElementById('passwordForm').reset();
         } else {
             showAlert('error', data.message);
         }
     })
     .catch(error => {
-        showAlert('error', 'An error occurred while changing password.');
+        showAlert('error', 'An error occurred while updating password.');
         console.error('Error:', error);
     });
 });
@@ -619,26 +727,29 @@ document.getElementById('profileImageInput').addEventListener('change', function
 });
 
 // Alert function
-function showAlert(type, message) {
-    // Hide all alerts first
-    document.querySelectorAll('.alert').forEach(alert => {
-        alert.classList.remove('show');
-    });
-    
-    // Show the appropriate alert
-    const alertElement = document.getElementById(`alert-${type}`);
-    const messageElement = document.getElementById(`${type}-message`);
-    
-    if (alertElement && messageElement) {
-        messageElement.textContent = message;
-        alertElement.classList.add('show');
-        
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-        }, 5000);
+ffunction showAlert(type, message) {
+    const successAlert = document.getElementById('alert-success');
+    const errorAlert = document.getElementById('alert-error');
+    const successMsg = document.getElementById('success-message');
+    const errorMsg = document.getElementById('error-message');
+
+    successAlert.classList.remove('show');
+    errorAlert.classList.remove('show');
+
+    if (type === 'success') {
+        successMsg.textContent = message;
+        successAlert.classList.add('show');
+    } else {
+        errorMsg.textContent = message;
+        errorAlert.classList.add('show');
     }
+
+    setTimeout(() => {
+        successAlert.classList.remove('show');
+        errorAlert.classList.remove('show');
+    }, 4000);
 }
+
 
 // Auto-hide alerts on page load if there are any
 document.addEventListener('DOMContentLoaded', function() {
