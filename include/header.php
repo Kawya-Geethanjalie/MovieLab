@@ -1023,22 +1023,22 @@
      onclick="closeRegisterModal(event)">
 
     <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-2xl p-6 rounded-xl shadow-xl border border-primary-red/40 
+     class="bg-dark-card w-full max-w-2xl p-4 rounded-xl shadow-xl border border-primary-red/40 
      max-h-[90vh] overflow-y-auto modal-enter">
 
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-xl font-bold text-white mb-2">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
 
         <form id="register-form" enctype="multipart/form-data">
             <!-- Profile Image Upload -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-3">
                 <label class="block text-sm font-medium text-gray-300 mb-2">Profile Image</label>
                 <div class="relative">
                     <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(this)">
                     <label for="profile_image" class="cursor-pointer block">
-                        <div class="w-24 h-24 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
+                        <div class="w-20 h-20 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -1050,7 +1050,8 @@
             </div>
 
             <!-- GRID START -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
 
                 <!-- First Name -->
                 <div>
@@ -1091,7 +1092,7 @@
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
                     <select id="countrySelect" name="country"
-                class="w-full mt-2 mb-4 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')" required>
+                class="w-full mt-2 mb-2 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')" required>
                     </select>
                     <div id="country_message" class="validation-message"></div>
                 </div>
