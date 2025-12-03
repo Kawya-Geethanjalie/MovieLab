@@ -688,10 +688,10 @@
                         
 
                      <!-- Sign In Link (FIXED → modal now opens) -->
-                    <button id="sign-in-btn" onclick="openLoginModal()" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
+                    <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
                         Sign In
                     </button>
+
 
                     <!-- User Profile Section (Hidden by default) -->
                     <div id="user-profile-section" class="relative hidden items-center space-x-3">
