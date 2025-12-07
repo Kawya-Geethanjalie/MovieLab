@@ -2,14 +2,12 @@
 include '../include/header.php';
 include '../include/connection.php';
 
-// Debug: Check session data
-error_log("Session admin_id: " . ($_SESSION['admin_id'] ?? 'NOT SET'));
-error_log("Session admin_username: " . ($_SESSION['admin_username'] ?? 'NOT SET'));
+// Initialize success/error messages
+$success_message = '';
+$error_message = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $response = ['success' => false, 'message' => ''];
-    
     try {
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
@@ -27,20 +25,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('Please enter a valid email address.');
                     }
                     
-                    // Update database
+                    // Check if email already exists for another user
                     $admin_id = $_SESSION['admin_id'];
+                    $stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = ? AND user_id != ?");
+                    $stmt->execute([$email, $admin_id]);
+                    if ($stmt->rowCount() > 0) {
+                        throw new Exception('Email already exists for another user.');
+                    }
+                    
+                    // Update database
                     $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, updated_at = NOW() WHERE user_id = ?");
                     $success = $stmt->execute([$first_name, $last_name, $email, $admin_id]);
                     
                     if ($success) {
-                        // Update session data
+                        // Update session data immediately
                         $_SESSION['admin_first_name'] = $first_name;
                         $_SESSION['admin_last_name'] = $last_name;
                         $_SESSION['admin_email'] = $email;
                         $_SESSION['admin_full_name'] = $first_name . ' ' . $last_name;
                         
-                        $response['success'] = true;
-                        $response['message'] = 'Profile updated successfully!';
+                        $success_message = 'Profile updated successfully!';
                     } else {
                         throw new Exception('Failed to update profile.');
                     }
@@ -80,8 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $success = $stmt->execute([$new_password_hash, $admin_id]);
                     
                     if ($success) {
-                        $response['success'] = true;
-                        $response['message'] = 'Password updated successfully!';
+                        $success_message = 'Password updated successfully!';
                     } else {
                         throw new Exception('Failed to update password.');
                     }
@@ -89,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                 case 'upload_image':
                     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === 0) {
-                        $upload_dir = '../uploads/profile_images/';
+                        $upload_dir = '../../uploads/profile_images/';
                         
                         // Create directory if it doesn't exist
                         if (!is_dir($upload_dir)) {
@@ -103,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             throw new Exception('Only JPG, JPEG, PNG, and GIF files are allowed.');
                         }
                         
-                        // Check file size (max 5MB)
-                        if ($_FILES['profile_image']['size'] > 5 * 1024 * 1024) {
-                            throw new Exception('File size must be less than 5MB.');
+                        // Check file size (max 1MB)
+                        if ($_FILES['profile_image']['size'] > 1 * 1024 * 1024) {
+                            throw new Exception('File size must be less than 1MB.');
                         }
                         
                         $new_filename = 'profile_' . $_SESSION['admin_username'] . '_' . time() . '.' . $file_info['extension'];
@@ -118,8 +121,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $stmt->execute([$admin_id]);
                             $old_user = $stmt->fetch();
                             
-                            if ($old_user && !empty($old_user['profile_image']) && file_exists('../uploads/profile_images/' . $old_user['profile_image'])) {
-                                unlink('../uploads/profile_images/' . $old_user['profile_image']);
+                            if ($old_user && !empty($old_user['profile_image']) && file_exists('../../uploads/profile_images/' . $old_user['profile_image'])) {
+                                unlink('../../uploads/profile_images/' . $old_user['profile_image']);
                             }
                             
                             // Update database
@@ -127,9 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $success = $stmt->execute([$new_filename, $admin_id]);
                             
                             if ($success) {
+                                // Update session data immediately
                                 $_SESSION['admin_profile_image'] = $new_filename;
-                                $response['success'] = true;
-                                $response['message'] = 'Profile image updated successfully!';
+                                $success_message = 'Profile image updated successfully!';
                             } else {
                                 throw new Exception('Failed to update profile image in database.');
                             }
@@ -143,14 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } catch (Exception $e) {
-        $response['message'] = $e->getMessage();
-    }
-    
-    // Return JSON response for AJAX requests
-    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
-        header('Content-Type: application/json');
-        echo json_encode($response);
-        exit;
+        $error_message = $e->getMessage();
     }
 }
 
@@ -206,10 +202,6 @@ if ($admin_id) {
             $_SESSION['admin_email'] = $user['email'];
             $_SESSION['admin_profile_image'] = $user['profile_image'];
             $_SESSION['admin_full_name'] = $user['first_name'] . ' ' . $user['last_name'];
-            
-            // Debug log
-            error_log("Profile image from DB: " . $user['profile_image']);
-            error_log("Image file exists: " . (file_exists('../uploads/profile_images/' . $user['profile_image']) ? 'YES' : 'NO'));
         }
     } catch (PDOException $e) {
         error_log("Profile data fetch error: " . $e->getMessage());
@@ -418,38 +410,25 @@ if ($admin_id) {
         border-color: #E50914;
     }
 
-    /* Alert Styles */
-    .alert {
-        padding: 12px 16px;
+    /* Message Styles */
+    .message {
+        padding: 15px 20px;
         border-radius: 8px;
         margin-bottom: 20px;
-        display: none;
+        font-size: 14px;
+        font-weight: 500;
     }
 
-    .alert.show {
-        display: block;
-    }
-
-    .alert-success {
+    .message-success {
         background: rgba(34, 197, 94, 0.1);
         border: 1px solid rgba(34, 197, 94, 0.3);
         color: #22c55e;
     }
 
-    .alert-error {
+    .message-error {
         background: rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.3);
         color: #ef4444;
-    }
-
-    .debug-info {
-        background: rgba(255, 255, 0, 0.1);
-        border: 1px solid rgba(255, 255, 0, 0.3);
-        color: #ffff00;
-        padding: 10px;
-        margin-bottom: 20px;
-        border-radius: 8px;
-        font-size: 12px;
     }
 
     /* Responsive */
@@ -481,23 +460,20 @@ if ($admin_id) {
             <p class="page-subtitle">Manage your profile information and settings</p>
         </div>
 
-        <!-- Debug Information -->
-        <!-- <div class="debug-info">
-            <strong>Debug Info:</strong> User ID: <?= $admin_data['user_id'] ?> | 
-            Profile Image: <?= $admin_data['profile_image'] ?> | 
-            Image Path: ../uploads/profile_images/<?= $admin_data['profile_image'] ?> |
-            File Exists: <?= (!empty($admin_data['profile_image']) && file_exists('../uploads/profile_images/' . $admin_data['profile_image'])) ? 'YES' : 'NO' ?>
-        </div> -->
+        <!-- Success/Error Messages -->
+        <?php if (!empty($success_message)): ?>
+            <div class="message message-success">
+                <i class="fas fa-check-circle"></i>
+                <?= htmlspecialchars($success_message) ?>
+            </div>
+        <?php endif; ?>
 
-        <!-- Alert Messages -->
-        <div id="alert-success" class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            <span id="success-message"></span>
-        </div>
-        <div id="alert-error" class="alert alert-error">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="error-message"></span>
-        </div>
+        <?php if (!empty($error_message)): ?>
+            <div class="message message-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <?= htmlspecialchars($error_message) ?>
+            </div>
+        <?php endif; ?>
 
         <div class="profile-grid">
             <!-- Profile Image Section -->
@@ -508,8 +484,8 @@ if ($admin_id) {
                 </h2>
                 <div class="profile-image-section">
                     <div class="current-image-container">
-                        <?php if (!empty($admin_data['profile_image']) && file_exists('../uploads/profile_images/' . $admin_data['profile_image'])): ?>
-                            <img src="../uploads/profile_images/<?= htmlspecialchars($admin_data['profile_image']) ?>" alt="Profile Image" class="current-profile-image" id="currentImage">
+                        <?php if (!empty($admin_data['profile_image']) && file_exists('../../uploads/profile_images/' . $admin_data['profile_image'])): ?>
+                            <img src="../../uploads/profile_images/<?= htmlspecialchars($admin_data['profile_image']) ?>" alt="Profile Image" class="current-profile-image" id="currentImage">
                         <?php else: ?>
                             <div class="profile-image-placeholder-large" id="imagePlaceholder">
                                 <i class="fas fa-user"></i>
@@ -518,10 +494,10 @@ if ($admin_id) {
                     </div>
                     
                     <div class="upload-section">
-                        <form id="imageUploadForm" enctype="multipart/form-data">
+                        <form method="POST" enctype="multipart/form-data">
                             <input type="hidden" name="action" value="upload_image">
                             <div class="file-input-wrapper">
-                                <input type="file" name="profile_image" id="profileImageInput" class="file-input" accept="image/*">
+                                <input type="file" name="profile_image" id="profileImageInput" class="file-input" accept="image/*" required>
                                 <label for="profileImageInput" class="file-input-label">
                                     <i class="fas fa-upload"></i>
                                     Choose Image
@@ -534,7 +510,7 @@ if ($admin_id) {
                             </button>
                         </form>
                         <p style="font-size: 12px; color: #888; margin-top: 10px;">
-                            Supported formats: JPG, JPEG, PNG, GIF (Max 5MB)
+                            Supported formats: JPG, JPEG, PNG, GIF (Max 1MB)
                         </p>
                     </div>
                 </div>
@@ -546,14 +522,8 @@ if ($admin_id) {
                     <i class="fas fa-user-edit"></i>
                     Profile Information
                 </h2>
-                <form id="profileForm">
+                <form method="POST">
                     <input type="hidden" name="action" value="update_profile">
-                    
-                    <!-- <div class="form-group">
-                        <label class="form-label">User ID (Read Only)</label>
-                        <input type="text" name="user_id" class="form-input" 
-                        value="<?php echo htmlspecialchars($admin_data['user_id']); ?>" readonly>
-                    </div> -->
                     
                     <div class="form-group">
                         <label class="form-label">Username (Read Only)</label>
@@ -590,7 +560,7 @@ if ($admin_id) {
                 <i class="fas fa-lock"></i>
                 Change Password
             </h2>
-            <form id="passwordForm">
+            <form method="POST">
                 <input type="hidden" name="action" value="update_password">
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
@@ -620,92 +590,6 @@ if ($admin_id) {
 </div>
 
 <script>
-// Handle Profile Form Submission
-document.getElementById('profileForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch('profile.php', {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-        } else {
-            showAlert('error', data.message);
-        }
-    })
-    .catch(error => {
-        showAlert('error', 'An error occurred while updating profile.');
-        console.error('Error:', error);
-    });
-});
-
-// Handle Password Form Submission
-document.getElementById('passwordForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    fetch('profile.php', {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            document.getElementById('passwordForm').reset();
-        } else {
-            showAlert('error', data.message);
-        }
-    })
-    .catch(error => {
-        showAlert('error', 'An error occurred while updating password.');
-        console.error('Error:', error);
-    });
-});
-
-// Handle Image Upload Form Submission
-document.getElementById('imageUploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch('profile.php', {
-        method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message);
-            // Reload page to show new image
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-        } else {
-            showAlert('error', data.message);
-        }
-    })
-    .catch(error => {
-        showAlert('error', 'An error occurred while uploading image.');
-        console.error('Error:', error);
-    });
-});
-
 // Preview image before upload
 document.getElementById('profileImageInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -724,37 +608,5 @@ document.getElementById('profileImageInput').addEventListener('change', function
         };
         reader.readAsDataURL(file);
     }
-});
-
-// Alert function
-ffunction showAlert(type, message) {
-    const successAlert = document.getElementById('alert-success');
-    const errorAlert = document.getElementById('alert-error');
-    const successMsg = document.getElementById('success-message');
-    const errorMsg = document.getElementById('error-message');
-
-    successAlert.classList.remove('show');
-    errorAlert.classList.remove('show');
-
-    if (type === 'success') {
-        successMsg.textContent = message;
-        successAlert.classList.add('show');
-    } else {
-        errorMsg.textContent = message;
-        errorAlert.classList.add('show');
-    }
-
-    setTimeout(() => {
-        successAlert.classList.remove('show');
-        errorAlert.classList.remove('show');
-    }, 4000);
-}
-
-
-// Auto-hide alerts on page load if there are any
-document.addEventListener('DOMContentLoaded', function() {
-    <?php if (isset($response) && !empty($response['message'])): ?>
-        showAlert('<?php echo $response['success'] ? 'success' : 'error'; ?>', '<?php echo addslashes($response['message']); ?>');
-    <?php endif; ?>
 });
 </script>
