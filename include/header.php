@@ -1,14 +1,12 @@
 <header class="sticky top-0 z-50">
 
-<!DOCTYPE html>
+<!DOCTYPE TML>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Lab</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SweetAlert2 for beautiful notifications -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* 'Inter' font for modern web apps */
@@ -455,7 +453,7 @@
                     if (currentUser.profile_image) {
                         profileImg.src = '../uploads/profile_images/' + currentUser.profile_image;
                     } else {
-                        profileImg.src = 'https://via.placeholder.com/40x40/E50914/FFFFFF?text=' + currentUser.first_name.charAt(0);
+                        profileImg.src = 'https://via.placeholder.com/40x40/E50914/FFFFFF?text=' + (currentUser.first_name ? currentUser.first_name.charAt(0) : 'U');
                     }
                 }
                 if (userName) {
@@ -491,20 +489,189 @@
             });
         }
 
+        // JS FOR UPDATE PROFILE MODAL
+        function openUpdateProfileModal() {
+            const modal = document.getElementById('update-profile-modal');
+            modal.classList.remove('hidden');
+            
+            // Apply modal-enter class to the content box for animation
+            const modalContent = modal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.classList.add('modal-enter');
+            }
+            document.body.classList.add('overflow-hidden'); 
+            
+            // Populate form with current user data
+            if (currentUser) {
+                document.getElementById('up_first_name').value = currentUser.first_name || '';
+                document.getElementById('up_last_name').value = currentUser.last_name || '';
+                document.getElementById('up_username').value = currentUser.username || '';
+                document.getElementById('up_email').value = currentUser.email || ''; // *** Email field pre-fill එක තහවුරු කරයි ***
+                
+                // Set profile image preview
+                const profileImgUrl = currentUser.profile_image 
+                    ? '../uploads/profile_images/' + currentUser.profile_image 
+                    : 'https://via.placeholder.com/100x100/222222/FFFFFF?text=' + (currentUser.first_name ? currentUser.first_name.charAt(0) : 'U');
+                
+                const preview = document.getElementById('up_image_preview');
+                preview.src = profileImgUrl;
+                preview.classList.add('show');
+            }
+        }
+
+        function closeUpdateProfileModal(event) {
+            const modal = document.getElementById('update-profile-modal');
+            const modalContent = modal.querySelector('.modal-content');
+            
+            if (!event || event.target.id === 'update-profile-modal' || event.target.closest('#update-profile-modal .close-btn')) {
+                 if (modalContent) {
+                    modalContent.classList.remove('modal-enter');
+                    // Add modal-exit for visual feedback
+                    modalContent.classList.add('modal-exit'); 
+                 }
+                 
+                 // Wait for the exit animation to finish before hiding
+                 setTimeout(() => {
+                    modal.classList.add('hidden');
+                    if (modalContent) {
+                        modalContent.classList.remove('modal-exit');
+                    }
+                    document.body.classList.remove('overflow-hidden');
+                    
+                    // Reset password fields
+                    document.getElementById('up_current_password').value = ''; // *** Current Password ක්ෂේත්‍රය Reset කිරීම ***
+                    document.getElementById('up_password').value = '';
+                    document.getElementById('up_confirm_password').value = '';
+                 }, 300); // 300ms matches the transition duration in CSS
+            }
+        }
+
+        // Reuse the image preview function for the update profile form
+        function previewUpdateImage(input) {
+            const preview = document.getElementById('up_image_preview');
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.add('show');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                // If the user clears the file input, we keep the existing image if available
+                if (currentUser && currentUser.profile_image) {
+                     preview.src = '../uploads/profile_images/' + currentUser.profile_image;
+                } else {
+                    preview.src = 'https://via.placeholder.com/100x100/222222/FFFFFF?text=No+Image';
+                }
+            }
+        }
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkUserSession();
+            
+            // Handle Update Profile Form Submission
+            const form = document.getElementById('update-profile-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const newPassword = document.getElementById('up_password').value;
+                    const confirmPassword = document.getElementById('up_confirm_password').value;
+                    const currentPassword = document.getElementById('up_current_password').value; // *** Current Password එක ලබා ගැනීම ***
+
+                    // 1. New Password / Confirm Password Validation
+                    if (newPassword && newPassword !== confirmPassword) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Passwords Do Not Match',
+                            text: 'The new password and confirm password fields must match.',
+                            confirmButtonColor: '#E50914'
+                        });
+                        return; // Stop submission
+                    }
+                    
+                    // 2. *** Current Password Required Validation (Backend ඉල්ලීම පරිදි) ***
+                    if (newPassword && !currentPassword) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Current Password Required',
+                            text: 'You must enter your current password to set a new one.',
+                            confirmButtonColor: '#E50914'
+                        });
+                        // Visual feedback (shaking the field)
+                        document.getElementById('up_current_password').classList.add('error');
+                        setTimeout(() => document.getElementById('up_current_password').classList.remove('error'), 1500);
+                        return; // Stop submission
+                    }
+
+
+                    const btn = document.getElementById('update-profile-btn');
+                    btn.classList.add('btn-loading');
+                    btn.textContent = ''; 
+
+                    const formData = new FormData(this);
+                    
+                    fetch('../library/updateProfileBackend.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.classList.remove('btn-loading');
+                        btn.textContent = 'Update Profile';
+                        
+                        if (data.status === 'success') {
+                            // Update global currentUser object and UI display
+                            currentUser = data.user;
+                            updateUserProfileDisplay(); 
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Profile Updated!',
+                                text: data.message,
+                                confirmButtonColor: '#E50914'
+                            }).then(() => {
+                                closeUpdateProfileModal();
+                            });
+                            
+                            // Clear password fields on success
+                            document.getElementById('up_current_password').value = '';
+                            document.getElementById('up_password').value = '';
+                            document.getElementById('up_confirm_password').value = '';
+                            
+                        } else {
+                             Swal.fire({
+                                icon: 'error',
+                                title: 'Update Failed',
+                                text: data.message,
+                                confirmButtonColor: '#E50914'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        btn.classList.remove('btn-loading');
+                        btn.textContent = 'Update Profile';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Could not reach server. Please check your connection and try again.',
+                            confirmButtonColor: '#E50914'
+                        });
+                        console.error('Update profile error:', error);
+                    });
+                });
+            }
         });
     </script>
 </head>
 <body class="min-h-screen">
 
-    <!-- NAVIGATION BAR START -->
     <nav class="bg-dark-bg shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
 
-                <!-- 1. Logo and Main Links (Left Side) -->
                 <div class="flex-shrink-0 flex items-center">
                          <div class=" top-8 left-8  items-center gap-2 ms-8">
                             <a href="../Site/index.php" class="text-glow-red">
@@ -515,18 +682,10 @@
                         Movie Lab 
                       </a></div>
                       
-                    <!-- Primary Desktop Links (Home + Dropdowns) -->
-                    <!-- *** TV Series dropdown eka lagata ewith, gap eka nathi karala thiyenawa (space-x-4) *** -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-4 lg:space-x-6 items-center">
-                        <!-- HOME Link using the new underline class -->
-                        
-
-                        <!-- Dropdown: Movies -->
                         <div class="relative">
-                            <!-- Dropdown Button using a wrapper to apply underline effect on hover/focus -->
                             <button onclick="toggleDropdown('movies-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Movies</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -540,11 +699,9 @@
                             </div>
                         </div>
 
-                        <!-- Dropdown: Songs -->
                         <div class="relative">
                             <button onclick="toggleDropdown('songs-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Songs</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -559,11 +716,9 @@
                             </div>
                         </div>
 
-                        <!-- Dropdown: TV Series - Removed the margin on the right by using px-1 instead of default padding/margin -->
                         <div class="relative">
                             <button onclick="toggleDropdown('tv-series-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">TV Series</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -579,12 +734,8 @@
                     </div>
                 </div>
 
-                <!-- 2. Right Side: Genres, Years, Languages, Search, Notifications, PRO, Sign In -->
-                <!-- *** space-x-0 class eka use karala Genres/Years/Languages atara thibuna gap eka ain karala, eka search button eka lagata damma *** -->
                 <div class="flex items-center">
-                    <!-- Genres, Years, and Languages are now grouped together with minimal space -->
                     <div class="hidden sm:flex items-center space-x-0 lg:space-x-0">
-                        <!-- Dropdown: Genres -->
                         <div class="relative">
                             <button onclick="toggleDropdown('genres-dropdown')" class="nav-dropdown-btn inline-flex items-center px-3 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Genres</span>
@@ -610,7 +761,6 @@
                             </div>
                         </div>
 
-                        <!-- Dropdown: Years - Removed the margin on the left by using px-3 instead of default padding/margin -->
                         <div class="relative">
                             <button onclick="toggleDropdown('years-dropdown')" class="nav-dropdown-btn inline-flex items-center px-3 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Years</span>
@@ -634,7 +784,6 @@
                             </div>
                         </div>
                         
-                        <!-- Dropdown: Languages (UPDATED to multi-column) -->
                         <div class="relative">
                             <button onclick="toggleDropdown('languages-dropdown')" class="nav-dropdown-btn inline-flex items-center px-3 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Languages</span>
@@ -642,156 +791,134 @@
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </button>
-                            <!-- Dropdown Menu for Languages: Wider, 2-column grid -->
                             <div id="languages-dropdown" class="absolute hidden mt-3 w-72 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-16">
                                 <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="languages-menu-button">
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">All</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">English</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Japanese</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Mandarin</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Spanish</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">German</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Hindi</a>
-                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Korean</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Korean</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">French</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sinhala</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Tamil</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Malayalam</a>
-                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Kannada</a>
+                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Kannada</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Italian</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Telugu</a>
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Russian</a>
-                                                                   
                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Arabic</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Turkish</a>
-                                    
-                                   
-                                
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     
-                    <!-- Search, Notifications, PRO, and Sign In -->
-                    <div class="flex items-center space-x-4 lg:space-x-6 ml-4"> <!-- ml-4 (left margin) is the new gap between Years/Languages and Search -->
-                        
-                        <!-- Search Button -->
-                        <button type="button" onclick="toggleSearchBar()" class="p-2 text-gray-400 hover:text-white transition duration-300 focus:outline-none rounded-full hover:bg-dark-card hidden sm:block">
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-                        
-                        <!-- Bell/Notifications Button -->
-                        <button type="button" class="p-2 text-gray-400 hover:text-primary-red transition duration-300 focus:outline-none rounded-full hover:bg-dark-card hidden sm:block">
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </button>
-                        
-
-                     <!-- Sign In Link (FIXED → modal now opens) -->
-                    <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
-                        Sign In
-                    </button>
-
-
-                    <!-- User Profile Section (Hidden by default) -->
-                    <div id="user-profile-section" class="relative hidden items-center space-x-3">
-                        <button onclick="toggleProfileDropdown()" class="flex items-center space-x-2 text-white hover:text-primary-red transition duration-300">
-                            <img id="user-profile-img" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="Profile" class="profile-image">
-                            <span id="user-name-display" class="hidden sm:inline text-sm font-medium">User</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        
-                        <!-- Profile Dropdown -->
-                        <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
-                                <i class="fas fa-user mr-2"></i>Update Profile
-                            </a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
-                                <i class="fas fa-cog mr-2"></i>Settings
-                            </a>
-                            <hr class="border-gray-600 my-1">
-                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
-                                <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+                    <div class="flex items-center space-x-3 ml-4">
+                        <div class="relative">
+                            <button onclick="toggleSearchBar()" class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-dark-card transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-red">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
                             </button>
+                            <form id="search-bar" onsubmit="handleSearch(event)" class="search-bar absolute right-0 mt-3 w-64 md:w-80 hidden opacity-0 scale-95 origin-top-right bg-dark-card p-3 rounded-lg shadow-2xl ring-1 ring-primary-red ring-opacity-20 z-20" style="min-width: 250px;">
+                                <div class="flex items-center">
+                                    <input id="search-input" type="text" placeholder="Search movies, series..." class="w-full bg-dark-bg text-white border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:border-primary-red" autocomplete="off">
+                                    <button type="submit" class="ml-2 text-primary-red hover:text-white transition duration-200">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </div>
+                        
+                        <button class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-dark-card transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-red hidden sm:block">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 3 01-6 0v-1m6 0H9" />
+                            </svg>
+                        </button>
+                        
+                        <div id="user-profile-section" class="relative hidden sm:ml-4 sm:flex items-center" style="display: none;">
+                            <button id="user-menu-button" onclick="toggleProfileDropdown()" class="flex items-center space-x-2 text-white p-1 rounded-full hover:ring-2 hover:ring-primary-red focus:outline-none focus:ring-2 focus:ring-primary-red transition duration-200" aria-expanded="false" aria-haspopup="true">
+                                <img id="user-profile-img" class="profile-image" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="User Profile">
+                                <span id="user-name-display" class="hidden lg:inline text-sm font-medium">User</span>
+                            </button>
+                            
+                            <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2">
+                                
+                                <button onclick="openUpdateProfileModal()" class="w-full text-left block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                    <i class="fas fa-user mr-2"></i>Update Profile
+                                </button>
+                                
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                    <i class="fas fa-cog mr-2"></i>Settings
+                                </a>
+                                <hr class="border-gray-600 my-1">
+                                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button id="sign-in-btn" onclick="openLoginModal()" class="px-4 py-1.5 text-sm font-semibold text-white bg-primary-red hover:bg-red-600 rounded-md transition duration-200 shadow-md hidden sm:inline-flex">
+                            Sign In
+                        </button>
 
-                        <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
-                        <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
-                            PRO
-                        </button>
-                        <!-- Sign Up CTA Button - REMOVED -->
-                    </div>
-                    
-                    <!-- 3. Mobile Menu Button -->
-                    <div class="-mr-2 flex items-center sm:hidden">
-                        <button onclick="toggleMenu()" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-dark-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-red transition duration-300" aria-expanded="false">
-                            <span class="sr-only">Open main menu</span>
-                            <!-- Hamburger icon -->
-                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                            </svg>
-                            <!-- Close icon (hidden by default) -->
-                            <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                        <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex"> PRO </button>
+                        </div>
+                </div>
+
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button onclick="toggleMenu()" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-dark-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-red transition duration-300" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- SEARCH BAR (Hidden by default) -->
-        <div id="search-bar" class="hidden opacity-0 scale-95 search-bar absolute top-16 left-0 right-0 bg-dark-card p-4 shadow-lg z-40 border-t border-primary-red/20">
-            <div class="max-w-7xl mx-auto">
-                <form onsubmit="handleSearch(event)" class="flex items-center">
-                    <div class="relative flex-grow">
-                        <input 
-                            id="search-input"
-                            type="text" 
-                            placeholder="Search for movies, TV series, songs..." 
-                            class="w-full bg-dark-bg text-white placeholder-gray-500 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red border border-gray-700"
-                        >
-                        <svg class="absolute left-4 top-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <button type="submit" class="ml-4 bg-primary-red text-white font-medium py-3 px-6 rounded-full hover:bg-red-600 transition duration-200">
-                        Search
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- 4. Mobile Menu (Flattened Navigation) -->
         <div class="sm:hidden hidden" id="mobile-menu">
-            <div class="pt-2 pb-3 space-y-1 bg-dark-bg border-t border-primary-red/10 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                <!-- PRO Button for Mobile - Using the new theme color -->
-                <button onclick="openProModal()" class="pro-button-mobile w-full px-3 py-2 text-base font-bold text-white rounded-md transition duration-300 hover:bg-red-700 hover:shadow-lg uppercase tracking-widest sm:hidden">
+            <div class="pt-2 pb-3 space-y-1 px-2">
+                
+                <button onclick="openProModal()" class="pro-button-mobile w-full text-center px-3 py-2 rounded-md text-base font-bold text-white shadow-md shadow-theme-orange/50 uppercase tracking-widest mb-3">
                     GET PRO ACCESS
                 </button>
                 
                 <a href="#" class="bg-dark-card text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
-                
-                <!-- Sign In Mobile Link -->
-                 <!-- SIGN IN BUTTON -->
-                <button id="mobile-sign-in-btn" onclick="openLoginModal()"
-                    class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md">
-                    Sign In
-                </button>
-                <!-- Sign Up Mobile Link - REMOVED -->
 
-                <!-- Notifications Mobile Link (Bell Icon) with primary-red hover -->
+                <div id="mobile-user-actions" class="border-t border-gray-700 pt-3">
+                    <button id="mobile-sign-in-btn" onclick="openLoginModal()" class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md block w-full text-center"> Sign In </button>
+                    
+                    <div id="mobile-logged-in-actions" class="space-y-1" style="display: none;">
+                        <div class="flex items-center px-3 py-2">
+                            <img id="mobile-user-profile-img" class="profile-image w-8 h-8 mr-3" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="User Profile">
+                            <span class="text-white text-base font-medium" id="mobile-user-name-display">User</span>
+                        </div>
+                        
+                        <button onclick="openUpdateProfileModal()" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium w-full text-left">
+                            <i class="fas fa-user mr-2 w-6"></i>Update Profile
+                        </button>
+
+                        <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium">
+                            <i class="fas fa-cog mr-2 w-6"></i>Settings
+                        </a>
+
+                        <button onclick="logout()" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium w-full text-left">
+                            <i class="fas fa-sign-out-alt mr-2 w-6"></i>Log Out
+                        </button>
+                    </div>
+                </div>
+
                 <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium">
                     <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    Notifications
+                    </svg> Notifications 
                 </a>
-                
-                <!-- Genres (Mobile Section) -->
+
                 <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Genres (12)</h4>
                 <div class="grid grid-cols-2 gap-y-1">
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Action</a>
@@ -808,102 +935,91 @@
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Mystery</a>
                 </div>
 
-                <!-- Languages (Mobile Section) - UPDATED to 20 languages and 2 columns -->
-                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Languages (20)</h4>
+                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Years</h4>
+                <div class="grid grid-cols-2 gap-y-1">
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2025</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2024</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2023</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2022</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2021</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2020</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2019</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2018</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Older</a>
+                </div>
+
+                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Languages</h4>
                 <div class="grid grid-cols-2 gap-y-1">
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">English</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Japanese</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Mandarin</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Spanish</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">German</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Hindi</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Korean</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">French</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Sinhala</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">German</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Tamil</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Malayalam</a>
+                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Kannada</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Italian</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Hindi</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Spanish</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Telugu</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Russian</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Malayalam</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Portuguese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Kannada</a>
                     <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Arabic</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Japanese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Turkish</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Korean</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Thai</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Chinese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Indonesian</a>
                 </div>
-
-
-                <!-- Years (Common Filter) -->
-                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Filter by Year</h4>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2024</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2023</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2022</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Older</a>
-
-                <!-- Movies Categories (Other filters) -->
-                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Movies</h4>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Now Playing</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Popular</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Top Rated</a>
-                
-                <!-- Mobile Search -->
-                <div class="mt-4 relative">
-                    
-                    <input type="text" placeholder="Search..." class="w-full bg-dark-card text-white placeholder-gray-500 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red">
-                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-700">
+                <div class="px-2 space-y-1">
+                    </div>
+            </div>
+        </div>
+        <div class="hidden sm:flex sm:items-center sm:ml-6">
+            <div id="search-bar-desktop-wrapper" class="relative">
+                <form id="search-bar-desktop" onsubmit="handleSearch(event)" class="search-bar absolute right-0 mt-3 w-80 hidden opacity-0 scale-95 origin-top-right bg-dark-card p-3 rounded-lg shadow-2xl ring-1 ring-primary-red ring-opacity-20 z-20" style="min-width: 300px;">
+                    <div class="flex items-center">
+                        <input id="search-input-desktop" type="text" placeholder="Search movies, series..." class="w-full bg-dark-bg text-white border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:border-primary-red" autocomplete="off">
+                        <button type="submit" class="ml-2 text-primary-red hover:text-white transition duration-200">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </nav>
-    <!-- NAVIGATION BAR END -->
-
-    <!-- PRO SUBSCRIPTION MODAL START (hidden by default) -->
     <div id="pro-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 overflow-y-auto" onclick="closeProModal(event)">
-        
-        <!-- Modal Content Container: Added flex-col and removed internal overflow -->
-        <!-- The flex-col structure makes the header stick to the top and the body take up the rest of the available height -->
         <div class="bg-dark-bg rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-4xl transform transition-all duration-300 scale-100 border border-primary-red/50 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
-            
-            <!-- Header and Close Button (FIXED PART: shrink-0 ensures it doesn't shrink when content scrolls) -->
-            <!-- The horizontal padding (p-6/p-8) of the container applies to this header -->
             <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4 shrink-0">
-                <h2 class="text-3xl font-bold text-white text-glow-red">
-                    Unlock <span class="text-theme-orange">PRO</span> Features
-                </h2>
-                <!-- Close Button -->
+                <h2 class="text-3xl font-bold text-white text-glow-red"> Unlock <span class="text-theme-orange">PRO</span> Features </h2>
                 <button onclick="closeProModal()" class="text-gray-400 hover:text-primary-red transition duration-200 p-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-
-            <!-- Scrollable Content Wrapper (SCROLLING PART: flex-grow ensures it fills the remaining vertical space) -->
-            <div class="overflow-y-auto flex-grow">
-                <!-- Pricing Tiers (Early, Monthly, Weekly) -->
+            
+            <div class="flex-grow overflow-y-auto pr-2">
+                <p class="text-lg text-gray-300 mb-6">Choose the plan that fits your ultimate cinematic experience.</p>
+                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <!-- 1. Early Tier (Annual Plan) - Updated to use Red/Orange accents instead of Yellow -->
-                    <div class="bg-dark-card p-6 rounded-xl border-2 border-theme-orange/80 shadow-lg relative overflow-hidden flex flex-col">
-                        <!-- Updated Tag to be Red/White -->
-                        <div class="absolute top-0 right-0 bg-primary-red text-white text-xs font-bold py-1 px-4 rounded-bl-lg">BEST VALUE</div>
-                        <h3 class="text-2xl font-bold text-theme-orange mb-2">Early Access</h3>
-                        <p class="text-gray-400 mb-4 h-12">Limited time offer for long-term commitment.</p>
-                        <div class="text-4xl font-extrabold text-white mb-6">$49.99 <span class="text-base font-normal text-gray-500">/ Year</span></div>
+                    <div class="bg-dark-card p-6 rounded-xl border-2 border-primary-red shadow-2xl shadow-primary-red/20 flex flex-col relative">
+                        <div class="absolute -top-3 -right-3 bg-theme-orange text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg transform rotate-6">
+                            Best Value
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Yearly</h3>
+                        <p class="text-gray-400 mb-4 h-12">Save big with a one-time yearly payment.</p>
+                        <div class="text-4xl font-extrabold text-white mb-6">$59.99 <span class="text-base font-normal text-gray-500">/ Year</span></div>
+                        
                         <ul class="text-gray-300 space-y-2 mb-8 flex-grow">
-                            <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> 4K Ultra HD Streaming</li>
-                            <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> 5 simultaneous screens</li>
-                            <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> Offline Downloads</li>
-                            <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> Priority Support</li>
+                            <li class="flex items-center"><span class="text-primary-red mr-2">•</span> <span class="font-bold">4K Ultra HD</span> Streaming</li>
+                            <li class="flex items-center"><span class="text-primary-red mr-2">•</span> 4 simultaneous screens</li>
+                            <li class="flex items-center"><span class="text-primary-red mr-2">•</span> <span class="font-bold">Unlimited</span> Offline Downloads</li>
+                            <li class="flex items-center"><span class="text-primary-red mr-2">•</span> Priority Support</li>
                         </ul>
-                        <!-- Button uses the new gradient -->
-                        <button class="pro-button-gradient mt-auto w-full text-white font-bold py-3 rounded-full shadow-lg shadow-theme-orange/40 hover:shadow-theme-orange/80 transform hover:scale-[1.02]">
-                            Get Early Plan
+                        
+                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
+                            Subscribe Yearly
                         </button>
                     </div>
 
-                    <!-- 2. Monthly Tier -->
                     <div class="bg-dark-card p-6 rounded-xl border border-gray-600 shadow-md flex flex-col">
                         <h3 class="text-2xl font-bold text-white mb-2">Monthly</h3>
                         <p class="text-gray-400 mb-4 h-12">Flexible, no long-term contract.</p>
@@ -914,12 +1030,9 @@
                             <li class="flex items-center"><span class="text-primary-red mr-2">•</span> Offline Downloads</li>
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> Standard Support</li>
                         </ul>
-                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
-                            Subscribe Monthly
-                        </button>
+                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200"> Subscribe Monthly </button>
                     </div>
 
-                    <!-- 3. Weekly Tier (Shortest option) -->
                     <div class="bg-dark-card p-6 rounded-xl border border-gray-600 shadow-md flex flex-col">
                         <h3 class="text-2xl font-bold text-white mb-2">Weekly Pass</h3>
                         <p class="text-gray-400 mb-4 h-12">Perfect for a short binge-watching session.</p>
@@ -930,701 +1043,93 @@
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> No Downloads</li>
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> Standard Support</li>
                         </ul>
-                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
-                            Get Weekly Pass
-                        </button>
+                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200"> Get Weekly Pass </button>
                     </div>
+
                 </div>
                 
-                <!-- Adding some padding below the cards for better scroll margin on mobile -->
-                <div class="h-4 md:hidden"></div> 
+                <p class="text-sm text-center text-gray-500 mt-6">All plans include ad-free viewing and access to exclusive content.</p>
             </div>
-        </div>
-    </div>
-    <!-- PRO SUBSCRIPTION MODAL END -->
-
-    
-
-<!-- ============================================= -->
-<!--                 LOGIN MODAL                   -->
-<!-- ============================================= -->
-
-<div id="login-modal"
-     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[200] flex items-center justify-center p-4"
-     onclick="closeLoginModal(event)">
-
-    <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto modal-enter">
-
-
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-white">Sign In</h2>
-            <button onclick="closeLoginModal()" class="text-gray-400 hover:text-primary-red">✖</button>
-        </div>
-
-
-        <!-- EMAIL LOGIN FORM -->
-        <form id="login-form">
-            <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
-            <input id="login-identifier" type="text" placeholder="Enter Username or Email" class="input-field" required>
-            <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-            <input id="login-password" type="password" placeholder="Enter Password" class="input-field" required>
-        </form>
-
-       
-        <p class="text-gray-400 mt-2 text-center">
-            Forgot Password?
-            <button onclick="openForgotModal()" class="text-primary-red">Reset</button>
-        </p>
-
-        <!-- BEAUTIFUL RECAPTCHA UI -->
-        <div class="recaptcha-box mt-3 mb-4">
-            <input type="checkbox" class="w-3 h-3">
-            <span class="text-gray-900 text-sm">I'm not a robot</span>
-            <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" class="ml-auto w-5">
-        </div>
-
-        <!-- LOGIN BUTTON -->
-        <button id="login-btn" class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
-            Log In
-        </button>
-            <!-- Separator -->
-            <div class="flex items-center my-6">
-                <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-sm">Or continue with</span>
-                <div class="flex-grow border-t border-gray-700"></div>
-            </div>
-
-        <!-- Social Logins -->
-            <div class="space-y-3">
-                <button onclick="mockSocialLogin('Google')" class="w-full bg-gray-700 text-white py-3 rounded-lg flex items-center justify-center hover:bg-gray-600 transition duration-200">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.0003 4.75C14.0315 4.75 15.6888 5.41875 16.9453 6.64937L19.5378 4.0975C17.5028 2.1975 14.9082 1 12.0003 1C7.81708 1 4.2325 3.4475 2.55344 6.9425L5.75354 9.4975C6.55938 7.07812 9.00698 4.75 12.0003 4.75Z" fill="#EA4335"/><path d="M23.6382 12.0001C23.6382 11.3283 23.5852 10.6783 23.4756 10.0461H12.0003V14.6296H18.4239C18.1565 16.0967 17.3484 17.2917 16.2084 18.0641V21.1077H20.0898C22.2537 19.0601 23.6382 16.1437 23.6382 12.0001Z" fill="#4285F4"/><path d="M5.75344 14.5026C5.58984 14.0049 5.50036 13.5025 5.50036 12.9999C5.50036 12.4973 5.58984 11.9949 5.75344 11.4971V8.4534L2.55344 5.90156C1.94052 7.18562 1.59973 8.56781 1.59973 9.9999C1.59973 11.432 1.94052 12.8142 2.55344 14.0983L5.75344 14.5026Z" fill="#FBBC05"/><path d="M12.0003 23.0002C15.0005 23.0002 17.6975 21.9213 19.7431 20.1585L16.2084 18.0641C15.1793 18.7308 13.7845 19.1668 12.0003 19.1668C9.00698 19.1668 6.55938 17.0211 5.75354 14.5027L2.55354 17.0578C4.2325 20.5528 7.81708 23.0002 12.0003 23.0002Z" fill="#34A853"/></svg>
-                    Continue with Google
-                </button>
-                <button onclick="mockSocialLogin('Facebook')" class="w-full bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center hover:bg-blue-600 transition duration-200">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33V22C18.343 21.128 22 16.991 22 12z"/></svg>
-                    Continue with Facebook
-                </button>
-            </div>
-
-        <p class="text-gray-300 text-center mt-4">
-            Don't have an account?
-            <button onclick="openRegisterModal()" class="text-primary-red">Register</button>
-        </p>
-    </div>
-</div>
-
-<!-- ============================================= -->
-<!--             REGISTER MODAL                    -->
-<!-- ============================================= -->
-<div id="register-modal"
-     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
-     onclick="closeRegisterModal(event)">
-
-    <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-2xl p-4 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto modal-enter">
-
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="text-xl font-bold text-white mb-2">Create Account</h2>
-            <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
-        </div>
-
-        <form id="register-form" enctype="multipart/form-data">
-            <!-- Profile Image Upload -->
-            <div class="text-center mb-3">
-                <label class="block text-sm font-medium text-gray-300 mb-2">Profile Image</label>
-                <div class="relative">
-                    <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(this)">
-                    <label for="profile_image" class="cursor-pointer block">
-                        <div class="w-20 h-20 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                        </div>
-                        <p class="text-xs text-gray-400 mt-2">Click to upload</p>
-                    </label>
-                    <img id="image-preview" class="image-preview" alt="Preview">
-                </div>
-            </div>
-
-            <!-- GRID START -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-
-
-                <!-- First Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-                    <input id="first_name" name="first_name" type="text" placeholder="Enter First Name" class="input-field" onblur="validateField(this, 'first_name')" required>
-                    <div id="first_name_message" class="validation-message"></div>
-                </div>
-
-                <!-- Last Name -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-                    <input id="last_name" name="last_name" type="text" placeholder="Enter Last Name" class="input-field" onblur="validateField(this, 'last_name')" required>
-                    <div id="last_name_message" class="validation-message"></div>
-                </div>
-
-                <!-- Email -->
-                <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                    <input id="email" name="email" type="email" placeholder="Enter Email" class="input-field" onblur="validateField(this, 'email')" required>
-                    <div id="email_message" class="validation-message"></div>
-                </div>
-
-                <!-- Username -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
-                    <input id="username" name="username" type="text" placeholder="Enter Username" class="input-field" onblur="validateField(this, 'username')" required>
-                    <div id="username_message" class="validation-message"></div>
-                </div>
-
-                <!-- Birthday -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
-                    <input id="birthday" name="birthday" type="date" class="input-field" onblur="validateField(this, 'birthday')" required>
-                    <div id="birthday_message" class="validation-message"></div>
-                </div>
-
-                <!-- Country -->
-                <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
-                    <select id="countrySelect" name="country"
-                class="w-full mt-2 mb-2 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')" required>
-                    </select>
-                    <div id="country_message" class="validation-message"></div>
-                </div>
-
-                <!-- Password -->
-                
-
-            <div class="relative">
-        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-        <input id="password" name="password" type="password" placeholder="Enter Password" class="input-field pr-10" onblur="validateField(this, 'password')" required>
-        <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
-            👁
-        </button>
-        <div id="password_message" class="validation-message"></div>
-        </div>
-
-    <!-- Confirm Password -->
-
-    <div class="relative">
-        <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-        <input id="confirm_password" name="confirm_password" type="password" placeholder="Confirm Password" class="input-field pr-10" onblur="validateField(this, 'confirm_password')" required>
-        <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-2 top-1/2 w-5 transform -translate-y-1/2 text-gray-400">
-            👁
-        </button>
-        <div id="confirm_password_message" class="validation-message"></div>
-    </div>
-    </div>
-
-            <!-- GRID END -->
-
-            <!-- Terms -->
-            <div class="flex items-start mt-4">
-                <input id="terms-check" name="agree" type="checkbox"
-                    class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1" required>
-                <label for="terms-check" class="ml-2 text-gray-400 text-sm">
-                    I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
-                    and Privacy Policy.
-                </label>
-            </div>
-
-        <button type="submit" id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
-        Register
-        </button>
-        </form>
-
-
-        <p class="text-center text-gray-300 mt-4">
-            Already have an account?
-            <button onclick="openLoginModal()" class="text-primary-red">Sign In</button>
-        </p>
-    
-</div>
-
-
-<!-- ============================================= -->
-<!--            FORGOT PASSWORD MODAL              -->
-<!-- ============================================= -->
-<div id="forgot-modal"
-     class="fixed inset-0 bg-black bg-opacity-80 hidden z-[220] flex items-center justify-center p-4"
-     onclick="closeForgotModal(event)">
-
-    <div onclick="event.stopPropagation()"
-         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40 modal-enter">
-
-        <h2 class="text-xl font-bold text-white mb-4">Reset Password</h2>
-
-        <input type="email" class="input-field" placeholder="Enter Email">
-
-        <button class="w-full bg-primary-red py-3 rounded-lg font-bold text-white">Send Reset Link</button>
-    </div>
-</div>
-
-<!-- ============================================= -->
-<!--                JAVASCRIPT                     -->
-<!-- ============================================= -->
-
-<script>
-function openLoginModal(){ 
-    const modal = document.getElementById("login-modal");
-    modal.classList.remove("hidden"); 
-    modal.querySelector('.modal-enter').classList.add('modal-enter');
-}
-
-function closeLoginModal(e){ 
-    if(!e || e.target.id==="login-modal") {
-        const modal = document.getElementById("login-modal");
-        modal.classList.add("hidden"); 
-    }
-}
-
-function openRegisterModal(){ 
-    closeLoginModal(); 
-    const modal = document.getElementById("register-modal");
-    modal.classList.remove("hidden");
-    modal.querySelector('.modal-enter').classList.add('modal-enter');
-}
-
-function closeRegisterModal(e){ 
-    if(!e || e.target.id==="register-modal") {
-        const modal = document.getElementById("register-modal");
-        modal.classList.add("hidden");
-    }
-}
-
-function openForgotModal(){ 
-    closeLoginModal(); 
-    const modal = document.getElementById("forgot-modal");
-    modal.classList.remove("hidden");
-    modal.querySelector('.modal-enter').classList.add('modal-enter');
-}
-
-function closeForgotModal(e){ 
-    if(!e || e.target.id==="forgot-modal") {
-        const modal = document.getElementById("forgot-modal");
-        modal.classList.add("hidden");
-    }
-}
-
-// Image preview function
-function previewImage(input) {
-    const preview = document.getElementById('image-preview');
-    const file = input.files[0];
-    
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.add('show');
-        }
-        reader.readAsDataURL(file);
-    } else {
-        preview.classList.remove('show');
-    }
-}
-
-// Validation Functions
-function validateField(input, fieldType) {
-    const value = input.value.trim();
-    const messageEl = document.getElementById(fieldType + '_message');
-    let isValid = true;
-    let message = '';
-
-    // Clear previous styles
-    input.classList.remove('error', 'success');
-    messageEl.classList.remove('show', 'error', 'success');
-
-    switch(fieldType) {
-        case 'first_name':
-        case 'last_name':
-            if (!value) {
-                message = 'This field is required';
-                isValid = false;
-            } else if (!/^[a-zA-Z]{2,30}$/.test(value)) {
-                message = 'Name must contain only letters (2-30 characters)';
-                isValid = false;
-            } else {
-                message = 'Looks good!';
-            }
-            break;
-
-        case 'email':
-            if (!value) {
-                message = 'Email is required';
-                isValid = false;
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-                message = 'Please enter a valid email address';
-                isValid = false;
-            } else {
-                message = 'Valid email format!';
-            }
-            break;
-
-        case 'username':
-            if (!value) {
-                message = 'Username is required';
-                isValid = false;
-            } else if (value.length < 5) {
-                message = 'Username must be at least 5 characters long';
-                isValid = false;
-            } else {
-                message = 'Username looks good!';
-            }
-            break;
-
-        case 'birthday':
-            if (!value) {
-                message = 'Birthday is required';
-                isValid = false;
-            } else {
-                const dob = new Date(value);
-                const now = new Date();
-                const age = now.getFullYear() - dob.getFullYear();
-                if (age < 13) {
-                    message = 'You must be at least 13 years old';
-                    isValid = false;
-                } else {
-                    message = 'Age verified!';
-                }
-            }
-            break;
-
-        case 'country':
-            if (!value || value === 'Select Country') {
-                message = 'Please select your country';
-                isValid = false;
-            } else {
-                message = 'Country selected!';
-            }
-            break;
-
-        case 'password':
-            if (!value) {
-                message = 'Password is required';
-                isValid = false;
-            } else if (value.length < 8) {
-                message = 'Password must be at least 8 characters long';
-                isValid = false;
-            } else {
-                message = 'Strong password!';
-            }
-            break;
-
-        case 'confirm_password':
-            const password = document.getElementById('password').value;
-            if (!value) {
-                message = 'Please confirm your password';
-                isValid = false;
-            } else if (value !== password) {
-                message = 'Passwords do not match';
-                isValid = false;
-            } else {
-                message = 'Passwords match!';
-            }
-            break;
-    }
-
-    // Apply styles and show message
-    if (value) { // Only show validation if user has entered something
-        input.classList.add(isValid ? 'success' : 'error');
-        messageEl.textContent = message;
-        messageEl.classList.add('show', isValid ? 'success' : 'error');
-    }
-
-    return isValid;
-}
-
-
-const countries = [
-    "Select Country","Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
-    "Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
-    "Belize","Benin","Bhutan","Bolivia","Bosnia & Herzegovina","Botswana","Brazil","Brunei",
-    "Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde",
-    "Central African Republic","Chad","Chile","China","Colombia","Comoros","Congo",
-    "Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark","Djibouti","Dominica",
-    "Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea",
-    "Estonia","Eswatini","Ethiopia","Fiji","Finland","France","Gabon","Gambia","Georgia",
-    "Germany","Ghana","Greece","Grenada","Guatemala","Guinea","Guinea-Bissau","Guyana",
-    "Haiti","Honduras","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland",
-    "Israel","Italy","Jamaica","Japan","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait",
-    "Kyrgyzstan","Laos","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein",
-    "Lithuania","Luxembourg","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta",
-    "Marshall Islands","Mauritania","Mauritius","Mexico","Micronesia","Moldova","Monaco",
-    "Mongolia","Montenegro","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal",
-    "Netherlands","New Zealand","Nicaragua","Niger","Nigeria","North Korea","North Macedonia",
-    "Norway","Oman","Pakistan","Palau","Panama","Papua New Guinea","Paraguay","Peru",
-    "Philippines","Poland","Portugal","Qatar","Romania","Russia","Rwanda","Saint Lucia",
-    "Samoa","San Marino","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone",
-    "Singapore","Slovakia","Slovenia","Somalia","South Africa","South Korea","South Sudan",
-    "Spain","Sri Lanka","Sudan","Suriname","Sweden","Switzerland","Syria","Taiwan",
-    "Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tonga","Trinidad & Tobago",
-    "Tunisia","Turkey","Turkmenistan","Tuvalu","Uganda","Ukraine","United Arab Emirates",
-    "United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Vatican City",
-    "Venezuela","Vietnam","Yemen","Zambia","Zimbabwe"
-];
-
-const select = document.getElementById("countrySelect");
-
-countries.forEach(country => {
-    let option = document.createElement("option");
-    option.value = country;
-    option.textContent = country;
-    select.appendChild(option);
-});
-
-// Register form submission
-document.getElementById("register-form").addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    // Add loading state
-    const btn = document.getElementById("registerBtn");
-    btn.classList.add('btn-loading');
-    btn.textContent = '';
-
-    let inputs = document.querySelectorAll("#register-modal .input-field");
-
-    // Validate all fields before submission
-    let allValid = true;
-    const fieldsToValidate = ['first_name', 'last_name', 'email', 'username', 'birthday', 'password', 'confirm_password'];
-    
-    fieldsToValidate.forEach(fieldId => {
-        const input = document.getElementById(fieldId);
-        if (!validateField(input, fieldId)) {
-            allValid = false;
-        }
-    });
-
-    // Validate country
-    const countrySelect = document.getElementById("countrySelect");
-    if (!validateField(countrySelect, 'country')) {
-        allValid = false;
-    }
-
-    // Check terms agreement
-    const termsCheck = document.getElementById("terms-check");
-    if (!termsCheck.checked) {
-        allValid = false;
-        Swal.fire({
-            icon: 'error',
-            title: 'Terms Required',
-            text: 'You must agree to the Terms of Service and Privacy Policy',
-            confirmButtonColor: "#E50914"
-        });
-        btn.classList.remove('btn-loading');
-        btn.textContent = 'Register';
-        return;
-    }
-
-    if (!allValid) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Validation Error',
-            text: 'Please fix the errors in the form before submitting',
-            confirmButtonColor: "#E50914"
-        });
-        btn.classList.remove('btn-loading');
-        btn.textContent = 'Register';
-        return;
-    }
-
-    // Create FormData for file upload
-    let data = new FormData(this);
-
-    fetch("../library/registerBackend.php", {
-        method: "POST",
-        body: data
-    })
-    .then(res => res.text())
-    .then(text => {
-        console.log("RAW:", text);
-
-        let data;
-        try { data = JSON.parse(text); }
-        catch (e) {
-            Swal.fire({
-                icon: "error",
-                title: "Server Error",
-                text: "Invalid server response. Please try again.",
-                confirmButtonColor: "#E50914"
-            });
-            return;
-        }
-
-        if (data.status === "success") {
-            Swal.fire({
-                icon: "success",
-                title: "🎉 Congratulations!",
-                text: data.message,
-                confirmButtonColor: "#E50914",
-                confirmButtonText: "Continue to Login",
-                showClass: {
-                    popup: 'animate__animated animate__fadeInUp'
-                }
-            }).then(() => {
-                // Clear form
-                document.getElementById("register-form").reset();
-                document.getElementById("countrySelect").value = "Select Country";
-                document.getElementById("image-preview").classList.remove('show');
-                
-                // Clear all validation messages
-                document.querySelectorAll('.validation-message').forEach(msg => {
-                    msg.classList.remove('show', 'error', 'success');
-                });
-                document.querySelectorAll('.input-field').forEach(input => {
-                    input.classList.remove('error', 'success');
-                });
-
-                closeRegisterModal();
-                
-                // Open login modal with a slight delay for smooth transition
-                setTimeout(() => {
-                    openLoginModal();
-                }, 300);
-            });
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "Registration Failed",
-                text: data.message,
-                confirmButtonColor: "#E50914"
-            });
-        }
-    })
-    .catch(err => {
-        Swal.fire({
-            icon: "error",
-            title: "Network Error",
-            text: "Could not reach server. Please check your connection and try again.",
-            confirmButtonColor: "#E50914"
-        });
-        console.error(err);
-    })
-    .finally(() => {
-        // Remove loading state
-        btn.classList.remove('btn-loading');
-        btn.textContent = 'Register';
-    });
-});
-
-// Login form submission
-document.getElementById("login-btn").addEventListener("click", function (e) {
-    e.preventDefault();
-
-    // Add loading state
-    const btn = this;
-    btn.classList.add('btn-loading');
-    btn.textContent = '';
-
-    const identifier = document.getElementById("login-identifier").value.trim();
-    const password = document.getElementById("login-password").value.trim();
-
-    if (!identifier || !password) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Missing Information',
-            text: 'Please enter both username/email and password',
-            confirmButtonColor: "#E50914"
-        });
-        btn.classList.remove('btn-loading');
-        btn.textContent = 'Log In';
-        return;
-    }
-
-    let data = new FormData();
-    data.append("identifier", identifier);
-    data.append("password", password);
-
-    fetch("../library/logingBackend.php", {
-        method: "POST",
-        body: data
-    })
-    .then(res => res.text())
-    .then(text => {
-        console.log("RAW:", text);
-
-        let data;
-        try { data = JSON.parse(text); }
-        catch (e) {
-            Swal.fire({
-                icon: "error",
-                title: "Server Error",
-                text: "Invalid server response. Please try again.",
-                confirmButtonColor: "#E50914"
-            });
-            return;
-        }
-
-        if (data.status === "success") {
-            // Update global user state
-            currentUser = data.user;
-            isLoggedIn = true;
             
-            Swal.fire({
-                icon: "success",
-                title: "🎬 Welcome to MovieLab!",
-                text: data.message,
-                confirmButtonColor: "#E50914",
-                confirmButtonText: "Let's Go!",
-                showClass: {
-                    popup: 'animate__animated animate__fadeInUp'
-                }
-            }).then(() => {
-                // Clear form
-                document.getElementById("login-identifier").value = "";
-                document.getElementById("login-password").value = "";
-                
-                closeLoginModal();
-                updateNavbarForLoggedInUser();
-                
-                // Redirect to home page
-                window.location.href = "../Site/index.php";
-            });
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "Login Failed",
-                text: data.message,
-                confirmButtonColor: "#E50914"
-            });
-        }
-    })
-    .catch(err => {
-        Swal.fire({
-            icon: "error",
-            title: "Network Error",
-            text: "Could not reach server. Please check your connection and try again.",
-            confirmButtonColor: "#E50914"
-        });
-        console.error(err);
-    })
-    .finally(() => {
-        // Remove loading state
-        btn.classList.remove('btn-loading');
-        btn.textContent = 'Log In';
-    });
-});
+        </div>
+    </div>
+    <div id="update-profile-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 overflow-y-auto" onclick="closeUpdateProfileModal(event)">
+        <div class="modal-content bg-dark-bg rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-lg transform transition-all duration-300 border border-primary-red/50 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            
+            <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-6 sticky top-0 bg-dark-bg z-10">
+                <h2 class="text-3xl font-bold text-white text-glow-red">Update Profile</h2>
+                <button onclick="closeUpdateProfileModal()" class="text-gray-400 hover:text-primary-red transition duration-200 p-2 close-btn">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
 
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    if (field.type === "password") {
-        field.type = "text";
-    } else {
-        field.type = "password";
-    }
-}
+            <form id="update-profile-form" method="POST" enctype="multipart/form-data">
+                <div class="space-y-6">
 
-</script>
-   
+                    <div class="flex flex-col items-center">
+                        <img id="up_image_preview" src="https://via.placeholder.com/100x100/222222/FFFFFF?text=No+Image" alt="Profile Preview" class="image-preview show ring-offset-dark-bg ring-offset-2">
+                        <div class="mt-4">
+                            <label for="up_profile_image" class="cursor-pointer bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium py-2 px-4 rounded-md transition duration-200">
+                                Change Profile Image
+                            </label>
+                            <input type="file" id="up_profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewUpdateImage(this)">
+                            <input type="hidden" name="current_image" id="up_current_image"> </div>
+                        <small class="text-gray-500 mt-2">Max 1MB (JPG, PNG, GIF)</small>
+                    </div>
 
+                    <hr class="border-gray-700"> <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1" for="up_first_name">First Name</label>
+                            <input id="up_first_name" name="first_name" type="text" placeholder="First Name" class="input-field" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1" for="up_last_name">Last Name</label>
+                            <input id="up_last_name" name="last_name" type="text" placeholder="Last Name" class="input-field" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1" for="up_username">Username</label>
+                        <input id="up_username" name="username" type="text" placeholder="Username" class="input-field" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1" for="up_email">Email</label>
+                        <input id="up_email" name="email" type="email" placeholder="Email Address" class="input-field" required>
+                    </div>
+
+                    <hr class="border-gray-700 my-8">
+                    
+                    <h3 class="text-xl font-semibold text-primary-red mb-4 border-l-4 border-primary-red pl-3">Password Change</h3>
+                    
+                    <!-- <p class="text-sm text-gray-400 mb-6 bg-dark-card p-3 rounded-md border border-gray-700">
+                        Only fill these fields if you want to change your password. <span class="text-primary-red font-semibold">Current Password is required to change it.</span>
+                    </p> -->
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1" for="up_current_password">Current Password</label>
+                        <input id="up_current_password" name="current_password" type="password" placeholder="Your Current Password" class="input-field">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1" for="up_password">New Password</label>
+                            <input id="up_password" name="password" type="password" placeholder="New Password" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1" for="up_confirm_password">Confirm Password</label>
+                            <input id="up_confirm_password" name="confirm_password" type="password" placeholder="Confirm New Password" class="input-field">
+                        </div>
+                    </div>
+
+                    <button id="update-profile-btn" type="submit" class="w-full pro-button-gradient text-white font-bold py-3 rounded-lg shadow-xl shadow-primary-red/20 hover:shadow-primary-red/50 transition duration-300 uppercase tracking-wider mt-8">
+                        Update Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="../Site/js/modalHandler.js"></script>
+    <script src="../Site/js/registration.js"></script>
 </body>
 </html>
- </header>
-
-
-<div class="mid_container" style="height:auto;">
-    

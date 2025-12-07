@@ -9,6 +9,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
             "first_name" => $_SESSION['first_name'],
             "last_name" => $_SESSION['last_name'],
             "username" => $_SESSION['username'],
+            "email" => $_SESSION['email'],
             "user_type" => $_SESSION['user_type'],
             "profile_image" => $_SESSION['profile_image'] ?? null
         ]
