@@ -961,4 +961,4 @@ function getActivityIcon($activityType) {
         });
     </script>
 </body>
-</html>
+</html> 

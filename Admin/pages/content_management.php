@@ -7,102 +7,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit();
 }
 
-// Session timeout (30 minutes)
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php?error=session_expired');
-    exit();
-}
-$_SESSION['last_activity'] = time();
-
-$admin_username = $_SESSION['admin_username'] ?? 'Admin';
-
 include("../include/header.php");
-
-// Database connection
-require_once '../include/connection.php';
-
-// Handle delete action
-if (isset($_GET['delete_id']) && isset($_GET['type'])) {
-    $delete_id = $_GET['delete_id'];
-    $type = $_GET['type'];
-    
-    try {
-        if ($type === 'movie') {
-            $stmt = $pdo->prepare("DELETE FROM movies WHERE movie_id = ?");
-        } elseif ($type === 'song') {
-            $stmt = $pdo->prepare("DELETE FROM songs WHERE song_id = ?");
-        }
-        
-        $stmt->execute([$delete_id]);
-        $success_message = "Content deleted successfully!";
-    } catch (PDOException $e) {
-        $error_message = "Error deleting content: " . $e->getMessage();
-    }
-}
-
-// Fetch content from database
-try {
-    // Get all movies
-    $movies_stmt = $pdo->prepare("
-        SELECT movie_id, title, description, release_year, genre, rating, duration, poster_image, 
-               COALESCE(view_count, 0) as views 
-        FROM movies 
-        ORDER BY created_at DESC
-    ");
-    $movies_stmt->execute();
-    $movies = $movies_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Get all songs
-    $songs_stmt = $pdo->prepare("
-        SELECT song_id, title, artist, album, genre, duration, language, cover_image, 
-               COALESCE(view_count, 0) as views 
-        FROM songs 
-        ORDER BY created_at DESC
-    ");
-    $songs_stmt->execute();
-    $songs = $songs_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Combine all content
-    $all_content = [];
-    
-    foreach ($movies as $movie) {
-        $all_content[] = [
-            'type' => 'movie',
-            'id' => $movie['movie_id'],
-            'title' => $movie['title'],
-            'description' => $movie['description'],
-            'genre' => $movie['genre'],
-            'year' => $movie['release_year'],
-            'duration' => $movie['duration'],
-            'rating' => $movie['rating'],
-            'views' => $movie['views'],
-            'image' => $movie['poster_image']
-        ];
-    }
-    
-    foreach ($songs as $song) {
-        $all_content[] = [
-            'type' => 'song',
-            'id' => $song['song_id'],
-            'title' => $song['title'],
-            'description' => $song['album'] . ' - ' . $song['artist'],
-            'genre' => $song['genre'],
-            'year' => null,
-            'duration' => $song['duration'],
-            'rating' => null,
-            'views' => $song['views'],
-            'image' => $song['cover_image'],
-            'artist' => $song['artist']
-        ];
-    }
-
-} catch (PDOException $e) {
-    error_log("Content management error: " . $e->getMessage());
-    $all_content = [];
-    $error_message = "Error loading content from database.";
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -286,9 +191,14 @@ try {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 6px;
-            color: var(--text-light);
+            color: #ffffff; /* White text */
             font-size: 14px;
             cursor: pointer;
+        }
+
+        .filter-select option {
+            background-color: var(--card-bg);
+            color: #ffffff; /* White text for options */
         }
 
         .filter-select:focus {
@@ -461,6 +371,28 @@ try {
             color: var(--text-light);
         }
 
+        /* Loading State */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+            grid-column: 1 / -1;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 1024px) {
             .content-grid {
@@ -537,43 +469,31 @@ try {
         <div class="page-header">
             <h1 class="page-title">Content Management</h1>
             <div class="header-actions">
-                <button class="btn btn-secondary">
+                <button class="btn btn-secondary" id="exportBtn">
                     <i class="fas fa-download"></i>
                     Export
                 </button>
-                <a href="../library/add-content.php" class="btn btn-primary">
+                <a href="add-content.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add New Content
                 </a>
             </div>
         </div>
 
-        <!-- Alerts -->
-        <?php if (isset($success_message)): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo $success_message; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($error_message)): ?>
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo $error_message; ?>
-            </div>
-        <?php endif; ?>
+        <!-- Alerts Container -->
+        <div id="alertsContainer"></div>
 
         <!-- Filters Section -->
         <div class="filters-section">
             <div class="search-box">
-                <input type="text" class="search-input" placeholder="Search movies, songs...">
-                <button class="btn btn-primary">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search movies, songs...">
+                <button class="btn btn-primary" id="searchBtn">
                     <i class="fas fa-search"></i>
                     Search
                 </button>
-                <button class="btn btn-secondary">
-                    <i class="fas fa-filter"></i>
-                    Filters
+                <button class="btn btn-secondary" id="resetFiltersBtn">
+                    <i class="fas fa-redo"></i>
+                    Reset
                 </button>
             </div>
             <div class="filter-grid">
@@ -589,15 +509,7 @@ try {
                     <label class="filter-label">Genre</label>
                     <select class="filter-select" id="genreFilter">
                         <option value="">All Genres</option>
-                        <option value="Action">Action</option>
-                        <option value="Drama">Drama</option>
-                        <option value="Comedy">Comedy</option>
-                        <option value="Romance">Romance</option>
-                        <option value="Thriller">Thriller</option>
-                        <option value="Sci-Fi">Sci-Fi</option>
-                        <option value="Pop">Pop</option>
-                        <option value="Rock">Rock</option>
-                        <option value="Reggaeton">Reggaeton</option>
+                        <!-- Genres will be loaded dynamically -->
                     </select>
                 </div>
                 <div class="filter-group">
@@ -614,132 +526,318 @@ try {
 
         <!-- Content Grid -->
         <div class="content-grid" id="contentGrid">
-            <?php if (!empty($all_content)): ?>
-                <?php foreach ($all_content as $content): ?>
-                    <div class="content-card" data-type="<?php echo $content['type']; ?>" data-genre="<?php echo $content['genre']; ?>">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading content...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allContent = [];
+        let genres = [];
+        let filteredContent = [];
+
+        // Load content from backend
+        async function loadContent() {
+            try {
+                const response = await fetch('content-management-backend.php');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allContent = data.content;
+                    genres = data.genres;
+                    
+                    // Display alerts if any
+                    displayAlerts(data);
+                    
+                    // Populate genre filter
+                    populateGenreFilter();
+                    
+                    // Display content
+                    displayContent(allContent);
+                    
+                    // Apply initial filters
+                    applyFilters();
+                } else {
+                    showError(data.error_message || 'Failed to load content');
+                    displayContent([]);
+                }
+            } catch (error) {
+                console.error('Error loading content:', error);
+                showError('Failed to load content. Please try again.');
+                displayContent([]);
+            }
+        }
+
+        // Display alerts
+        function displayAlerts(data) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            alertsContainer.innerHTML = '';
+            
+            if (data.success_message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success';
+                alertDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.success_message}`;
+                alertsContainer.appendChild(alertDiv);
+                
+                // Auto-remove alert after 5 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+            
+            if (data.error_message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.error_message}`;
+                alertsContainer.appendChild(alertDiv);
+                
+                // Auto-remove alert after 5 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+        }
+
+        // Populate genre filter
+        function populateGenreFilter() {
+            const genreFilter = document.getElementById('genreFilter');
+            
+            // Clear existing options except the first one
+            while (genreFilter.options.length > 1) {
+                genreFilter.remove(1);
+            }
+            
+            // Add genres from database
+            genres.forEach(genre => {
+                if (genre && genre.trim() !== '') {
+                    const option = document.createElement('option');
+                    option.value = genre;
+                    option.textContent = genre;
+                    genreFilter.appendChild(option);
+                }
+            });
+            
+            // If no genres from database, add default ones
+            if (genres.length === 0) {
+                const defaultGenres = ['Action', 'Drama', 'Comedy', 'Romance', 'Thriller', 'Sci-Fi', 'Pop', 'Rock', 'Reggaeton'];
+                defaultGenres.forEach(genre => {
+                    const option = document.createElement('option');
+                    option.value = genre;
+                    option.textContent = genre;
+                    genreFilter.appendChild(option);
+                });
+            }
+        }
+
+        // Display content
+        function displayContent(contentArray) {
+            const contentGrid = document.getElementById('contentGrid');
+            
+            if (contentArray.length === 0) {
+                contentGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-film"></i>
+                        <h3>No Content Found</h3>
+                        <p>There is no content matching your criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let contentHTML = '';
+            
+            contentArray.forEach(content => {
+                const durationFormatted = content.duration ? formatDuration(content.duration) : 'N/A';
+                const imageSrc = content.image || '';
+                const description = content.description || (content.type === 'movie' ? 'No description available.' : 'No album information.');
+                
+                contentHTML += `
+                    <div class="content-card" data-type="${content.type}" data-genre="${content.genre || ''}">
                         <div class="content-poster">
-                            <?php if ($content['image']): ?>
-                                <img src="<?php echo htmlspecialchars($content['image']); ?>" alt="<?php echo htmlspecialchars($content['title']); ?>">
-                            <?php else: ?>
-                                <i class="fas fa-<?php echo $content['type'] === 'movie' ? 'film' : 'music'; ?>"></i>
-                            <?php endif; ?>
-                            <span class="content-type <?php echo $content['type']; ?>">
-                                <?php echo ucfirst($content['type']); ?>
+                            ${imageSrc ? `<img src="${imageSrc}" alt="${content.title}">` : `<i class="fas fa-${content.type === 'movie' ? 'film' : 'music'}"></i>`}
+                            <span class="content-type ${content.type}">
+                                ${content.type.charAt(0).toUpperCase() + content.type.slice(1)}
                             </span>
                         </div>
                         <div class="content-info">
-                            <h3 class="content-title"><?php echo htmlspecialchars($content['title']); ?></h3>
+                            <h3 class="content-title">${escapeHtml(content.title)}</h3>
                             <div class="content-meta">
                                 <span class="meta-item">
-                                    <i class="fas fa-<?php echo $content['type'] === 'movie' ? 'film' : 'music'; ?>"></i>
-                                    <?php echo ucfirst($content['type']); ?>
+                                    <i class="fas fa-${content.type === 'movie' ? 'film' : 'music'}"></i>
+                                    ${content.type.charAt(0).toUpperCase() + content.type.slice(1)}
                                 </span>
-                                <?php if ($content['duration']): ?>
-                                    <span class="meta-item">
-                                        <i class="fas fa-clock"></i>
-                                        <?php echo gmdate("H:i", $content['duration']); ?>
-                                    </span>
-                                <?php endif; ?>
+                                <span class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    ${durationFormatted}
+                                </span>
                                 <span class="meta-item">
                                     <i class="fas fa-eye"></i>
-                                    <?php echo number_format($content['views']); ?>
+                                    ${content.views.toLocaleString()}
                                 </span>
                             </div>
-                            <p class="content-description">
-                                <?php 
-                                if ($content['type'] === 'movie') {
-                                    echo htmlspecialchars($content['description'] ?: 'No description available.');
-                                } else {
-                                    echo htmlspecialchars($content['description'] ?: 'No album information.');
-                                }
-                                ?>
-                            </p>
+                            <p class="content-description">${escapeHtml(description)}</p>
                             <div class="content-actions">
-                                <a href="edit-content.php?type=<?php echo $content['type']; ?>&id=<?php echo $content['id']; ?>" class="btn btn-sm btn-edit">
+                                <a href="edit-content.php?type=${content.type}&id=${content.id}" class="btn btn-sm btn-edit">
                                     <i class="fas fa-edit"></i>
                                     Edit
                                 </a>
-                                <button class="btn btn-sm btn-view">
+                                <button class="btn btn-sm btn-view" onclick="viewContent('${content.type}', '${content.id}')">
                                     <i class="fas fa-eye"></i>
                                     View
                                 </button>
-                                <a href="?delete_id=<?php echo $content['id']; ?>&type=<?php echo $content['type']; ?>" 
+                                <a href="?delete_id=${content.id}&type=${content.type}" 
                                    class="btn btn-sm btn-delete" 
-                                   onclick="return confirm('Are you sure you want to delete <?php echo htmlspecialchars($content['title']); ?>?')">
+                                   onclick="return confirmDelete('${escapeSingleQuotes(content.title)}', '${content.type}')">
                                     <i class="fas fa-trash"></i>
                                     Delete
                                 </a>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="empty-state">
-                    <i class="fas fa-film"></i>
-                    <h3>No Content Found</h3>
-                    <p>There is no content in the database. Start by adding some content.</p>
-                    <a href="../library/add-content.php" class="btn btn-primary" style="margin-top: 15px;">
-                        <i class="fas fa-plus"></i>
-                        Add New Content
-                    </a>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <script>
-        // Search functionality
-        document.querySelector('.search-input').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const contentCards = document.querySelectorAll('.content-card');
-            
-            contentCards.forEach(card => {
-                const title = card.querySelector('.content-title').textContent.toLowerCase();
-                const description = card.querySelector('.content-description').textContent.toLowerCase();
-                
-                if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                `;
             });
-        });
+            
+            contentGrid.innerHTML = contentHTML;
+        }
 
-        // Filter functionality
+        // Format duration from seconds to HH:MM
+        function formatDuration(seconds) {
+            if (!seconds) return 'N/A';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}`;
+            }
+            return `${minutes}:00`;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Escape single quotes for JavaScript
+        function escapeSingleQuotes(text) {
+            return text.replace(/'/g, "\\'");
+        }
+
+        // Apply filters
         function applyFilters() {
             const contentType = document.getElementById('contentTypeFilter').value;
             const genre = document.getElementById('genreFilter').value;
-            const contentCards = document.querySelectorAll('.content-card');
+            const sortBy = document.getElementById('sortFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             
-            contentCards.forEach(card => {
-                const cardType = card.getAttribute('data-type');
-                const cardGenre = card.getAttribute('data-genre');
-                let showCard = true;
-                
-                if (contentType && cardType !== contentType) {
-                    showCard = false;
+            // Filter content
+            filteredContent = allContent.filter(content => {
+                // Content type filter
+                if (contentType && content.type !== contentType) {
+                    return false;
                 }
                 
-                if (genre && cardGenre !== genre) {
-                    showCard = false;
+                // Genre filter
+                if (genre && content.genre !== genre) {
+                    return false;
                 }
                 
-                card.style.display = showCard ? 'block' : 'none';
+                // Search filter
+                if (searchTerm) {
+                    const titleMatch = content.title.toLowerCase().includes(searchTerm);
+                    const descMatch = content.description.toLowerCase().includes(searchTerm);
+                    const genreMatch = content.genre && content.genre.toLowerCase().includes(searchTerm);
+                    
+                    if (!titleMatch && !descMatch && !genreMatch) {
+                        return false;
+                    }
+                }
+                
+                return true;
             });
+            
+            // Sort content
+            sortContent(filteredContent, sortBy);
+            
+            // Display filtered content
+            displayContent(filteredContent);
         }
 
+        // Sort content
+        function sortContent(contentArray, sortBy) {
+            switch (sortBy) {
+                case 'title':
+                    contentArray.sort((a, b) => a.title.localeCompare(b.title));
+                    break;
+                case 'views':
+                    contentArray.sort((a, b) => b.views - a.views);
+                    break;
+                case 'oldest':
+                    // Assuming newer content is at the beginning of the array
+                    contentArray.reverse();
+                    break;
+                case 'newest':
+                default:
+                    // Keep as is (newest first)
+                    break;
+            }
+        }
+
+        // View content
+        function viewContent(type, id) {
+            // You can implement view functionality here
+            // For now, show an alert
+            alert(`Viewing ${type} with ID: ${id}`);
+            // Example: window.location.href = `view-content.php?type=${type}&id=${id}`;
+        }
+
+        // Confirm delete
+        function confirmDelete(title, type) {
+            return confirm(`Are you sure you want to delete "${title}" (${type})?`);
+        }
+
+        // Show error
+        function showError(message) {
+            const alertsContainer = document.getElementById('alertsContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-error';
+            alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            alertsContainer.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            // Implement export functionality
+            alert('Export functionality would be implemented here.');
+        });
+
+        // Reset filters
+        document.getElementById('resetFiltersBtn').addEventListener('click', function() {
+            document.getElementById('contentTypeFilter').value = '';
+            document.getElementById('genreFilter').value = '';
+            document.getElementById('sortFilter').value = 'newest';
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        });
+
+        // Event listeners for filters
         document.getElementById('contentTypeFilter').addEventListener('change', applyFilters);
         document.getElementById('genreFilter').addEventListener('change', applyFilters);
         document.getElementById('sortFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('searchBtn').addEventListener('click', applyFilters);
 
-        // View button functionality
-        document.querySelectorAll('.btn-view').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const contentTitle = this.closest('.content-card').querySelector('.content-title').textContent;
-                alert('Viewing: ' + contentTitle);
-                // Add actual view logic here
-            });
-        });
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadContent);
     </script>
 </body>
 </html>
