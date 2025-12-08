@@ -1,6 +1,5 @@
 <header class="sticky top-0 z-50">
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,11 +8,13 @@
     <title>Movie Lab</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 for beautiful notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* 'Inter' font for modern web apps */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0d0d0d; /* Slightly off-black background */
+            background-color: #0d0d0d; overflow-x: hidden;/* Slightly off-black background */
         }
         /* Custom glow effect for red text/elements (applied to the logo) */
         .text-glow-red {
@@ -98,12 +99,32 @@
             border-radius: 8px;
             border: 1px solid #444;
             outline: none;
+            transition: all 0.3s ease;
         }
         
         .input-field:focus {
             border-color: #E50914;
             box-shadow: 0 0 6px #E50914;
+            transform: translateY(-1px);
         }
+
+        .input-field.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .input-field.success {
+            border-color: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
         /* Custom reCAPTCHA UI box */
         .recaptcha-box {
             background: #f9f9f9;
@@ -113,6 +134,147 @@
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+
+        /* Loading animation for buttons */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal animations */
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+
+        .modal-exit {
+            animation: modalExit 0.3s ease-in;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes modalExit {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+        }
+
+        /* Validation message styles */
+        .validation-message {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .validation-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .validation-message.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .validation-message.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Profile dropdown styles */
+        .profile-dropdown {
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .profile-dropdown.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Profile image styles */
+        .profile-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #E50914;
+        }
+
+        /* Image preview styles */
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #E50914;
+            margin: 10px auto;
+            display: none;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 640px) {
+            .profile-image {
+                width: 32px;
+                height: 32px;
+            }
         }
     </style>
 
@@ -130,6 +292,10 @@
                 }
             }
         }
+
+        // Global variables for user state
+        let currentUser = null;
+        let isLoggedIn = false;
 
         // JavaScript for mobile menu toggle and dropdowns
         function toggleMenu() {
@@ -150,6 +316,12 @@
             dropdown.classList.toggle('hidden');
         }
 
+        // Toggle profile dropdown
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('show');
+        }
+
         // Close dropdown when clicking outside (on the window)
         window.onclick = function(event) {
             // Close all dropdowns if click is not on a dropdown button
@@ -157,6 +329,11 @@
                 document.querySelectorAll('div.absolute[id$="-dropdown"]').forEach(d => {
                     d.classList.add('hidden');
                 });
+                // Close profile dropdown
+                const profileDropdown = document.getElementById('profile-dropdown');
+                if (profileDropdown) {
+                    profileDropdown.classList.remove('show');
+                }
             }
         }
         
@@ -221,6 +398,103 @@
                 // For example: window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
             }
         }
+
+        // Check user session on page load
+        function checkUserSession() {
+            fetch('../library/checkSession.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'logged_in') {
+                        currentUser = data.user;
+                        isLoggedIn = true;
+                        updateNavbarForLoggedInUser();
+                    } else {
+                        isLoggedIn = false;
+                        updateNavbarForGuest();
+                    }
+                })
+                .catch(error => {
+                    console.error('Session check error:', error);
+                    isLoggedIn = false;
+                    updateNavbarForGuest();
+                });
+        }
+
+        // Update navbar for logged in user
+        function updateNavbarForLoggedInUser() {
+            const signInBtn = document.getElementById('sign-in-btn');
+            const mobileSignInBtn = document.getElementById('mobile-sign-in-btn');
+            const userProfileSection = document.getElementById('user-profile-section');
+            
+            if (signInBtn) signInBtn.style.display = 'none';
+            if (mobileSignInBtn) mobileSignInBtn.style.display = 'none';
+            if (userProfileSection) {
+                userProfileSection.style.display = 'flex';
+                updateUserProfileDisplay();
+            }
+        }
+
+        // Update navbar for guest user
+        function updateNavbarForGuest() {
+            const signInBtn = document.getElementById('sign-in-btn');
+            const mobileSignInBtn = document.getElementById('mobile-sign-in-btn');
+            const userProfileSection = document.getElementById('user-profile-section');
+            
+            if (signInBtn) signInBtn.style.display = 'inline-flex';
+            if (mobileSignInBtn) mobileSignInBtn.style.display = 'block';
+            if (userProfileSection) userProfileSection.style.display = 'none';
+        }
+
+        // Update user profile display
+        function updateUserProfileDisplay() {
+            const profileImg = document.getElementById('user-profile-img');
+            const userName = document.getElementById('user-name-display');
+            
+            if (currentUser) {
+                if (profileImg) {
+                    if (currentUser.profile_image) {
+                        profileImg.src = '../uploads/profile_images/' + currentUser.profile_image;
+                    } else {
+                        profileImg.src = 'https://via.placeholder.com/40x40/E50914/FFFFFF?text=' + currentUser.first_name.charAt(0);
+                    }
+                }
+                if (userName) {
+                    userName.textContent = currentUser.first_name;
+                }
+            }
+        }
+
+        // Logout Function
+        function logout() {
+            fetch('../library/logoutBackend.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    currentUser = null;
+                    isLoggedIn = false;
+                    updateNavbarForGuest();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Logged Out',
+                        text: 'You have been successfully logged out!',
+                        confirmButtonColor: '#E50914'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Logout error:', error);
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserSession();
+        });
     </script>
 </head>
 <body class="min-h-screen">
@@ -412,13 +686,37 @@
                             </svg>
                         </button>
                         
-                        
 
                      <!-- Sign In Link (FIXED → modal now opens) -->
-                    <button onclick="openLoginModal()" 
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50">
+                    <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
                         Sign In
                     </button>
+
+
+                    <!-- User Profile Section (Hidden by default) -->
+                    <div id="user-profile-section" class="relative hidden items-center space-x-3">
+                        <button onclick="toggleProfileDropdown()" class="flex items-center space-x-2 text-white hover:text-primary-red transition duration-300">
+                            <img id="user-profile-img" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="Profile" class="profile-image">
+                            <span id="user-name-display" class="hidden sm:inline text-sm font-medium">User</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-user mr-2"></i>Update Profile
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <hr class="border-gray-600 my-1">
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+                            </button>
+                        </div>
+                    </div>
 
                         <!-- NEW PRO BUTTON (Highlighted, large, on the right, hidden on mobile) -->
                         <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
@@ -469,7 +767,7 @@
 
         <!-- 4. Mobile Menu (Flattened Navigation) -->
         <div class="sm:hidden hidden" id="mobile-menu">
-            <div class="px-2 pt-2 pb-3 space-y-1">
+            <div class="pt-2 pb-3 space-y-1 bg-dark-bg border-t border-primary-red/10 max-h-[calc(100vh-4rem)] overflow-y-auto">
                 <!-- PRO Button for Mobile - Using the new theme color -->
                 <button onclick="openProModal()" class="pro-button-mobile w-full px-3 py-2 text-base font-bold text-white rounded-md transition duration-300 hover:bg-red-700 hover:shadow-lg uppercase tracking-widest sm:hidden">
                     GET PRO ACCESS
@@ -479,7 +777,7 @@
                 
                 <!-- Sign In Mobile Link -->
                  <!-- SIGN IN BUTTON -->
-                <button onclick="openLoginModal()"
+                <button id="mobile-sign-in-btn" onclick="openLoginModal()"
                     class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md">
                     Sign In
                 </button>
@@ -657,7 +955,7 @@
 
     <div onclick="event.stopPropagation()"
      class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto">
+     max-h-[90vh] overflow-y-auto modal-enter">
 
 
         <div class="flex justify-between items-center mb-4">
@@ -667,12 +965,12 @@
 
 
         <!-- EMAIL LOGIN FORM -->
-        <div id="emailLogin">
+        <form id="login-form">
             <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username or Email</label>
-            <input type="email" placeholder="Enter Username or Email" class="input-field">
+            <input id="login-identifier" type="text" placeholder="Enter Username or Email" class="input-field" required>
             <label for="login-password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-            <input type="password" placeholder="Enter Password" class="input-field">
-        </div>
+            <input id="login-password" type="password" placeholder="Enter Password" class="input-field" required>
+        </form>
 
        
         <p class="text-gray-400 mt-2 text-center">
@@ -688,7 +986,7 @@
         </div>
 
         <!-- LOGIN BUTTON -->
-        <button class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
+        <button id="login-btn" class="w-full bg-primary-red text-white py-3 rounded-lg font-bold hover:bg-red-600">
             Log In
         </button>
             <!-- Separator -->
@@ -711,7 +1009,7 @@
             </div>
 
         <p class="text-gray-300 text-center mt-4">
-            Don’t have an account?
+            Don't have an account?
             <button onclick="openRegisterModal()" class="text-primary-red">Register</button>
         </p>
     </div>
@@ -724,57 +1022,130 @@
      class="fixed inset-0 bg-black bg-opacity-80 hidden z-[210] flex items-center justify-center p-4"
      onclick="closeRegisterModal(event)">
 
-   <div onclick="event.stopPropagation()"
-     class="bg-dark-card w-full max-w-md p-6 rounded-xl shadow-xl border border-primary-red/40 
-     max-h-[90vh] overflow-y-auto">
+    <div onclick="event.stopPropagation()"
+     class="bg-dark-card w-full max-w-2xl p-4 rounded-xl shadow-xl border border-primary-red/40 
+     max-h-[90vh] overflow-y-auto modal-enter">
 
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-white mb-4">Create Account</h2>
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="text-xl font-bold text-white mb-2">Create Account</h2>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-primary-red">✖</button>
         </div>
-        
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
-        <input type="text" placeholder="Enter First Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
-        <input type="text" placeholder="Enter Last Name" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Email</label>
-        <input type="email" placeholder="Enter Email" class="input-field">
-        <!-- <input type="text" placeholder="Phone Number" class="input-field"> -->
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Username</label>
-         <input type="text" placeholder="Enter Usename" class="input-field">
-          <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
-         <input type="date" placeholder="Birthday" class="input-field">
 
-          <!-- Country Selector -->
-          <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
-        <select id="countrySelect" class="input-field">
-        <option value="" disabled selected>Select Country</option>
-        </select>
+        <form id="register-form" enctype="multipart/form-data">
+            <!-- Profile Image Upload -->
+            <div class="text-center mb-3">
+                <label class="block text-sm font-medium text-gray-300 mb-2">Profile Image</label>
+                <div class="relative">
+                    <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    <label for="profile_image" class="cursor-pointer block">
+                        <div class="w-20 h-20 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Click to upload</p>
+                    </label>
+                    <img id="image-preview" class="image-preview" alt="Preview">
+                </div>
+            </div>
+
+            <!-- GRID START -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 
 
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
-        <input type="password" placeholder="Enter Password" class="input-field">
-         <label for="login-identifier" class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
-        <input type="password" placeholder="Confirm Password" class="input-field">
+                <!-- First Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">First Name</label>
+                    <input id="first_name" name="first_name" type="text" placeholder="Enter First Name" class="input-field" onblur="validateField(this, 'first_name')" required>
+                    <div id="first_name_message" class="validation-message"></div>
+                </div>
 
-       
+                <!-- Last Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Last Name</label>
+                    <input id="last_name" name="last_name" type="text" placeholder="Enter Last Name" class="input-field" onblur="validateField(this, 'last_name')" required>
+                    <div id="last_name_message" class="validation-message"></div>
+                </div>
 
-        <!-- Terms Checkbox -->
-                    <div class="flex items-start">
-                        <input id="terms-check" type="checkbox" class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1">
-                        <label for="terms-check" class="ml-2 text-gray-400 text-sm">
-                            I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> and Privacy Policy.
-                        </label>
-                    </div>
+                <!-- Email -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                    <input id="email" name="email" type="email" placeholder="Enter Email" class="input-field" onblur="validateField(this, 'email')" required>
+                    <div id="email_message" class="validation-message"></div>
+                </div>
 
-        <button class="w-full bg-primary-red mt-3 py-3 rounded-lg font-bold text-white">Register</button>
+                <!-- Username -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                    <input id="username" name="username" type="text" placeholder="Enter Username" class="input-field" onblur="validateField(this, 'username')" required>
+                    <div id="username_message" class="validation-message"></div>
+                </div>
+
+                <!-- Birthday -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Birthday</label>
+                    <input id="birthday" name="birthday" type="date" class="input-field" onblur="validateField(this, 'birthday')" required>
+                    <div id="birthday_message" class="validation-message"></div>
+                </div>
+
+                <!-- Country -->
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Country</label>
+                    <select id="countrySelect" name="country"
+                class="w-full mt-2 mb-2 bg-[#0d0d0d] text-white p-3 rounded-lg border border-[#444]" onblur="validateField(this, 'country')" required>
+                    </select>
+                    <div id="country_message" class="validation-message"></div>
+                </div>
+
+                <!-- Password -->
+                
+
+            <div class="relative">
+        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter Password" class="input-field pr-10" onblur="validateField(this, 'password')" required>
+        <button type="button" onclick="togglePassword('password')" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+            👁
+        </button>
+        <div id="password_message" class="validation-message"></div>
+        </div>
+
+    <!-- Confirm Password -->
+
+    <div class="relative">
+        <label class="block text-sm font-medium text-gray-300 mb-1">Confirm Password</label>
+        <input id="confirm_password" name="confirm_password" type="password" placeholder="Confirm Password" class="input-field pr-10" onblur="validateField(this, 'confirm_password')" required>
+        <button type="button" onclick="togglePassword('confirm_password')" class="absolute right-2 top-1/2 w-5 transform -translate-y-1/2 text-gray-400">
+            👁
+        </button>
+        <div id="confirm_password_message" class="validation-message"></div>
+    </div>
+    </div>
+
+            <!-- GRID END -->
+
+            <!-- Terms -->
+            <div class="flex items-start mt-4">
+                <input id="terms-check" name="agree" type="checkbox"
+                    class="h-4 w-4 text-primary-red bg-gray-700 border-gray-600 rounded focus:ring-primary-red mt-1" required>
+                <label for="terms-check" class="ml-2 text-gray-400 text-sm">
+                    I agree to the <a href="#" class="text-primary-red hover:text-red-400">Terms of Service</a> 
+                    and Privacy Policy.
+                </label>
+            </div>
+
+        <button type="submit" id="registerBtn" class="w-full bg-primary-red mt-4 py-3 rounded-lg font-bold text-white hover:bg-red-600 transition duration-200">
+        Register
+        </button>
+        </form>
+
 
         <p class="text-center text-gray-300 mt-4">
             Already have an account?
             <button onclick="openLoginModal()" class="text-primary-red">Sign In</button>
         </p>
-    </div>
+    
 </div>
+
 
 <!-- ============================================= -->
 <!--            FORGOT PASSWORD MODAL              -->
@@ -784,7 +1155,7 @@
      onclick="closeForgotModal(event)">
 
     <div onclick="event.stopPropagation()"
-         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40">
+         class="bg-dark-card w-full max-w-md p-6 rounded-xl border border-primary-red/40 modal-enter">
 
         <h2 class="text-xl font-bold text-white mb-4">Reset Password</h2>
 
@@ -794,37 +1165,184 @@
     </div>
 </div>
 
+
 <!-- ============================================= -->
 <!--                JAVASCRIPT                     -->
 <!-- ============================================= -->
 
 <script>
-function openLoginModal(){ document.getElementById("login-modal").classList.remove("hidden"); }
-function closeLoginModal(e){ if(!e || e.target.id==="login-modal") document.getElementById("login-modal").classList.add("hidden"); }
-
-function openRegisterModal(){ closeLoginModal(); document.getElementById("register-modal").classList.remove("hidden"); }
-function closeRegisterModal(e){ if(!e || e.target.id==="register-modal") document.getElementById("register-modal").classList.add("hidden"); }
-
-function openForgotModal(){ closeLoginModal(); document.getElementById("forgot-modal").classList.remove("hidden"); }
-function closeForgotModal(e){ if(!e || e.target.id==="forgot-modal") document.getElementById("forgot-modal").classList.add("hidden"); }
-
-/* SWITCH Tabs */
-function switchToEmail(){
-    document.getElementById("emailLogin").classList.remove("hidden");
-    document.getElementById("phoneLogin").classList.add("hidden");
-    emailTab.classList.add("bg-primary-red","text-white");
-    phoneTab.classList.remove("bg-primary-red","text-white");
+function openLoginModal(){ 
+    const modal = document.getElementById("login-modal");
+    modal.classList.remove("hidden"); 
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
 }
-function switchToPhone(){
-    document.getElementById("emailLogin").classList.add("hidden");
-    document.getElementById("phoneLogin").classList.remove("hidden");
-    phoneTab.classList.add("bg-primary-red","text-white");
-    emailTab.classList.remove("bg-primary-red","text-white");
+
+function closeLoginModal(e){ 
+    if(!e || e.target.id==="login-modal") {
+        const modal = document.getElementById("login-modal");
+        modal.classList.add("hidden"); 
+    }
+}
+
+function openRegisterModal(){ 
+    closeLoginModal(); 
+    const modal = document.getElementById("register-modal");
+    modal.classList.remove("hidden");
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
+}
+
+function closeRegisterModal(e){ 
+    if(!e || e.target.id==="register-modal") {
+        const modal = document.getElementById("register-modal");
+        modal.classList.add("hidden");
+    }
+}
+
+function openForgotModal(){ 
+    closeLoginModal(); 
+    const modal = document.getElementById("forgot-modal");
+    modal.classList.remove("hidden");
+    modal.querySelector('.modal-enter').classList.add('modal-enter');
+}
+
+function closeForgotModal(e){ 
+    if(!e || e.target.id==="forgot-modal") {
+        const modal = document.getElementById("forgot-modal");
+        modal.classList.add("hidden");
+    }
+}
+
+// Image preview function
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    const file = input.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.add('show');
+        }
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.remove('show');
+    }
+}
+
+// Validation Functions
+function validateField(input, fieldType) {
+    const value = input.value.trim();
+    const messageEl = document.getElementById(fieldType + '_message');
+    let isValid = true;
+    let message = '';
+
+    // Clear previous styles
+    input.classList.remove('error', 'success');
+    messageEl.classList.remove('show', 'error', 'success');
+
+    switch(fieldType) {
+        case 'first_name':
+        case 'last_name':
+            if (!value) {
+                message = 'This field is required';
+                isValid = false;
+            } else if (!/^[a-zA-Z]{2,30}$/.test(value)) {
+                message = 'Name must contain only letters (2-30 characters)';
+                isValid = false;
+            } else {
+                message = 'Looks good!';
+            }
+            break;
+
+        case 'email':
+            if (!value) {
+                message = 'Email is required';
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                message = 'Please enter a valid email address';
+                isValid = false;
+            } else {
+                message = 'Valid email format!';
+            }
+            break;
+
+        case 'username':
+            if (!value) {
+                message = 'Username is required';
+                isValid = false;
+            } else if (value.length < 5) {
+                message = 'Username must be at least 5 characters long';
+                isValid = false;
+            } else {
+                message = 'Username looks good!';
+            }
+            break;
+
+        case 'birthday':
+            if (!value) {
+                message = 'Birthday is required';
+                isValid = false;
+            } else {
+                const dob = new Date(value);
+                const now = new Date();
+                const age = now.getFullYear() - dob.getFullYear();
+                if (age < 13) {
+                    message = 'You must be at least 13 years old';
+                    isValid = false;
+                } else {
+                    message = 'Age verified!';
+                }
+            }
+            break;
+
+        case 'country':
+            if (!value || value === 'Select Country') {
+                message = 'Please select your country';
+                isValid = false;
+            } else {
+                message = 'Country selected!';
+            }
+            break;
+
+        case 'password':
+            if (!value) {
+                message = 'Password is required';
+                isValid = false;
+            } else if (value.length < 8) {
+                message = 'Password must be at least 8 characters long';
+                isValid = false;
+            } else {
+                message = 'Strong password!';
+            }
+            break;
+
+        case 'confirm_password':
+            const password = document.getElementById('password').value;
+            if (!value) {
+                message = 'Please confirm your password';
+                isValid = false;
+            } else if (value !== password) {
+                message = 'Passwords do not match';
+                isValid = false;
+            } else {
+                message = 'Passwords match!';
+            }
+            break;
+    }
+
+    // Apply styles and show message
+    if (value) { // Only show validation if user has entered something
+        input.classList.add(isValid ? 'success' : 'error');
+        messageEl.textContent = message;
+        messageEl.classList.add('show', isValid ? 'success' : 'error');
+    }
+
+    return isValid;
 }
 
 
 const countries = [
-    "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
+    "Select Country","Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia","Australia",
     "Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium",
     "Belize","Benin","Bhutan","Bolivia","Bosnia & Herzegovina","Botswana","Brazil","Brunei",
     "Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde",
@@ -860,6 +1378,246 @@ countries.forEach(country => {
     select.appendChild(option);
 });
 
+// Register form submission
+document.getElementById("register-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    // Add loading state
+    const btn = document.getElementById("registerBtn");
+    btn.classList.add('btn-loading');
+    btn.textContent = '';
+
+    let inputs = document.querySelectorAll("#register-modal .input-field");
+
+    // Validate all fields before submission
+    let allValid = true;
+    const fieldsToValidate = ['first_name', 'last_name', 'email', 'username', 'birthday', 'password', 'confirm_password'];
+    
+    fieldsToValidate.forEach(fieldId => {
+        const input = document.getElementById(fieldId);
+        if (!validateField(input, fieldId)) {
+            allValid = false;
+        }
+    });
+
+    // Validate country
+    const countrySelect = document.getElementById("countrySelect");
+    if (!validateField(countrySelect, 'country')) {
+        allValid = false;
+    }
+
+    // Check terms agreement
+    const termsCheck = document.getElementById("terms-check");
+    if (!termsCheck.checked) {
+        allValid = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'Terms Required',
+            text: 'You must agree to the Terms of Service and Privacy Policy',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+        return;
+    }
+
+    if (!allValid) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please fix the errors in the form before submitting',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+        return;
+    }
+
+    // Create FormData for file upload
+    let data = new FormData(this);
+
+    fetch("../library/registerBackend.php", {
+        method: "POST",
+        body: data
+    })
+    .then(res => res.text())
+    .then(text => {
+        console.log("RAW:", text);
+
+        let data;
+        try { data = JSON.parse(text); }
+        catch (e) {
+            Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: "Invalid server response. Please try again.",
+                confirmButtonColor: "#E50914"
+            });
+            return;
+        }
+
+        if (data.status === "success") {
+            Swal.fire({
+                icon: "success",
+                title: "🎉 Congratulations!",
+                text: data.message,
+                confirmButtonColor: "#E50914",
+                confirmButtonText: "Continue to Login",
+                showClass: {
+                    popup: 'animate__animated animate__fadeInUp'
+                }
+            }).then(() => {
+                // Clear form
+                document.getElementById("register-form").reset();
+                document.getElementById("countrySelect").value = "Select Country";
+                document.getElementById("image-preview").classList.remove('show');
+                
+                // Clear all validation messages
+                document.querySelectorAll('.validation-message').forEach(msg => {
+                    msg.classList.remove('show', 'error', 'success');
+                });
+                document.querySelectorAll('.input-field').forEach(input => {
+                    input.classList.remove('error', 'success');
+                });
+
+                closeRegisterModal();
+                
+                // Open login modal with a slight delay for smooth transition
+                setTimeout(() => {
+                    openLoginModal();
+                }, 300);
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Registration Failed",
+                text: data.message,
+                confirmButtonColor: "#E50914"
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: "error",
+            title: "Network Error",
+            text: "Could not reach server. Please check your connection and try again.",
+            confirmButtonColor: "#E50914"
+        });
+        console.error(err);
+    })
+    .finally(() => {
+        // Remove loading state
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Register';
+    });
+});
+
+// Login form submission
+document.getElementById("login-btn").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    // Add loading state
+    const btn = this;
+    btn.classList.add('btn-loading');
+    btn.textContent = '';
+
+    const identifier = document.getElementById("login-identifier").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!identifier || !password) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Information',
+            text: 'Please enter both username/email and password',
+            confirmButtonColor: "#E50914"
+        });
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Log In';
+        return;
+    }
+
+    let data = new FormData();
+    data.append("identifier", identifier);
+    data.append("password", password);
+
+    fetch("../library/logingBackend.php", {
+        method: "POST",
+        body: data
+    })
+    .then(res => res.text())
+    .then(text => {
+        console.log("RAW:", text);
+
+        let data;
+        try { data = JSON.parse(text); }
+        catch (e) {
+            Swal.fire({
+                icon: "error",
+                title: "Server Error",
+                text: "Invalid server response. Please try again.",
+                confirmButtonColor: "#E50914"
+            });
+            return;
+        }
+
+        if (data.status === "success") {
+            // Update global user state
+            currentUser = data.user;
+            isLoggedIn = true;
+            
+            Swal.fire({
+                icon: "success",
+                title: "🎬 Welcome to MovieLab!",
+                text: data.message,
+                confirmButtonColor: "#E50914",
+                confirmButtonText: "Let's Go!",
+                showClass: {
+                    popup: 'animate__animated animate__fadeInUp'
+                }
+            }).then(() => {
+                // Clear form
+                document.getElementById("login-identifier").value = "";
+                document.getElementById("login-password").value = "";
+                
+                closeLoginModal();
+                updateNavbarForLoggedInUser();
+                
+                // Redirect to home page
+                window.location.href = "../Site/index.php";
+            });
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Login Failed",
+                text: data.message,
+                confirmButtonColor: "#E50914"
+            });
+        }
+    })
+    .catch(err => {
+        Swal.fire({
+            icon: "error",
+            title: "Network Error",
+            text: "Could not reach server. Please check your connection and try again.",
+            confirmButtonColor: "#E50914"
+        });
+        console.error(err);
+    })
+    .finally(() => {
+        // Remove loading state
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Log In';
+    });
+});
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}
 
 </script>
    
@@ -870,3 +1628,4 @@ countries.forEach(country => {
 
 
 <div class="mid_container" style="height:auto;">
+    
