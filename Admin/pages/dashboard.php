@@ -19,6 +19,105 @@ $_SESSION['last_activity'] = time();
 $admin_username = $_SESSION['admin_username'] ?? 'Admin';
 
 include("../include/header.php");
+
+// Database connection
+require_once '../include/connection.php';
+
+// Fetch data from database
+try {
+    // Total Users
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM users WHERE is_active = 1");
+    $stmt->execute();
+    $totalUsers = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Total Movies
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM movies");
+    $stmt->execute();
+    $totalMovies = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Total Songs
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM songs");
+    $stmt->execute();
+    $totalSongs = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Total Content
+    $totalContent = $totalMovies + $totalSongs;
+
+    // Recent User Activities
+    $stmt = $pdo->prepare("
+        SELECT ua.*, u.username 
+        FROM user_activity ua 
+        JOIN users u ON ua.user_id = u.user_id 
+        ORDER BY ua.created_at DESC 
+        LIMIT 4
+    ");
+    $stmt->execute();
+    $recentActivities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Top Movies by views
+    $stmt = $pdo->prepare("
+        SELECT movie_id, title, 
+               COALESCE(view_count, 0) as views 
+        FROM movies 
+        ORDER BY views DESC 
+        LIMIT 4
+    ");
+    $stmt->execute();
+    $trendingMovies = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Movies by Genre for chart
+    $stmt = $pdo->prepare("
+        SELECT genre, COUNT(*) as count 
+        FROM movies 
+        GROUP BY genre 
+        ORDER BY count DESC
+    ");
+    $stmt->execute();
+    $moviesByGenre = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Monthly data for revenue chart (demo data based on content)
+    $monthlyData = [];
+    for ($i = 0; $i < 12; $i++) {
+        $monthlyData[] = rand(3, 12); // Random data for demo
+    }
+
+} catch (PDOException $e) {
+    error_log("Dashboard data error: " . $e->getMessage());
+    // Set default values if database error
+    $totalUsers = 0;
+    $totalMovies = 0;
+    $totalSongs = 0;
+    $totalContent = 0;
+    $recentActivities = [];
+    $trendingMovies = [];
+    $moviesByGenre = [];
+    $monthlyData = array_fill(0, 12, 0);
+}
+
+// Helper function for time ago
+function timeAgo($datetime) {
+    $time = strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    
+    if ($diff < 60) return 'Just now';
+    if ($diff < 3600) return floor($diff / 60) . ' minutes ago';
+    if ($diff < 86400) return floor($diff / 3600) . ' hours ago';
+    if ($diff < 2592000) return floor($diff / 86400) . ' days ago';
+    return date('M j, Y', $time);
+}
+
+// Helper function for activity icons
+function getActivityIcon($activityType) {
+    $icons = [
+        'login' => 'sign-in-alt',
+        'logout' => 'sign-out-alt',
+        'register' => 'user-plus',
+        'view' => 'eye',
+        'default' => 'bell'
+    ];
+    return $icons[$activityType] ?? $icons['default'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -576,47 +675,6 @@ include("../include/header.php");
                 font-size: 12px;
             }
         }
-
-        /* Touch device improvements */
-        @media (hover: none) and (pointer: coarse) {
-            .stat-card:hover {
-                transform: none;
-            }
-            
-            .action-btn:hover {
-                transform: none;
-            }
-            
-            .chart-action-btn, .notification-btn {
-                min-height: 44px;
-                min-width: 44px;
-            }
-        }
-
-        /* High contrast support */
-        @media (prefers-contrast: high) {
-            .stat-card {
-                border: 2px solid var(--text-light);
-            }
-            
-            .chart-action-btn.active {
-                border: 1px solid white;
-            }
-        }
-
-        /* Reduced motion support */
-        @media (prefers-reduced-motion: reduce) {
-            .stat-card,
-            .action-btn,
-            .notification-btn {
-                transition: none;
-            }
-            
-            .stat-card:hover,
-            .action-btn:hover {
-                transform: none;
-            }
-        }
     </style>
 </head>
 <body>
@@ -628,7 +686,7 @@ include("../include/header.php");
                 <div class="date-display" id="currentDate"></div>
                 <div class="notification-btn">
                     <i class="fas fa-bell"></i>
-                    <span class="notification-badge">3</span>
+                    <span class="notification-badge"><?php echo count($recentActivities); ?></span>
                 </div>
             </div>
         </div>
@@ -639,46 +697,46 @@ include("../include/header.php");
                     <i class="fas fa-users"></i>
                     Total Users
                 </div>
-                <div class="stat-value">15,892</div>
+                <div class="stat-value"><?php echo number_format($totalUsers); ?></div>
                 <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    12.5% from last month
+                    <i class="fas fa-database"></i>
+                    Active Users
                 </div>
             </div>
 
             <div class="stat-card green-highlight">
                 <div class="stat-title">
-                    <i class="fas fa-play-circle"></i>
-                    Content Views
+                    <i class="fas fa-film"></i>
+                    Total Movies
                 </div>
-                <div class="stat-value">245,678</div>
+                <div class="stat-value"><?php echo number_format($totalMovies); ?></div>
                 <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    8.3% from last month
+                    <i class="fas fa-database"></i>
+                    From Database
                 </div>
             </div>
 
             <div class="stat-card blue-highlight">
                 <div class="stat-title">
-                    <i class="fas fa-money-bill-wave"></i>
-                    Revenue (YTD)
+                    <i class="fas fa-music"></i>
+                    Total Songs
                 </div>
-                <div class="stat-value">LKR 45.6M</div>
+                <div class="stat-value"><?php echo number_format($totalSongs); ?></div>
                 <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    15.2% from last year
+                    <i class="fas fa-database"></i>
+                    From Database
                 </div>
             </div>
 
             <div class="stat-card purple-highlight">
                 <div class="stat-title">
-                    <i class="fas fa-film"></i>
-                    Active Content
+                    <i class="fas fa-play-circle"></i>
+                    Total Content
                 </div>
-                <div class="stat-value">2,847</div>
+                <div class="stat-value"><?php echo number_format($totalContent); ?></div>
                 <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    5.7% from last month
+                    <i class="fas fa-database"></i>
+                    Movies + Songs
                 </div>
             </div>
         </div>
@@ -686,22 +744,19 @@ include("../include/header.php");
         <div class="charts-grid">
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3 class="chart-title">Monthly Revenue Trend</h3>
+                    <h3 class="chart-title">Content Overview</h3>
                     <div class="chart-actions">
-                        <button class="chart-action-btn active">1M</button>
-                        <button class="chart-action-btn">6M</button>
-                        <button class="chart-action-btn">1Y</button>
-                        <button class="chart-action-btn">All</button>
+                        <button class="chart-action-btn active">Overview</button>
                     </div>
                 </div>
                 <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
+                    <canvas id="contentChart"></canvas>
                 </div>
             </div>
 
             <div class="chart-card">
                 <div class="chart-header">
-                    <h3 class="chart-title">Content by Genre</h3>
+                    <h3 class="chart-title">Movies by Genre</h3>
                     <div class="chart-actions">
                         <button class="chart-action-btn">View All</button>
                     </div>
@@ -719,105 +774,65 @@ include("../include/header.php");
                     <button class="chart-action-btn">View All</button>
                 </div>
                 <ul class="activity-list">
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-plus"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-text">New movie "Kusa Paba" added to library</div>
-                            <div class="activity-time">2 hours ago</div>
-                        </div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-text">125 new users registered today</div>
-                            <div class="activity-time">5 hours ago</div>
-                        </div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-text">Subscription plan updated for user group</div>
-                            <div class="activity-time">Yesterday</div>
-                        </div>
-                    </li>
-                    <li class="activity-item">
-                        <div class="activity-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <div class="activity-content">
-                            <div class="activity-text">Content "Ran Kevita 2" reached 10,000 views</div>
-                            <div class="activity-time">2 days ago</div>
-                        </div>
-                    </li>
+                    <?php if (!empty($recentActivities)): ?>
+                        <?php foreach ($recentActivities as $activity): ?>
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-<?php echo getActivityIcon($activity['activity_type']); ?>"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-text">
+                                        <strong><?php echo htmlspecialchars($activity['username']); ?></strong> - 
+                                        <?php echo htmlspecialchars($activity['description']); ?>
+                                    </div>
+                                    <div class="activity-time"><?php echo timeAgo($activity['created_at']); ?></div>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="activity-item">
+                            <div class="activity-content">
+                                <div class="activity-text">No recent activities found</div>
+                            </div>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
 
             <div class="top-content">
                 <div class="content-header">
-                    <h3 class="content-title">Trending Content</h3>
+                    <h3 class="content-title">Popular Movies</h3>
                     <button class="chart-action-btn">View All</button>
                 </div>
                 <ul class="content-list">
-                    <li class="content-item">
-                        <div class="content-poster">
-                            <i class="fas fa-film"></i>
-                        </div>
-                        <div class="content-details">
-                            <div class="content-name">Kusa Paba</div>
-                            <div class="content-views">
-                                <i class="fas fa-eye"></i>
-                                45,678 views
+                    <?php if (!empty($trendingMovies)): ?>
+                        <?php foreach ($trendingMovies as $movie): ?>
+                            <li class="content-item">
+                                <div class="content-poster">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                <div class="content-details">
+                                    <div class="content-name"><?php echo htmlspecialchars($movie['title']); ?></div>
+                                    <div class="content-views">
+                                        <i class="fas fa-eye"></i>
+                                        <?php echo number_format($movie['views']); ?> views
+                                    </div>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="content-item">
+                            <div class="content-details">
+                                <div class="content-name">No movies available</div>
                             </div>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-poster">
-                            <i class="fas fa-film"></i>
-                        </div>
-                        <div class="content-details">
-                            <div class="content-name">Ran Kevita 2</div>
-                            <div class="content-views">
-                                <i class="fas fa-eye"></i>
-                                38,921 views
-                            </div>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-poster">
-                            <i class="fas fa-film"></i>
-                        </div>
-                        <div class="content-details">
-                            <div class="content-name">Sinhala Comedy Special</div>
-                            <div class="content-views">
-                                <i class="fas fa-eye"></i>
-                                32,456 views
-                            </div>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-poster">
-                            <i class="fas fa-film"></i>
-                        </div>
-                        <div class="content-details">
-                            <div class="content-name">Action Thriller 2024</div>
-                            <div class="content-views">
-                                <i class="fas fa-eye"></i>
-                                28,734 views
-                            </div>
-                        </div>
-                    </li>
+                        </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>
 
         <div class="quick-actions">
-            <a href="content-management.php" class="action-btn">
+            <a href="content_management.php" class="action-btn">
                 <div class="action-icon">
                     <i class="fas fa-plus"></i>
                 </div>
@@ -829,17 +844,17 @@ include("../include/header.php");
                 </div>
                 <div class="action-text">Manage Users</div>
             </a>
-            <a href="subscriptions-payments.php" class="action-btn">
+            <a href="movies.php" class="action-btn">
                 <div class="action-icon">
-                    <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-film"></i>
                 </div>
-                <div class="action-text">View Reports</div>
+                <div class="action-text">Manage Movies</div>
             </a>
-            <a href="settings.php" class="action-btn">
+            <a href="songs.php" class="action-btn">
                 <div class="action-icon">
-                    <i class="fas fa-cogs"></i>
+                    <i class="fas fa-music"></i>
                 </div>
-                <div class="action-text">System Settings</div>
+                <div class="action-text">Manage Songs</div>
             </a>
         </div>
     </div>
@@ -850,25 +865,20 @@ include("../include/header.php");
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
 
-        // Initialize Charts with responsive settings
+        // Initialize Charts with database data
         document.addEventListener('DOMContentLoaded', function() {
-            // Revenue Chart
-            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-            const revenueChart = new Chart(revenueCtx, {
-                type: 'line',
+            // Content Overview Chart
+            const contentCtx = document.getElementById('contentChart').getContext('2d');
+            const contentChart = new Chart(contentCtx, {
+                type: 'bar',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     datasets: [{
-                        label: 'Revenue (LKR Millions)',
-                        data: [5.2, 5.5, 6.1, 7.0, 6.8, 7.5, 8.2, 8.5, 9.0, 9.5, 10.1, 11.0],
+                        label: 'Content Added',
+                        data: <?php echo json_encode($monthlyData); ?>,
+                        backgroundColor: '#E50914',
                         borderColor: '#E50914',
-                        backgroundColor: 'rgba(229, 9, 20, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#E50914',
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -887,9 +897,6 @@ include("../include/header.php");
                             },
                             ticks: {
                                 color: '#888',
-                                callback: function(value) {
-                                    return 'LKR ' + value + 'M';
-                                },
                                 font: {
                                     size: window.innerWidth < 768 ? 10 : 12
                                 }
@@ -915,16 +922,12 @@ include("../include/header.php");
             const genreChart = new Chart(genreCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Action', 'Drama', 'Comedy', 'Romance', 'Thriller', 'Other'],
+                    labels: <?php echo json_encode(array_column($moviesByGenre, 'genre')); ?>,
                     datasets: [{
-                        data: [25, 20, 18, 15, 12, 10],
+                        data: <?php echo json_encode(array_column($moviesByGenre, 'count')); ?>,
                         backgroundColor: [
-                            '#E50914',
-                            '#8B5CF6',
-                            '#3B82F6',
-                            '#10B981',
-                            '#F59E0B',
-                            '#6B7280'
+                            '#E50914', '#8B5CF6', '#3B82F6', '#10B981', 
+                            '#F59E0B', '#6B7280', '#EF4444', '#84CC16'
                         ],
                         borderWidth: 0,
                         hoverOffset: 8
@@ -941,7 +944,6 @@ include("../include/header.php");
                                 color: '#e0e0e0',
                                 padding: 15,
                                 usePointStyle: true,
-                                pointStyle: 'circle',
                                 font: {
                                     size: window.innerWidth < 768 ? 10 : 12
                                 }
@@ -951,21 +953,9 @@ include("../include/header.php");
                 }
             });
 
-            // Chart period buttons
-            document.querySelectorAll('.chart-action-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    if (this.parentElement.classList.contains('chart-actions')) {
-                        this.parentElement.querySelectorAll('.chart-action-btn').forEach(b => {
-                            b.classList.remove('active');
-                        });
-                        this.classList.add('active');
-                    }
-                });
-            });
-
             // Make charts responsive on window resize
             window.addEventListener('resize', function() {
-                revenueChart.resize();
+                contentChart.resize();
                 genreChart.resize();
             });
         });

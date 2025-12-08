@@ -19,6 +19,90 @@ $_SESSION['last_activity'] = time();
 $admin_username = $_SESSION['admin_username'] ?? 'Admin';
 
 include("../include/header.php");
+
+// Database connection
+require_once '../include/connection.php';
+
+// Handle delete action
+if (isset($_GET['delete_id']) && isset($_GET['type'])) {
+    $delete_id = $_GET['delete_id'];
+    $type = $_GET['type'];
+    
+    try {
+        if ($type === 'movie') {
+            $stmt = $pdo->prepare("DELETE FROM movies WHERE movie_id = ?");
+        } elseif ($type === 'song') {
+            $stmt = $pdo->prepare("DELETE FROM songs WHERE song_id = ?");
+        }
+        
+        $stmt->execute([$delete_id]);
+        $success_message = "Content deleted successfully!";
+    } catch (PDOException $e) {
+        $error_message = "Error deleting content: " . $e->getMessage();
+    }
+}
+
+// Fetch content from database
+try {
+    // Get all movies
+    $movies_stmt = $pdo->prepare("
+        SELECT movie_id, title, description, release_year, genre, rating, duration, poster_image, 
+               COALESCE(view_count, 0) as views 
+        FROM movies 
+        ORDER BY created_at DESC
+    ");
+    $movies_stmt->execute();
+    $movies = $movies_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get all songs
+    $songs_stmt = $pdo->prepare("
+        SELECT song_id, title, artist, album, genre, duration, language, cover_image, 
+               COALESCE(view_count, 0) as views 
+        FROM songs 
+        ORDER BY created_at DESC
+    ");
+    $songs_stmt->execute();
+    $songs = $songs_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Combine all content
+    $all_content = [];
+    
+    foreach ($movies as $movie) {
+        $all_content[] = [
+            'type' => 'movie',
+            'id' => $movie['movie_id'],
+            'title' => $movie['title'],
+            'description' => $movie['description'],
+            'genre' => $movie['genre'],
+            'year' => $movie['release_year'],
+            'duration' => $movie['duration'],
+            'rating' => $movie['rating'],
+            'views' => $movie['views'],
+            'image' => $movie['poster_image']
+        ];
+    }
+    
+    foreach ($songs as $song) {
+        $all_content[] = [
+            'type' => 'song',
+            'id' => $song['song_id'],
+            'title' => $song['title'],
+            'description' => $song['album'] . ' - ' . $song['artist'],
+            'genre' => $song['genre'],
+            'year' => null,
+            'duration' => $song['duration'],
+            'rating' => null,
+            'views' => $song['views'],
+            'image' => $song['cover_image'],
+            'artist' => $song['artist']
+        ];
+    }
+
+} catch (PDOException $e) {
+    error_log("Content management error: " . $e->getMessage());
+    $all_content = [];
+    $error_message = "Error loading content from database.";
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -122,6 +206,28 @@ include("../include/header.php");
 
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10B981;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #EF4444;
         }
 
         /* Filters and Search */
@@ -232,29 +338,24 @@ include("../include/header.php");
             object-fit: cover;
         }
 
-        .content-status {
+        .content-type {
             position: absolute;
             top: 10px;
-            right: 10px;
+            left: 10px;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
-        }
-
-        .status-active {
-            background: var(--success);
+            background: var(--primary-red);
             color: white;
         }
 
-        .status-inactive {
-            background: var(--text-gray);
-            color: white;
+        .content-type.movie {
+            background: var(--primary-red);
         }
 
-        .status-featured {
-            background: var(--warning);
-            color: black;
+        .content-type.song {
+            background: #8B5CF6;
         }
 
         .content-info {
@@ -340,48 +441,12 @@ include("../include/header.php");
             background: rgba(16, 185, 129, 0.3);
         }
 
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-
-        .pagination-btn {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .pagination-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .pagination-btn.active {
-            background: var(--primary-red);
-            color: white;
-            border-color: var(--primary-red);
-        }
-
-        .pagination-info {
-            color: var(--text-gray);
-            font-size: 14px;
-            margin: 0 15px;
-        }
-
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: var(--text-gray);
+            grid-column: 1 / -1;
         }
 
         .empty-state i {
@@ -463,40 +528,6 @@ include("../include/header.php");
                 flex-direction: column;
                 gap: 8px;
             }
-
-            .pagination {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .pagination-info {
-                margin: 10px 0;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid var(--primary-red);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
     </style>
 </head>
@@ -510,17 +541,32 @@ include("../include/header.php");
                     <i class="fas fa-download"></i>
                     Export
                 </button>
-                <a href="add-content.php" class="btn btn-primary">
+                <a href="../library/add-content.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add New Content
                 </a>
             </div>
         </div>
 
+        <!-- Alerts -->
+        <?php if (isset($success_message)): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <?php echo $success_message; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($error_message)): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Filters Section -->
         <div class="filters-section">
             <div class="search-box">
-                <input type="text" class="search-input" placeholder="Search movies, TV shows...">
+                <input type="text" class="search-input" placeholder="Search movies, songs...">
                 <button class="btn btn-primary">
                     <i class="fas fa-search"></i>
                     Search
@@ -532,38 +578,31 @@ include("../include/header.php");
             </div>
             <div class="filter-grid">
                 <div class="filter-group">
-                    <label class="filter-label">Genre</label>
-                    <select class="filter-select">
-                        <option value="">All Genres</option>
-                        <option value="action">Action</option>
-                        <option value="drama">Drama</option>
-                        <option value="comedy">Comedy</option>
-                        <option value="romance">Romance</option>
-                        <option value="thriller">Thriller</option>
-                        <option value="horror">Horror</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Category</label>
-                    <select class="filter-select">
-                        <option value="">All Categories</option>
+                    <label class="filter-label">Content Type</label>
+                    <select class="filter-select" id="contentTypeFilter">
+                        <option value="">All Types</option>
                         <option value="movie">Movies</option>
-                        <option value="tv">TV Shows</option>
-                        <option value="documentary">Documentaries</option>
+                        <option value="song">Songs</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select class="filter-select">
-                        <option value="">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="featured">Featured</option>
+                    <label class="filter-label">Genre</label>
+                    <select class="filter-select" id="genreFilter">
+                        <option value="">All Genres</option>
+                        <option value="Action">Action</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Thriller">Thriller</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Pop">Pop</option>
+                        <option value="Rock">Rock</option>
+                        <option value="Reggaeton">Reggaeton</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Sort By</label>
-                    <select class="filter-select">
+                    <select class="filter-select" id="sortFilter">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="title">Title A-Z</option>
@@ -574,275 +613,77 @@ include("../include/header.php");
         </div>
 
         <!-- Content Grid -->
-        <div class="content-grid">
-            <!-- Content Card 1 -->
-            <div class="content-card">
-                <div class="content-poster">
+        <div class="content-grid" id="contentGrid">
+            <?php if (!empty($all_content)): ?>
+                <?php foreach ($all_content as $content): ?>
+                    <div class="content-card" data-type="<?php echo $content['type']; ?>" data-genre="<?php echo $content['genre']; ?>">
+                        <div class="content-poster">
+                            <?php if ($content['image']): ?>
+                                <img src="<?php echo htmlspecialchars($content['image']); ?>" alt="<?php echo htmlspecialchars($content['title']); ?>">
+                            <?php else: ?>
+                                <i class="fas fa-<?php echo $content['type'] === 'movie' ? 'film' : 'music'; ?>"></i>
+                            <?php endif; ?>
+                            <span class="content-type <?php echo $content['type']; ?>">
+                                <?php echo ucfirst($content['type']); ?>
+                            </span>
+                        </div>
+                        <div class="content-info">
+                            <h3 class="content-title"><?php echo htmlspecialchars($content['title']); ?></h3>
+                            <div class="content-meta">
+                                <span class="meta-item">
+                                    <i class="fas fa-<?php echo $content['type'] === 'movie' ? 'film' : 'music'; ?>"></i>
+                                    <?php echo ucfirst($content['type']); ?>
+                                </span>
+                                <?php if ($content['duration']): ?>
+                                    <span class="meta-item">
+                                        <i class="fas fa-clock"></i>
+                                        <?php echo gmdate("H:i", $content['duration']); ?>
+                                    </span>
+                                <?php endif; ?>
+                                <span class="meta-item">
+                                    <i class="fas fa-eye"></i>
+                                    <?php echo number_format($content['views']); ?>
+                                </span>
+                            </div>
+                            <p class="content-description">
+                                <?php 
+                                if ($content['type'] === 'movie') {
+                                    echo htmlspecialchars($content['description'] ?: 'No description available.');
+                                } else {
+                                    echo htmlspecialchars($content['description'] ?: 'No album information.');
+                                }
+                                ?>
+                            </p>
+                            <div class="content-actions">
+                                <a href="edit-content.php?type=<?php echo $content['type']; ?>&id=<?php echo $content['id']; ?>" class="btn btn-sm btn-edit">
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+                                </a>
+                                <button class="btn btn-sm btn-view">
+                                    <i class="fas fa-eye"></i>
+                                    View
+                                </button>
+                                <a href="?delete_id=<?php echo $content['id']; ?>&type=<?php echo $content['type']; ?>" 
+                                   class="btn btn-sm btn-delete" 
+                                   onclick="return confirm('Are you sure you want to delete <?php echo htmlspecialchars($content['title']); ?>?')">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-state">
                     <i class="fas fa-film"></i>
-                    <span class="content-status status-active">Active</span>
+                    <h3>No Content Found</h3>
+                    <p>There is no content in the database. Start by adding some content.</p>
+                    <a href="../library/add-content.php" class="btn btn-primary" style="margin-top: 15px;">
+                        <i class="fas fa-plus"></i>
+                        Add New Content
+                    </a>
                 </div>
-                <div class="content-info">
-                    <h3 class="content-title">Kusa Paba</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-film"></i>
-                            Movie
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            2h 15m
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            45.6K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        A romantic drama set in the beautiful landscapes of Sri Lanka, exploring love and tradition.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content Card 2 -->
-            <div class="content-card">
-                <div class="content-poster">
-                    <i class="fas fa-film"></i>
-                    <span class="content-status status-featured">Featured</span>
-                </div>
-                <div class="content-info">
-                    <h3 class="content-title">Ran Kevita 2</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-film"></i>
-                            Movie
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            2h 30m
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            38.9K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        The sequel to the blockbuster action thriller with intense sequences and stunning visuals.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content Card 3 -->
-            <div class="content-card">
-                <div class="content-poster">
-                    <i class="fas fa-tv"></i>
-                    <span class="content-status status-active">Active</span>
-                </div>
-                <div class="content-info">
-                    <h3 class="content-title">Sinhala Comedy Special</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-tv"></i>
-                            TV Show
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-list"></i>
-                            12 Episodes
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            32.4K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        Hilarious comedy series featuring top Sri Lankan comedians in various funny situations.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content Card 4 -->
-            <div class="content-card">
-                <div class="content-poster">
-                    <i class="fas fa-film"></i>
-                    <span class="content-status status-inactive">Inactive</span>
-                </div>
-                <div class="content-info">
-                    <h3 class="content-title">Action Thriller 2024</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-film"></i>
-                            Movie
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            1h 55m
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            28.7K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        High-octane action movie with breathtaking stunts and a gripping storyline.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content Card 5 -->
-            <div class="content-card">
-                <div class="content-poster">
-                    <i class="fas fa-video"></i>
-                    <span class="content-status status-active">Active</span>
-                </div>
-                <div class="content-info">
-                    <h3 class="content-title">Wildlife Documentary</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-video"></i>
-                            Documentary
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-clock"></i>
-                            1h 30m
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            15.2K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        Explore the beautiful wildlife of Sri Lanka through this stunning documentary.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content Card 6 -->
-            <div class="content-card">
-                <div class="content-poster">
-                    <i class="fas fa-tv"></i>
-                    <span class="content-status status-featured">Featured</span>
-                </div>
-                <div class="content-info">
-                    <h3 class="content-title">Historical Drama Series</h3>
-                    <div class="content-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-tv"></i>
-                            TV Series
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-list"></i>
-                            8 Episodes
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            22.1K
-                        </span>
-                    </div>
-                    <p class="content-description">
-                        A captivating historical drama based on Sri Lankan history and culture.
-                    </p>
-                    <div class="content-actions">
-                        <button class="btn btn-sm btn-edit">
-                            <i class="fas fa-edit"></i>
-                            Edit
-                        </button>
-                        <button class="btn btn-sm btn-view">
-                            <i class="fas fa-eye"></i>
-                            View
-                        </button>
-                        <button class="btn btn-sm btn-delete">
-                            <i class="fas fa-trash"></i>
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pagination -->
-        <div class="pagination">
-            <button class="pagination-btn">
-                <i class="fas fa-chevron-left"></i>
-                Previous
-            </button>
-            <button class="pagination-btn active">1</button>
-            <button class="pagination-btn">2</button>
-            <button class="pagination-btn">3</button>
-            <span class="pagination-info">...</span>
-            <button class="pagination-btn">8</button>
-            <button class="pagination-btn">
-                Next
-                <i class="fas fa-chevron-right"></i>
-            </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -865,35 +706,38 @@ include("../include/header.php");
         });
 
         // Filter functionality
-        document.querySelectorAll('.filter-select').forEach(select => {
-            select.addEventListener('change', function() {
-                // Add filter logic here
-                console.log('Filter changed:', this.value);
+        function applyFilters() {
+            const contentType = document.getElementById('contentTypeFilter').value;
+            const genre = document.getElementById('genreFilter').value;
+            const contentCards = document.querySelectorAll('.content-card');
+            
+            contentCards.forEach(card => {
+                const cardType = card.getAttribute('data-type');
+                const cardGenre = card.getAttribute('data-genre');
+                let showCard = true;
+                
+                if (contentType && cardType !== contentType) {
+                    showCard = false;
+                }
+                
+                if (genre && cardGenre !== genre) {
+                    showCard = false;
+                }
+                
+                card.style.display = showCard ? 'block' : 'none';
             });
-        });
+        }
 
-        // Delete confirmation
-        document.querySelectorAll('.btn-delete').forEach(btn => {
+        document.getElementById('contentTypeFilter').addEventListener('change', applyFilters);
+        document.getElementById('genreFilter').addEventListener('change', applyFilters);
+        document.getElementById('sortFilter').addEventListener('change', applyFilters);
+
+        // View button functionality
+        document.querySelectorAll('.btn-view').forEach(btn => {
             btn.addEventListener('click', function() {
                 const contentTitle = this.closest('.content-card').querySelector('.content-title').textContent;
-                if (confirm(`Are you sure you want to delete "${contentTitle}"?`)) {
-                    // Add delete logic here
-                    this.closest('.content-card').style.opacity = '0.5';
-                    setTimeout(() => {
-                        this.closest('.content-card').remove();
-                    }, 500);
-                }
-            });
-        });
-
-        // Pagination
-        document.querySelectorAll('.pagination-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!this.classList.contains('active')) {
-                    document.querySelectorAll('.pagination-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    // Add pagination logic here
-                }
+                alert('Viewing: ' + contentTitle);
+                // Add actual view logic here
             });
         });
     </script>

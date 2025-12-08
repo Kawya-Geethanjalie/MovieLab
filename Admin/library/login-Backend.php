@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $update_stmt->execute([':user_id' => $user['user_id']]);
                     
                     // Redirect to admin dashboard
-                    header('Location: ../include/header.php');
+                    header('Location: ../pages/dashboard.php');
                     exit();
                 } else {
                     header('Location: ../pages/login.php?error=account_error');
