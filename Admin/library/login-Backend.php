@@ -27,9 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     }
 
     try {
-        // Check if user exists and is Admin
+        // Check if user exists and is Admin - INCLUDE profile_image and other fields
         $stmt = $pdo->prepare("
-            SELECT user_id, username, email, password_hash, user_type 
+            SELECT user_id, username, email, password_hash, user_type, first_name, last_name, profile_image
             FROM users 
             WHERE (username = :username OR email = :email) AND is_active = 1
         ");
@@ -49,10 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     // Regenerate session ID for Security
                     session_regenerate_id(true);
                     
-                    // Set session variables
+                    // Set session variables INCLUDING profile image and names
                     $_SESSION['admin_id'] = $user['user_id'];
                     $_SESSION['admin_username'] = $user['username'];
                     $_SESSION['admin_email'] = $user['email'];
+                    $_SESSION['admin_first_name'] = $user['first_name'];
+                    $_SESSION['admin_last_name'] = $user['last_name'];
+                    $_SESSION['admin_profile_image'] = $user['profile_image'];
+                    $_SESSION['admin_full_name'] = $user['first_name'] . ' ' . $user['last_name'];
                     $_SESSION['admin_logged_in'] = true;
                     $_SESSION['last_activity'] = time();
                     
@@ -61,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $update_stmt->execute([':user_id' => $user['user_id']]);
                     
                     // Redirect to admin dashboard
-                    header('Location: ../include/header.php');
+                    header('Location: ../pages/dashboard.php');
                     exit();
                 } else {
                     header('Location: ../pages/login.php?error=account_error');

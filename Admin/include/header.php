@@ -21,8 +21,16 @@ $_SESSION['last_activity'] = time();
 
 $admin_username = $_SESSION['admin_username'] ?? 'Admin';
 
-// Get admin profile data (you can modify this to fetch from database)
-$admin_profile_image = $_SESSION['admin_profile_image'] ?? '/images/AdminProfile.jpg';
+// Get admin profile data from session
+$admin_profile_image_filename = $_SESSION['admin_profile_image'] ?? ''; 
+// Base path to the uploads directory relative to the file including this header (e.g., dashboard.php in ../pages/)
+$image_base_path = '../../uploads/profile_images/'; 
+// Full image path for HTML src
+$admin_profile_image_src = $image_base_path . htmlspecialchars($admin_profile_image_filename);
+// Full image path for PHP file_exists check (using absolute path or relative from header.php file location)
+// Since this file is in 'include', to reach the 'uploads' folder, it must go up two directories.
+$admin_profile_image_check_path = __DIR__ . '/../../uploads/profile_images/' . $admin_profile_image_filename;
+
 $admin_full_name = $_SESSION['admin_full_name'] ?? $admin_username;
 $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
 ?>
@@ -487,12 +495,11 @@ $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
         <div class="divider"></div>
 
         <div class="auth-section">
-            <!-- Profile Section -->
             <div class="profile-section">
                 <div class="profile-header">
                     <div class="profile-image-container">
-                        <?php if (!empty($admin_profile_image) && file_exists($admin_profile_image)): ?>
-                            <img src="<?php echo htmlspecialchars($admin_profile_image); ?>" alt="Profile" class="profile-image">
+                        <?php if (!empty($admin_profile_image_filename) && file_exists($admin_profile_image_check_path)): ?>
+                            <img src="<?php echo $admin_profile_image_src; ?>" alt="Profile" class="profile-image">
                         <?php else: ?>
                             <div class="profile-image-placeholder">
                                 <i class="fas fa-user"></i>
@@ -564,7 +571,7 @@ $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
             
             navItems.forEach(item => {
                 const href = item.getAttribute('href');
-                if (href === currentPage) {
+                if (href && href.endsWith(currentPage)) {
                     item.classList.add('active');
                 }
             });
