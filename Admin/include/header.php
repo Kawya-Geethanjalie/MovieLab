@@ -20,6 +20,19 @@ if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 
 $_SESSION['last_activity'] = time();
 
 $admin_username = $_SESSION['admin_username'] ?? 'Admin';
+
+// Get admin profile data from session
+$admin_profile_image_filename = $_SESSION['admin_profile_image'] ?? ''; 
+// Base path to the uploads directory relative to the file including this header (e.g., dashboard.php in ../pages/)
+$image_base_path = '../../uploads/profile_images/'; 
+// Full image path for HTML src
+$admin_profile_image_src = $image_base_path . htmlspecialchars($admin_profile_image_filename);
+// Full image path for PHP file_exists check (using absolute path or relative from header.php file location)
+// Since this file is in 'include', to reach the 'uploads' folder, it must go up two directories.
+$admin_profile_image_check_path = __DIR__ . '/../../uploads/profile_images/' . $admin_profile_image_filename;
+
+$admin_full_name = $_SESSION['admin_full_name'] ?? $admin_username;
+$admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -203,6 +216,94 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
             padding: 0 24px;
         }
 
+        /* Profile Section Styles */
+        .profile-section {
+            background: rgba(229, 9, 20, 0.05);
+            border: 1px solid rgba(229, 9, 20, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-section:hover {
+            background: rgba(229, 9, 20, 0.1);
+            border-color: rgba(229, 9, 20, 0.4);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-image-container {
+            position: relative;
+            width: 50px;
+            height: 50px;
+        }
+
+        .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #E50914;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+        }
+
+        .profile-image-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #E50914 0%, #B80710 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #E50914;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+            color: white;
+            font-size: 20px;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .profile-email {
+            font-size: 11px;
+            color: #E50914;
+            font-family: monospace;
+        }
+
+        .profile-edit-btn {
+            background: none;
+            border: 1px solid rgba(229, 9, 20, 0.3);
+            color: #E50914;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .profile-edit-btn:hover {
+            background: rgba(229, 9, 20, 0.1);
+            border-color: #E50914;
+        }
+
         .logout-btn {
             display: flex;
             align-items: center;
@@ -272,6 +373,23 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
                 display: flex;
                 align-items: center;
                 justify-content: center;
+            }
+
+            .profile-section {
+                padding: 12px;
+            }
+
+            .profile-image, .profile-image-placeholder {
+                width: 40px;
+                height: 40px;
+            }
+
+            .profile-name {
+                font-size: 13px;
+            }
+
+            .profile-email {
+                font-size: 10px;
             }
         }
 
@@ -356,7 +474,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
         <div class="nav-section">
             <ul class="nav-items">
                 <li>
-                    <a href="profile.php" class="nav-item">
+                    <a href="../pages/profile.php" class="nav-item">
                         <div class="nav-icon">
                             <i class="fas fa-user"></i>
                         </div>
@@ -377,12 +495,35 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
         <div class="divider"></div>
 
         <div class="auth-section">
-            <a href="logout.php" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+            <div class="profile-section">
+                <div class="profile-header">
+                    <div class="profile-image-container">
+                        <?php if (!empty($admin_profile_image_filename) && file_exists($admin_profile_image_check_path)): ?>
+                            <img src="<?php echo $admin_profile_image_src; ?>" alt="Profile" class="profile-image">
+                        <?php else: ?>
+                            <div class="profile-image-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name"><?php echo htmlspecialchars($admin_full_name); ?></div>
+                        <div class="profile-email"><?php echo htmlspecialchars($admin_email); ?></div>
+                    </div>
+                </div>
+                <a href="../pages/profile.php" class="profile-edit-btn">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Profile</span>
+                </a>
+            </div>
+
+            <a href="logout.php" class="logout-btn" onclick="return confirm('Are you sure you want to logout?');">
+                <i class='bx bx-log-out'></i>
+                <span class="links_name">Logout</span>
             </a>
+
             <div class="auth-status">Authenticated</div>
-            <div class="user-id">User ID: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
+            <div class="user-id">Username: <?php echo $_SESSION['admin_username'] ?? 'ADMIN-ML-001'; ?></div>
         </div>
     </div>
 
@@ -430,7 +571,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
             
             navItems.forEach(item => {
                 const href = item.getAttribute('href');
-                if (href === currentPage) {
+                if (href && href.endsWith(currentPage)) {
                     item.classList.add('active');
                 }
             });
