@@ -687,7 +687,7 @@
         </div>
 
         <!-- Back to Management Link -->
-        <a href="content_management.html" class="back-link">
+        <a href="content_management.php" class="back-link">
             <i class="fas fa-arrow-left"></i> Back to Content Management
         </a>
     </div>
