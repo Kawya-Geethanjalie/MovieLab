@@ -123,16 +123,90 @@
             border: 1px solid rgba(239, 68, 68, 0.4);
             backdrop-filter: blur(5px);
         }
+        
+        /* --- START OF VGG.HTML CSS FOR JS EFFECT --- */
+        
+        /* Required CSS for particle burst effect on button click */
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444; /* Red */
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 1;
+            transition: transform 0.8s ease-out, opacity 0.8s ease-out, width 0.8s ease-out, height 0.8s ease-out;
+            z-index: 50; 
+        }
+
+        /* Professional Glitch/Matrix Data Transfer Loading Effect for Next Page Load */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 #dc2626, -2px 0 #ef4444; }
+            50% { text-shadow: -2px 0 #dc2626, 2px 0 #ef4444; }
+            100% { text-shadow: 2px 0 #dc2626, -2px 0 #ef4444; }
+        }
+
+        .glitch-loader {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .data-core {
+            width: 100%;
+            height: 100%;
+            border: 6px solid transparent;
+            border-top-color: #dc2626; /* Deep Red for the rotating part */
+            border-radius: 50%;
+            animation: spin 1s infinite linear; 
+            position: absolute;
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.7); /* Red glow */
+        }
+
+        .data-core::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 6px solid transparent;
+            border-bottom-color: #ef4444; /* Lighter Red for secondary line */
+            border-radius: 50%;
+            animation: spin 1.5s infinite reverse linear;
+        }
+
+        .glitch-text {
+            font-size: 1.5rem; /* Adjust size if needed */
+            font-weight: bold;
+            color: #fff;
+            animation: glitch 0.3s infinite alternate;
+            z-index: 10;
+        }
+        
+        .message-box-inner {
+            background-color: rgba(127, 29, 29, 0.9); /* Dark red background for button message */
+        }
+        
+        /* --- END OF VGG.HTML CSS FOR JS EFFECT --- */
     </style>
 </head>
 
 <body class="flex items-center justify-center min-h-screen p-4">
-    <!-- Background Elements -->
+    <!-- Background Elements (Kept for design) -->
     <div class="absolute top-10 left-10 w-20 h-20 rounded-full bg-red-500/10 blur-xl floating"></div>
     <div class="absolute bottom-10 right-10 w-32 h-32 rounded-full bg-red-500/5 blur-xl floating" style="animation-delay: 1.5s;"></div>
     <div class="absolute top-1/2 left-1/4 w-16 h-16 rounded-full bg-red-500/10 blur-lg floating" style="animation-delay: 2.5s;"></div>
     
-    <!-- Film Strip Effect -->
+    <!-- Film Strip Effect (Kept for design) -->
     <div class="absolute top-0 left-0 w-full h-4 bg-black flex">
         <div class="h-full w-8 bg-red-500"></div>
         <div class="h-full w-8 bg-transparent"></div>
@@ -158,8 +232,9 @@
         <div class="h-full w-8 bg-transparent"></div>
     </div>
 
-    <div class="container max-w-md w-full">
-        <main class="login-container rounded-2xl p-8 relative overflow-hidden">
+    <!-- Main Content Wrapper for hiding/showing -->
+    <div id="mainContentWrapper" class="container max-w-md w-full transition-opacity duration-500">
+        <main id="loginCard" class="login-container rounded-2xl p-8 relative overflow-hidden">
             <!-- Decorative Corner Elements -->
             <div class="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-red-500"></div>
             <div class="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-red-500"></div>
@@ -177,7 +252,8 @@
                     <p class="text-gray-400 text-sm">Enter your credentials to access the dashboard</p>
                 </div>
 
-                <form class="space-y-5" action="../library/login-backend.php" method="post">
+                <!-- Form submission changed to JavaScript handleLogin function -->
+                <form id="loginForm" class="space-y-5" onsubmit="handleLogin(event)">
                     <div class="space-y-2">
                         <label for="username" class="block text-sm font-medium text-gray-300">
                             <i class="fas fa-user mr-2 text-red-500"></i>Username or Email
@@ -207,46 +283,21 @@
                     </div>
                     
                     <div class="pt-2">
-                        <button type="submit" id="login-button" name="login"
-                            class="login-btn w-full py-3 px-4 rounded-lg text-white font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Access Dashboard
+                        <!-- 'login' name is included here for backend consistency, although we simplified the PHP check -->
+                        <button type="submit" id="loginButton" name="login"
+                            class="login-btn w-full py-3 px-4 rounded-lg text-white font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out relative overflow-hidden transform hover:scale-[1.01] active:scale-[0.99]"
+                            aria-label="Access Dashboard">
+                            
+                            <span id="buttonText" class="relative z-10"><i class="fas fa-sign-in-alt mr-2"></i>Access Dashboard</span>
+                            <!-- Placeholder for temporary message (used during verification check) -->
+                            <div id="messageBox" class="message-box-inner absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 pointer-events-none"></div>
                         </button>
                     </div>
                 </form>
                 
-                <?php
-                if (isset($_GET['error'])) {
-                    $error_message = match ($_GET['error']) {
-                        'User_Name' => 'Username is required!',
-                        'Password' => 'Password is required!',
-                        'account_error' => 'Admin access only!',
-                        'login_error' => 'Invalid credentials!',
-                        'server_error' => 'Server connection error!',
-                        'session_expired' => 'Session expired. Please login again.',
-                        default => 'An error occurred!',
-                    };
-                } else {
-                    $error_message = null;
-                }
-                ?>
-                
-                <?php if (!empty($error_message)) { ?>
-                    <div class="mt-4 error-alert rounded-lg px-4 py-3 relative">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-exclamation-circle text-red-400"></i>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-red-300"><?php echo htmlspecialchars($error_message); ?></p>
-                            </div>
-                            <button type="button" onclick="this.parentElement.parentElement.style.display='none';"
-                                class="ml-auto flex-shrink-0 rounded-md text-red-400 hover:text-red-300 focus:outline-none">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                <?php } ?>
-                
+                <!-- This is where AJAX errors will be displayed -->
+                <div id="statusMessage" class="mt-6 p-3 text-sm rounded-lg text-center opacity-0 transition-opacity duration-500" role="alert"></div>
+
                 <div class="text-center pt-4 border-t border-gray-800">
                     <p class="text-xs text-gray-500">
                         <i class="fas fa-shield-alt mr-1 text-red-500"></i>Secure Admin Access
@@ -262,16 +313,195 @@
             <p class="text-gray-600 text-sm">© 2025 MovieLab. All rights reserved.</p>
         </div>
     </div>
+    
+    <!-- Full Screen Loading Overlay - Professional Data Matrix Look (FROM VGG.HTML) -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 flex flex-col items-center justify-center z-[100] transition-opacity duration-700 opacity-0 pointer-events-none">
+        <!-- Glitch/Matrix Loader -->
+        <div class="glitch-loader">
+            <div class="data-core"></div>
+            <span class="glitch-text">DATA</span>
+        </div>
+        <!-- Loading Text -->
+        <div class="text-red-600 text-3xl font-extrabold tracking-widest relative z-10 mt-16 animate-pulse">
+            LOADING ADMIN PANEL DATA CORE
+        </div>
+        <p class="text-gray-400 mt-4 relative z-10">Secure data transfer in progress...</p>
+    </div>
 
     <script>
+        // --- GLOBAL VARIABLES & CONSTANTS ---
+        const loginButton = document.getElementById('loginButton');
+        const loginForm = document.getElementById('loginForm');
+        const statusMessage = document.getElementById('statusMessage');
+        const messageBox = document.getElementById('messageBox');
+        const buttonText = document.getElementById('buttonText');
+        const mainContentWrapper = document.getElementById('mainContentWrapper');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const numParticles = 30; // Number of particles (FROM VGG.HTML)
+        const loadingAnimationDuration = 1000; // Duration to wait for the spinning effect
+
+        /**
+         * Red particle burst animation (Button click confirmation effect - FROM VGG.HTML)
+         */
+        function createParticleBurst(element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            for (let i = 0; i < numParticles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${centerX}px`;
+                particle.style.top = `${centerY}px`;
+                document.body.appendChild(particle);
+
+                const angle = Math.random() * 2 * Math.PI; 
+                const distance = Math.random() * 100 + 50; 
+                const endX = centerX + distance * Math.cos(angle);
+                const endY = centerY + distance * Math.sin(angle);
+
+                setTimeout(() => {
+                    particle.style.transform = `translate(${endX - centerX}px, ${endY - centerY}px)`;
+                    particle.style.opacity = '0';
+                    particle.style.width = '2px';
+                    particle.style.height = '2px';
+                }, 10);
+
+                setTimeout(() => {
+                    particle.remove();
+                }, 850); 
+            }
+        }
+
+        /**
+         * Starts the next page load animation (The Data Matrix Effect - FROM VGG.HTML)
+         */
+        function startDataMatrixEffect() {
+            // 1. Hide the Login Card
+            mainContentWrapper.classList.add('opacity-0');
+
+            setTimeout(() => {
+                // 2. Show the Loading Overlay
+                loadingOverlay.classList.remove('pointer-events-none', 'opacity-0');
+            }, 500); // Wait for the login card to start fading out
+        }
+        
+        /**
+         * Stops the loading effect and resets the form (FROM VGG.HTML)
+         */
+        function stopDataMatrixEffect(error_message) {
+            // 1. Hide the Loading Overlay (if visible)
+            loadingOverlay.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                loadingOverlay.classList.add('pointer-events-none');
+                
+                // 2. Show the Login Form again
+                mainContentWrapper.classList.remove('opacity-0');
+                
+                // 3. Reset button and message
+                loginButton.disabled = false;
+                // Re-enable hover effects
+                loginButton.classList.add('transform', 'hover:scale-[1.01]');
+                messageBox.classList.remove('opacity-100');
+                buttonText.classList.remove('opacity-0');
+
+                // 4. Show the error message
+                showStatusMessage(error_message, 'bg-red-900/50', 'text-red-300');
+                
+            }, 700); // Overlay Opacity Transition time
+
+
+            // Reset messageBox after a short delay
+            setTimeout(() => {
+                messageBox.innerHTML = '';
+            }, 300);
+        }
+
+
+        /**
+         * Handles the AJAX login submission (Corrected to use JSON response and effects)
+         */
+        async function handleLogin(event) {
+            event.preventDefault(); 
+            
+            // 1. Prepare UI for validation check & Start effects
+            loginButton.disabled = true;
+            loginButton.classList.remove('transform', 'hover:scale-[1.01]'); // Disable hover/scale animation while disabled
+            createParticleBurst(loginButton); // Particle Burst Effect
+            
+            messageBox.innerHTML = '<span class="text-white text-lg animate-pulse">Verifying access...</span>';
+            messageBox.classList.add('opacity-100');
+            buttonText.classList.add('opacity-0');
+
+            const formData = new FormData(loginForm);
+formData.append('login', '1');
+            try {
+                // 2. Send data to the backend
+                // CORRECTED PATH: Changed from '../library/login-Backend.php' to './library/login-Backend.php'
+                // This assumes loging.php and a 'library' folder (containing login-Backend.php) 
+                // are in the same parent directory.
+                const response = await fetch('../library/login-Backend.php', { 
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // --- SUCCESS PATH: RUN ANIMATION AND REDIRECT ---
+                    
+                    // 3. Start the professional loading effect
+                    startDataMatrixEffect();
+                    
+                    // 4. Wait for the animation duration, then redirect
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, loadingAnimationDuration + 1000); // 1s effect + 1s to ensure fade-out is complete
+
+                } else {
+                    // --- ERROR PATH: STOP ANIMATION AND SHOW ERROR ---
+                    stopDataMatrixEffect(data.message || 'Login failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Login Error (Network or Server):', error.message);
+                // Modified error message for cleaner display
+                stopDataMatrixEffect('A network or server error occurred. Check console for details.');
+            }
+        }
+
+        /**
+         * Shows a status message in the UI
+         */
+        function showStatusMessage(message, bgColor, textColor) {
+            statusMessage.textContent = message;
+            statusMessage.className = `mt-6 p-3 text-sm rounded-lg text-center ${bgColor} ${textColor} opacity-0 transition-opacity duration-500`;
+            
+            // Fade in
+            setTimeout(() => {
+                statusMessage.classList.add('opacity-100');
+            }, 10);
+
+            // Fade out the status message after 4 seconds
+            setTimeout(() => {
+                statusMessage.classList.remove('opacity-100');
+            }, 4000);
+        }
+
+        // --- INITIAL SETUP ---
         window.onload = function () {
+            // Clear URL error parameters on load
             if (window.history.replaceState) {
                 const url = new URL(window.location.href);
                 url.searchParams.delete('error');
                 window.history.replaceState({ path: url.href }, '', url.href);
             }
             
-            // Add input field animations
+            // Add input field animations (original logic)
             const inputs = document.querySelectorAll('input');
             inputs.forEach(input => {
                 input.addEventListener('focus', function() {

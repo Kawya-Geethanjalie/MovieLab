@@ -1,12 +1,22 @@
 <?php
 session_start();
 
+// 1. Helper function to send JSON response and terminate script
+function sendJsonResponse(array $response) {
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    exit();
+}
+
 // Fix the connection path - adjust based on your actual structure
 $connection_path = dirname(__DIR__) . '/include/connection.php';
 if (!file_exists($connection_path)) {
     error_log("Connection file not found at: " . $connection_path);
-    header('Location: ../pages/login.php?error=server_error');
-    exit();
+    // Return a server error JSON response
+    sendJsonResponse([
+        'status' => 'error',
+        'message' => 'Server configuration error. Connection file missing.'
+    ]);
 }
 
 require_once $connection_path;
@@ -15,15 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
 
-    // Validate inputs
+    // 2. Validate inputs - Return JSON on validation failure
     if (empty($username)) {
-        header('Location: ../pages/login.php?error=User_Name');
-        exit();
+        sendJsonResponse([
+            'status' => 'error',
+            'message' => 'Please enter your Username or Email.'
+        ]);
     }
 
     if (empty($password)) {
-        header('Location: ../pages/login.php?error=Password');
-        exit();
+        sendJsonResponse([
+            'status' => 'error',
+            'message' => 'Please enter your Password.'
+        ]);
     }
 
     try {
@@ -64,29 +78,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     $update_stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE user_id = :user_id");
                     $update_stmt->execute([':user_id' => $user['user_id']]);
                     
-                    // Redirect to admin dashboard
-                    header('Location: ../pages/dashboard.php');
-                    exit();
+                    // 3. SUCCESS: Return JSON object for the frontend to handle the redirect
+                    sendJsonResponse([
+                        'status' => 'success',
+                        'message' => 'Authentication successful. Redirecting...',
+                        'redirect' => '../pages/dashboard.php'
+                    ]);
+                    
                 } else {
-                    header('Location: ../pages/login.php?error=account_error');
-                    exit();
+                    // Not an admin account
+                    sendJsonResponse([
+                        'status' => 'error',
+                        'message' => 'Access denied. Only administrators can log in here.'
+                    ]);
                 }
             } else {
-                header('Location: ../pages/login.php?error=login_error');
-                exit();
+                // Invalid password
+                sendJsonResponse([
+                    'status' => 'error',
+                    'message' => 'Invalid username or password.'
+                ]);
             }
         } else {
-            header('Location: ../pages/login.php?error=login_error');
-            exit();
+            // User not found or inactive
+            sendJsonResponse([
+                'status' => 'error',
+                'message' => 'Invalid username or password.'
+            ]);
         }
         
     } catch (PDOException $e) {
-        error_log("Login error: " . $e->getMessage());
-        header('Location: ../pages/login.php?error=login_error');
-        exit();
+        error_log("Login database error: " . $e->getMessage());
+        // Return database error
+        sendJsonResponse([
+            'status' => 'error',
+            'message' => 'A database error occurred. Please try again later.'
+        ]);
     }
 } else {
-    header('Location: ../pages/login.php');
-    exit();
+    // Direct access
+    sendJsonResponse([
+        'status' => 'error',
+        'message' => 'Invalid request method.'
+    ]);
 }
 ?>
