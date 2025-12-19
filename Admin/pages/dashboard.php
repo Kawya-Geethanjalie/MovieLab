@@ -832,13 +832,13 @@ function getActivityIcon($activityType) {
         </div>
 
         <div class="quick-actions">
-            <a href="content_management.php" class="action-btn">
+            <a href="add-content.php" class="action-btn">
                 <div class="action-icon">
                     <i class="fas fa-plus"></i>
                 </div>
                 <div class="action-text">Add New Content</div>
             </a>
-            <a href="user-management.php" class="action-btn">
+            <a href="User_management.php" class="action-btn">
                 <div class="action-icon">
                     <i class="fas fa-user-cog"></i>
                 </div>

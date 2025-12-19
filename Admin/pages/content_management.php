@@ -486,7 +486,7 @@ include("../include/header.php");
         <!-- Filters Section -->
         <div class="filters-section">
             <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search movies, songs...">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search movies, songs..." >
                 <button class="btn btn-primary" id="searchBtn">
                     <i class="fas fa-search"></i>
                     Search
@@ -533,311 +533,191 @@ include("../include/header.php");
         </div>
     </div>
 
-    <script>
-        // Global variables
-        let allContent = [];
-        let genres = [];
-        let filteredContent = [];
+ <script>
+    
+    // Global variables
+    let allContent = [];
+    let genres = [];
+    let filteredContent = [];
 
-        // Load content from backend
-        async function loadContent() {
-            try {
-                const response = await fetch('content-management-backend.php');
-                const data = await response.json();
+    // පිටුව Load වන විට දත්ත ලබා ගැනීම
+    async function loadContent() {
+        try {
+            // ඔබේ backend ගොනුවේ නම නිවැරදි දැයි බලන්න (content_manage_backend.php)
+            const response = await fetch('../library/content_manage_backend.php');
+            const data = await response.json();
+            
+            if (data.success) {
+                allContent = data.content;
+                genres = data.genres || [];
                 
-                if (data.success) {
-                    allContent = data.content;
-                    genres = data.genres;
-                    
-                    // Display alerts if any
-                    displayAlerts(data);
-                    
-                    // Populate genre filter
-                    populateGenreFilter();
-                    
-                    // Display content
-                    displayContent(allContent);
-                    
-                    // Apply initial filters
-                    applyFilters();
-                } else {
-                    showError(data.error_message || 'Failed to load content');
-                    displayContent([]);
-                }
-            } catch (error) {
-                console.error('Error loading content:', error);
-                showError('Failed to load content. Please try again.');
+                displayAlerts(data);
+                populateGenreFilter();
+                applyFilters(); // දත්ත ලැබුණු පසු Filter apply කර Cards පෙන්වයි
+            } else {
+                showError(data.error_message || 'Failed to load content');
                 displayContent([]);
             }
+        } catch (error) {
+            console.error('Error loading content:', error);
+            showError('Failed to load content. Please try again.');
+            displayContent([]);
         }
+    }
 
-        // Display alerts
-        function displayAlerts(data) {
-            const alertsContainer = document.getElementById('alertsContainer');
-            alertsContainer.innerHTML = '';
-            
-            if (data.success_message) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-success';
-                alertDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${data.success_message}`;
-                alertsContainer.appendChild(alertDiv);
-                
-                // Auto-remove alert after 5 seconds
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-            
-            if (data.error_message) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.error_message}`;
-                alertsContainer.appendChild(alertDiv);
-                
-                // Auto-remove alert after 5 seconds
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-        }
-
-        // Populate genre filter
-        function populateGenreFilter() {
-            const genreFilter = document.getElementById('genreFilter');
-            
-            // Clear existing options except the first one
-            while (genreFilter.options.length > 1) {
-                genreFilter.remove(1);
-            }
-            
-            // Add genres from database
-            genres.forEach(genre => {
-                if (genre && genre.trim() !== '') {
-                    const option = document.createElement('option');
-                    option.value = genre;
-                    option.textContent = genre;
-                    genreFilter.appendChild(option);
-                }
-            });
-            
-            // If no genres from database, add default ones
-            if (genres.length === 0) {
-                const defaultGenres = ['Action', 'Drama', 'Comedy', 'Romance', 'Thriller', 'Sci-Fi', 'Pop', 'Rock', 'Reggaeton'];
-                defaultGenres.forEach(genre => {
-                    const option = document.createElement('option');
-                    option.value = genre;
-                    option.textContent = genre;
-                    genreFilter.appendChild(option);
-                });
-            }
-        }
-
-        // Display content
-        function displayContent(contentArray) {
-            const contentGrid = document.getElementById('contentGrid');
-            
-            if (contentArray.length === 0) {
-                contentGrid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-film"></i>
-                        <h3>No Content Found</h3>
-                        <p>There is no content matching your criteria.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let contentHTML = '';
-            
-            contentArray.forEach(content => {
-                const durationFormatted = content.duration ? formatDuration(content.duration) : 'N/A';
-                const imageSrc = content.image || '';
-                const description = content.description || (content.type === 'movie' ? 'No description available.' : 'No album information.');
-                
-                contentHTML += `
-                    <div class="content-card" data-type="${content.type}" data-genre="${content.genre || ''}">
-                        <div class="content-poster">
-                            ${imageSrc ? `<img src="${imageSrc}" alt="${content.title}">` : `<i class="fas fa-${content.type === 'movie' ? 'film' : 'music'}"></i>`}
-                            <span class="content-type ${content.type}">
-                                ${content.type.charAt(0).toUpperCase() + content.type.slice(1)}
-                            </span>
-                        </div>
-                        <div class="content-info">
-                            <h3 class="content-title">${escapeHtml(content.title)}</h3>
-                            <div class="content-meta">
-                                <span class="meta-item">
-                                    <i class="fas fa-${content.type === 'movie' ? 'film' : 'music'}"></i>
-                                    ${content.type.charAt(0).toUpperCase() + content.type.slice(1)}
-                                </span>
-                                <span class="meta-item">
-                                    <i class="fas fa-clock"></i>
-                                    ${durationFormatted}
-                                </span>
-                                <span class="meta-item">
-                                    <i class="fas fa-eye"></i>
-                                    ${content.views.toLocaleString()}
-                                </span>
-                            </div>
-                            <p class="content-description">${escapeHtml(description)}</p>
-                            <div class="content-actions">
-                                <a href="edit-content.php?type=${content.type}&id=${content.id}" class="btn btn-sm btn-edit">
-                                    <i class="fas fa-edit"></i>
-                                    Edit
-                                </a>
-                                <button class="btn btn-sm btn-view" onclick="viewContent('${content.type}', '${content.id}')">
-                                    <i class="fas fa-eye"></i>
-                                    View
-                                </button>
-                                <a href="?delete_id=${content.id}&type=${content.type}" 
-                                   class="btn btn-sm btn-delete" 
-                                   onclick="return confirmDelete('${escapeSingleQuotes(content.title)}', '${content.type}')">
-                                    <i class="fas fa-trash"></i>
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            contentGrid.innerHTML = contentHTML;
-        }
-
-        // Format duration from seconds to HH:MM
-        function formatDuration(seconds) {
-            if (!seconds) return 'N/A';
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            
-            if (hours > 0) {
-                return `${hours}:${minutes.toString().padStart(2, '0')}`;
-            }
-            return `${minutes}:00`;
-        }
-
-        // Escape HTML to prevent XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Escape single quotes for JavaScript
-        function escapeSingleQuotes(text) {
-            return text.replace(/'/g, "\\'");
-        }
-
-        // Apply filters
-        function applyFilters() {
-            const contentType = document.getElementById('contentTypeFilter').value;
-            const genre = document.getElementById('genreFilter').value;
-            const sortBy = document.getElementById('sortFilter').value;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            // Filter content
-            filteredContent = allContent.filter(content => {
-                // Content type filter
-                if (contentType && content.type !== contentType) {
-                    return false;
-                }
-                
-                // Genre filter
-                if (genre && content.genre !== genre) {
-                    return false;
-                }
-                
-                // Search filter
-                if (searchTerm) {
-                    const titleMatch = content.title.toLowerCase().includes(searchTerm);
-                    const descMatch = content.description.toLowerCase().includes(searchTerm);
-                    const genreMatch = content.genre && content.genre.toLowerCase().includes(searchTerm);
-                    
-                    if (!titleMatch && !descMatch && !genreMatch) {
-                        return false;
-                    }
-                }
-                
-                return true;
-            });
-            
-            // Sort content
-            sortContent(filteredContent, sortBy);
-            
-            // Display filtered content
-            displayContent(filteredContent);
-        }
-
-        // Sort content
-        function sortContent(contentArray, sortBy) {
-            switch (sortBy) {
-                case 'title':
-                    contentArray.sort((a, b) => a.title.localeCompare(b.title));
-                    break;
-                case 'views':
-                    contentArray.sort((a, b) => b.views - a.views);
-                    break;
-                case 'oldest':
-                    // Assuming newer content is at the beginning of the array
-                    contentArray.reverse();
-                    break;
-                case 'newest':
-                default:
-                    // Keep as is (newest first)
-                    break;
-            }
-        }
-
-        // View content
-        function viewContent(type, id) {
-            // You can implement view functionality here
-            // For now, show an alert
-            alert(`Viewing ${type} with ID: ${id}`);
-            // Example: window.location.href = `view-content.php?type=${type}&id=${id}`;
-        }
-
-        // Confirm delete
-        function confirmDelete(title, type) {
-            return confirm(`Are you sure you want to delete "${title}" (${type})?`);
-        }
-
-        // Show error
-        function showError(message) {
-            const alertsContainer = document.getElementById('alertsContainer');
+    // Alerts පෙන්වීම (Success/Error messages)
+    function displayAlerts(data) {
+        const alertsContainer = document.getElementById('alertsContainer');
+        if(!alertsContainer) return;
+        alertsContainer.innerHTML = '';
+        
+        if (data.success_message || data.error_message) {
+            const isError = !!data.error_message;
             const alertDiv = document.createElement('div');
-            alertDiv.className = 'alert alert-error';
-            alertDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            alertDiv.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+            alertDiv.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${data.success_message || data.error_message}`;
             alertsContainer.appendChild(alertDiv);
             
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
+            setTimeout(() => { alertDiv.remove(); }, 5000);
+        }
+    }
+
+    // Genre filter එකට දත්ත ඇතුළත් කිරීම
+    function populateGenreFilter() {
+        const genreFilter = document.getElementById('genreFilter');
+        if(!genreFilter) return;
+        
+        while (genreFilter.options.length > 1) { genreFilter.remove(1); }
+        
+        const uniqueGenres = [...new Set(allContent.map(item => item.genre))].filter(g => g);
+        
+        uniqueGenres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre;
+            option.textContent = genre;
+            genreFilter.appendChild(option);
+        });
+    }
+
+    // දත්ත CARDS ආකාරයෙන් පෙන්වීමේ ප්‍රධාන Function එක
+    function displayContent(contentArray) {
+        const contentGrid = document.getElementById('contentGrid');
+        if(!contentGrid) return;
+        
+        contentGrid.innerHTML = '';
+
+        if (contentArray.length === 0) {
+            contentGrid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
+                    <i class="fas fa-search-minus" style="font-size: 50px; margin-bottom: 20px; display: block;"></i>
+                    <h3 style="color: #fff;">No Content Found</h3>
+                    <p>There is no content matching your criteria.</p>
+                </div>`;
+            return;
         }
 
-        // Export functionality
-        document.getElementById('exportBtn').addEventListener('click', function() {
-            // Implement export functionality
-            alert('Export functionality would be implemented here.');
+        contentArray.forEach(content => {
+            const imageSrc = (content.image && content.image !== null) 
+                 ? '..' + content.image 
+                 : '../assets/mdif.jpeg';
+            const badgeColor = content.type === 'movie' ? '#E50914' : '#007bff';
+            
+            contentGrid.innerHTML += `
+                <div class="content-card" style="background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; position: relative;">
+                    <div class="content-poster" style="position: relative; height: 250px;">
+                        <img src="${imageSrc}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; top: 10px; right: 10px; background: ${badgeColor}; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: #fff;">
+                            ${content.type.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="content-info" style="padding: 15px;">
+                        <h3 style="color: #fff; font-size: 16px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${escapeHtml(content.title)}
+                        </h3>
+                        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">
+                            <span><i class="fas fa-tag"></i> ${content.genre}</span> | 
+                            <span><i class="fas fa-clock"></i> ${content.duration} min</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="edit-content.php?type=${content.type}&id=${content.id}" class="btn-edit" style="flex: 1; text-align: center; background: #333; color: #fff; padding: 6px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button onclick="deleteContent(${content.id}, '${content.type}')" style="flex: 1; background: rgba(229, 9, 20, 0.1); color: #E50914; border: 1px solid #E50914; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
         });
+    }
 
-        // Reset filters
-        document.getElementById('resetFiltersBtn').addEventListener('click', function() {
-            document.getElementById('contentTypeFilter').value = '';
-            document.getElementById('genreFilter').value = '';
-            document.getElementById('sortFilter').value = 'newest';
-            document.getElementById('searchInput').value = '';
-            applyFilters();
+    // Filters ක්‍රියාත්මක කිරීම
+    function applyFilters() {
+        const contentType = document.getElementById('contentTypeFilter').value;
+        const genre = document.getElementById('genreFilter').value;
+        const sortBy = document.getElementById('sortFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        filteredContent = allContent.filter(content => {
+            const matchesType = !contentType || content.type === contentType;
+            const matchesGenre = !genre || content.genre === genre;
+            const matchesSearch = !searchTerm || 
+                                 content.title.toLowerCase().includes(searchTerm) || 
+                                 (content.genre && content.genre.toLowerCase().includes(searchTerm));
+            
+            return matchesType && matchesGenre && matchesSearch;
         });
+        
+        sortContent(filteredContent, sortBy);
+        displayContent(filteredContent);
+    }
 
-        // Event listeners for filters
+    function sortContent(contentArray, sortBy) {
+        if (sortBy === 'title') {
+            contentArray.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortBy === 'views') {
+            contentArray.sort((a, b) => (b.views || 0) - (a.views || 0));
+        } else if (sortBy === 'oldest') {
+            contentArray.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        } else {
+            contentArray.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function deleteContent(id, type) {
+        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+            window.location.href = `../library/content_manage_backend.php?delete_id=${id}&type=${type}`;
+        }
+    }
+
+    function showError(message) {
+        alert(message);
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        loadContent();
+        
         document.getElementById('contentTypeFilter').addEventListener('change', applyFilters);
         document.getElementById('genreFilter').addEventListener('change', applyFilters);
         document.getElementById('sortFilter').addEventListener('change', applyFilters);
         document.getElementById('searchInput').addEventListener('input', applyFilters);
         document.getElementById('searchBtn').addEventListener('click', applyFilters);
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', loadContent);
-    </script>
+        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+            document.getElementById('contentTypeFilter').value = '';
+            document.getElementById('genreFilter').value = '';
+            document.getElementById('sortFilter').value = 'newest';
+            document.getElementById('searchInput').value = '';
+            applyFilters();
+        });
+    });
+</script>
 </body>
 </html>
