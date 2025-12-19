@@ -1,7 +1,7 @@
 <?php
 // Start output buffering
 ob_start();
-
+include("../library/connection.php");
 session_start();
 
 // Debug mode - set to false in production

@@ -994,7 +994,7 @@
                 
                 // Send request to backend - CORRECTED ENDPOINT
                 // Note: Your backend file is add-content.php, not add_content.php
-                const response = await fetch('add-content.php', {
+                const response = await fetch('../library/add-content-backend.php', {
                     method: 'POST',
                     body: formData,
                     // Do NOT set Content-Type header when sending FormData
