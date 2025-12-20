@@ -559,10 +559,10 @@ include("../include/header.php");
                 <i class="fas fa-download"></i>
                 Export Users
             </button>
-            <button class="btn btn-primary">
-                <i class="fas fa-user-plus"></i>
-                Add New User
-            </button>
+            <a href="add_user.php" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add New User
+                </a>
         </div>
     </div>
 
