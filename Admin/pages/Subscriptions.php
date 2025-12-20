@@ -608,10 +608,10 @@ include("../include/header.php");
                 <i class="fas fa-download"></i>
                 Export Report
             </button>
-            <button class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                Add Subscription
-            </button>
+            <a href="add_subscription.php" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Subscription
+                </a>
         </div>
     </div>
 
