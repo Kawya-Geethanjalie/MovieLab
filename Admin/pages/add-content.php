@@ -601,6 +601,16 @@
                             <label for="song_genre" class="required">Genre</label>
                             <select id="song_genre" name="genre" required>
                                 <option value="">Select Genre</option>
+                                
+                                <option value="Romantic">Romantic</option>
+                                <option value="Sad">Sad</option>
+                                                                <option value="Dance">Dance</option>
+
+                                                                <option value="Entertatment">Entertatment</option>
+                                <option value="Dj">Dj</option>
+                                <option value="Mix">Mix</option>
+                                <option value="Mushup">Mushup</option>
+
                                 <option value="Pop">Pop</option>
                                 <option value="Rock">Rock</option>
                                 <option value="Hip Hop">Hip Hop</option>

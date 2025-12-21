@@ -1,3 +1,4 @@
+
 <?php 
 session_start();
 
@@ -533,8 +534,7 @@ include("../include/header.php");
         </div>
     </div>
 
- <script>
-    
+<script>
     // Global variables
     let allContent = [];
     let genres = [];
@@ -543,7 +543,6 @@ include("../include/header.php");
     // පිටුව Load වන විට දත්ත ලබා ගැනීම
     async function loadContent() {
         try {
-            // ඔබේ backend ගොනුවේ නම නිවැරදි දැයි බලන්න (content_manage_backend.php)
             const response = await fetch('../library/content_manage_backend.php');
             const data = await response.json();
             
@@ -553,7 +552,7 @@ include("../include/header.php");
                 
                 displayAlerts(data);
                 populateGenreFilter();
-                applyFilters(); // දත්ත ලැබුණු පසු Filter apply කර Cards පෙන්වයි
+                applyFilters();
             } else {
                 showError(data.error_message || 'Failed to load content');
                 displayContent([]);
@@ -565,7 +564,7 @@ include("../include/header.php");
         }
     }
 
-    // Alerts පෙන්වීම (Success/Error messages)
+    // Alerts පෙන්වීම
     function displayAlerts(data) {
         const alertsContainer = document.getElementById('alertsContainer');
         if(!alertsContainer) return;
@@ -599,50 +598,59 @@ include("../include/header.php");
         });
     }
 
-    // දත්ත CARDS ආකාරයෙන් පෙන්වීමේ ප්‍රධාන Function එක
+    // දත්ත CARDS ආකාරයෙන් පෙන්වීම
     function displayContent(contentArray) {
         const contentGrid = document.getElementById('contentGrid');
         if(!contentGrid) return;
         
         contentGrid.innerHTML = '';
 
-        if (contentArray.length === 0) {
-            contentGrid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
-                    <i class="fas fa-search-minus" style="font-size: 50px; margin-bottom: 20px; display: block;"></i>
-                    <h3 style="color: #fff;">No Content Found</h3>
-                    <p>There is no content matching your criteria.</p>
-                </div>`;
+        if (!contentArray || contentArray.length === 0) {
+            contentGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">...No Content Found...</div>`;
             return;
         }
 
         contentArray.forEach(content => {
-            const imageSrc = (content.image && content.image !== null) 
-                 ? '..' + content.image 
-                 : '../assets/mdif.jpeg';
-            const badgeColor = content.type === 'movie' ? '#E50914' : '#007bff';
+            const rawPath = content.poster_image;
+            let imageSrc = (rawPath && rawPath !== null && rawPath !== "") 
+                ? '../' + rawPath.replace(/^\//, '')
+                : (content.type === 'movie' ? '../assets/movie.jpg' : '../assets/song.jpg');
+            
+            const badgeColor = content.type === 'movie' ? '#E50914' : '#8B5CF6';
             
             contentGrid.innerHTML += `
-                <div class="content-card" style="background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; position: relative;">
-                    <div class="content-poster" style="position: relative; height: 250px;">
-                        <img src="${imageSrc}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span style="position: absolute; top: 10px; right: 10px; background: ${badgeColor}; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: #fff;">
+                <div class="content-card">
+                    <div class="content-poster">
+                        <img src="${imageSrc}" 
+                             onerror="this.onerror=null; this.src='../assets/${content.type}.jpg';" 
+                             alt="${escapeHtml(content.title)}">
+                        <span class="content-type ${content.type}" style="background: ${badgeColor}">
                             ${content.type.toUpperCase()}
                         </span>
                     </div>
-                    <div class="content-info" style="padding: 15px;">
-                        <h3 style="color: #fff; font-size: 16px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${escapeHtml(content.title)}
-                        </h3>
-                        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">
-                            <span><i class="fas fa-tag"></i> ${content.genre}</span> | 
-                            <span><i class="fas fa-clock"></i> ${content.duration} min</span>
+                    <div class="content-info">
+                        <h3 class="content-title">${escapeHtml(content.title)}</h3>
+                        <div class="content-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-tag"></i>
+                                <span>${content.genre || 'N/A'}</span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-clock"></i>
+                                <span>${content.duration || 0} min</span>
+                            </div>
+                            ${content.type === 'movie' && content.rating ? `
+                            <div class="meta-item">
+                                <i class="fas fa-star"></i>
+                                <span>${content.rating}/10</span>
+                            </div>` : ''}
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <a href="edit-content.php?type=${content.type}&id=${content.id}" class="btn-edit" style="flex: 1; text-align: center; background: #333; color: #fff; padding: 6px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+                        <p class="content-description">${escapeHtml(content.description || 'No description available')}</p>
+                        <div class="content-actions">
+                            <a href="edit-content.php?type=${content.type}&id=${content.movie_id || content.content_id}" class="btn btn-sm btn-edit">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <button onclick="deleteContent(${content.id}, '${content.type}')" style="flex: 1; background: rgba(229, 9, 20, 0.1); color: #E50914; border: 1px solid #E50914; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                            <button onclick="deleteContent(${content.movie_id || content.content_id}, '${content.type}')" class="btn btn-sm btn-delete">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         </div>
@@ -663,7 +671,8 @@ include("../include/header.php");
             const matchesGenre = !genre || content.genre === genre;
             const matchesSearch = !searchTerm || 
                                  content.title.toLowerCase().includes(searchTerm) || 
-                                 (content.genre && content.genre.toLowerCase().includes(searchTerm));
+                                 (content.genre && content.genre.toLowerCase().includes(searchTerm)) ||
+                                 (content.description && content.description.toLowerCase().includes(searchTerm));
             
             return matchesType && matchesGenre && matchesSearch;
         });
@@ -690,14 +699,55 @@ include("../include/header.php");
         return div.innerHTML;
     }
 
-    function deleteContent(id, type) {
-        if (confirm(`Are you sure you want to delete this ${type}?`)) {
-            window.location.href = `../library/content_manage_backend.php?delete_id=${id}&type=${type}`;
+    // Delete content function - Updated with confirmation and proper redirect
+    async function deleteContent(id, type) {
+        if (!confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            // Send delete request to backend
+            const response = await fetch(`../library/content_manage_backend.php?delete_id=${id}&type=${type}`, {
+                method: 'GET'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                showAlert('Content deleted successfully!', 'success');
+                
+                // Reload content after deletion
+                setTimeout(() => {
+                    loadContent();
+                }, 1500);
+            } else {
+                showAlert(data.error_message || 'Failed to delete content', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting content:', error);
+            showAlert('Failed to delete content. Please try again.', 'error');
         }
     }
 
+    // Show alert message
+    function showAlert(message, type) {
+        const alertsContainer = document.getElementById('alertsContainer');
+        if (!alertsContainer) return;
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.innerHTML = `<i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${message}`;
+        alertsContainer.appendChild(alertDiv);
+        
+        setTimeout(() => { 
+            alertDiv.style.opacity = '0';
+            setTimeout(() => { alertDiv.remove(); }, 300);
+        }, 5000);
+    }
+
     function showError(message) {
-        alert(message);
+        showAlert(message, 'error');
     }
 
     // Event Listeners
@@ -721,3 +771,4 @@ include("../include/header.php");
 </script>
 </body>
 </html>
+[file content end]
