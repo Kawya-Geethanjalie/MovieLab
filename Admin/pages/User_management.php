@@ -515,6 +515,149 @@ include("../include/header.php");
         border-color: var(--primary-red);
     }
 
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        margin: 5% auto;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 22px;
+        color: var(--text-light);
+    }
+
+    .close {
+        color: var(--text-gray);
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: var(--primary-red);
+    }
+
+    .modal-body {
+        padding: 25px;
+    }
+
+    .user-profile-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-img-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-red);
+    }
+
+    .user-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary-red);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: bold;
+        color: white;
+        border: 3px solid var(--primary-red);
+    }
+
+    .profile-info h3 {
+        margin: 0 0 5px 0;
+        font-size: 20px;
+        color: var(--text-light);
+    }
+
+    .profile-info p {
+        margin: 0;
+        color: var(--text-gray);
+        font-size: 14px;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .detail-item {
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: var(--text-gray);
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         .user-management {
@@ -571,6 +714,15 @@ include("../include/header.php");
             flex-direction: column;
             align-items: center;
         }
+
+        .modal-content {
+            width: 95%;
+            margin: 10% auto;
+        }
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 480px) {
@@ -618,10 +770,10 @@ include("../include/header.php");
                 <i class="fas fa-download"></i>
                 Export Users
             </button>
-            <button class="btn btn-primary">
-                <i class="fas fa-user-plus"></i>
-                Add New User
-            </button>
+            <a href="add_user.php" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add New User
+                </a>
         </div>
     </div>
 
@@ -688,10 +840,6 @@ include("../include/header.php");
             <i class="fas fa-filter"></i>
             Clear
         </a>
-            <!-- <button class="btn btn-secondary">
-                <i class="fas fa-filter"></i>
-                Advanced Filters
-            </button> -->
         </div>
         <div class="filter-grid">
             <div class="filter-group">
@@ -795,10 +943,12 @@ include("../include/header.php");
 
                 <td>
                     <div class="action-buttons">
-                        <button class="btn-sm" style="background: rgba(59, 130, 246, 0.2); color: #3B82F6;"><i class="fas fa-eye"></i></button>
-                        <a href="user-management-backend.php?action=delete&id=<?php echo $row['user_id']; ?>" 
+                        <button class="btn-sm btn-view" onclick="viewUserDetails(<?php echo $row['user_id']; ?>)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="../library/user-management-backend.php?action=delete&id=<?php echo $row['user_id']; ?>" 
                            class="btn-sm btn-delete" 
-                           onclick="return confirm('Are you sure?')">
+                           onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
                            <i class="fas fa-trash"></i>
                         </a>
                     </div>
@@ -813,29 +963,23 @@ include("../include/header.php");
 </tbody>
         </table>
     </div>
+</div>
 
-    <!-- Pagination -->
-    <!-- <div class="pagination">
-        <div class="pagination-info">
-            Showing 1-5 of 15,892 users
+<!-- User Details Modal -->
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>User Profile Details</h2>
+            <span class="close" onclick="closeModal()">&times;</span>
         </div>
-        <div class="pagination-controls">
-            <button class="pagination-btn">
-                <i class="fas fa-chevron-left"></i>
-                Previous
-            </button>
-            <button class="pagination-btn active">1</button>
-            <button class="pagination-btn">2</button>
-            <button class="pagination-btn">3</button>
-            <span style="color: var(--text-gray); padding: 0 10px;">...</span>
-            <button class="pagination-btn">25</button>
-            <button class="pagination-btn">
-                Next
-                <i class="fas fa-chevron-right"></i>
-            </button>
+        <div class="modal-body" id="modalBody">
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary-red);"></i>
+                <p style="margin-top: 15px; color: var(--text-gray);">Loading user details...</p>
+            </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <script>
     // Search functionality
@@ -863,53 +1007,177 @@ include("../include/header.php");
         });
     });
 
-    // Delete confirmation
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userName = this.closest('tr').querySelector('.user-name').textContent;
-            if (confirm(`Are you sure you want to delete user "${userName}"?`)) {
-                // Add delete logic here
-                this.closest('tr').style.opacity = '0.5';
-                setTimeout(() => {
-                    this.closest('tr').remove();
-                }, 500);
-            }
-        });
-    });
-
-    // Pagination
-    document.querySelectorAll('.pagination-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!this.classList.contains('active')) {
-                document.querySelectorAll('.pagination-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                // Add pagination logic here
-            }
-        });
-    });
-
+    // Update user status
     function updateUserStatus(userId, newStatus) {
-    if (confirm('Are you sure you want to change this status?')) {
-        fetch('user-management-backend.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `action=update_status&user_id=${userId}&status=${newStatus}`
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Status updated successfully!');
-                
-                // පිටුව reload කර අලුත් සංඛ්‍යාලේඛන පෙන්වීම
-                location.reload(); 
-                
-                // ඔබට පිටුව reload නොවී අගය වෙනස් වීමට අවශ්‍ය නම් backend එකෙන් අලුත් count එක එවිය යුතුය.
-            } else {
-                alert('Error: ' + data.message);
-            }
-        });
+        if (confirm('Are you sure you want to change this user status?')) {
+            fetch('../library/user-management-backend.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=update_status&user_id=${userId}&status=${newStatus}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Status updated successfully!');
+                    
+                    // Update suspended count if available
+                    if (data.suspended_count !== undefined) {
+                        document.getElementById('suspended-count').textContent = data.suspended_count;
+                    }
+                    
+                    // Reload page to reflect changes
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating status');
+                location.reload();
+            });
+        } else {
+            // Reset select to original value if cancelled
+            location.reload();
+        }
     }
-}
+
+    // View user details in modal
+    function viewUserDetails(userId) {
+        const modal = document.getElementById('userModal');
+        const modalBody = document.getElementById('modalBody');
+        
+        // Show modal
+        modal.style.display = 'block';
+        
+        // Show loading state
+        modalBody.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary-red);"></i>
+                <p style="margin-top: 15px; color: var(--text-gray);">Loading user details...</p>
+            </div>
+        `;
+        
+        // Fetch user details
+        fetch(`../library/user-management-backend.php?action=get_user_details&user_id=${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.user;
+                    
+                    // Build profile image or avatar
+                    let profileImageHtml = '';
+                    if (user.profile_image) {
+                        profileImageHtml = `<img src="../../uploads/profile_images/${user.profile_image}" alt="Profile" class="profile-img-large">`;
+                    } else {
+                        const initial = user.username.charAt(0).toUpperCase();
+                        profileImageHtml = `<div class="user-avatar-large">${initial}</div>`;
+                    }
+                    
+                    // Build modal content
+                    modalBody.innerHTML = `
+                        <div class="user-profile-section">
+                            ${profileImageHtml}
+                            <div class="profile-info">
+                                <h3>${user.first_name} ${user.last_name}</h3>
+                                <p>@${user.username}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Email</div>
+                                <div class="detail-value">${user.email}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">User Type</div>
+                                <div class="detail-value">${user.user_type_display}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value">${user.status_display}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Country</div>
+                                <div class="detail-value">${user.country || 'Not specified'}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Birthday</div>
+                                <div class="detail-value">${user.birthday_formatted || 'Not specified'}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Email Verified</div>
+                                <div class="detail-value">${user.email_verified ? 'Yes' : 'No'}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Registration Date</div>
+                                <div class="detail-value">${user.created_at_formatted}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Last Login</div>
+                                <div class="detail-value">${user.last_login_formatted}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">Last Updated</div>
+                                <div class="detail-value">${user.updated_at_formatted}</div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-label">User ID</div>
+                                <div class="detail-value">#${user.user_id}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modalBody.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <i class="fas fa-exclamation-circle" style="font-size: 48px; color: var(--danger);"></i>
+                            <p style="margin-top: 15px; color: var(--text-light);">Failed to load user details</p>
+                            <p style="color: var(--text-gray); font-size: 14px;">${data.message}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalBody.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--warning);"></i>
+                        <p style="margin-top: 15px; color: var(--text-light);">An error occurred</p>
+                        <p style="color: var(--text-gray); font-size: 14px;">Please try again later</p>
+                    </div>
+                `;
+            });
+    }
+
+    // Close modal
+    function closeModal() {
+        document.getElementById('userModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('userModal');
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
 </script>
 
 </body>

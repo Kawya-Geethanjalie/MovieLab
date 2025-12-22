@@ -23,16 +23,20 @@ header('Content-Type: application/json');
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
-    case 'add_user':
-        handleAddUser();
+    case 'update_status':
+        handleUpdateStatus();
         break;
     
     case 'get_user_details':
         handleGetUserDetails();
         break;
     
-    case 'delete_user':
+    case 'delete':
         handleDeleteUser();
+        break;
+    
+    case 'add_user':
+        handleAddUser();
         break;
     
     case 'export':
@@ -50,15 +54,147 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
-    case 'update_status':
-    $user_id = $_POST['user_id'];
-    $status = $_POST['status'];
+}
+
+// Function to handle status updates
+function handleUpdateStatus() {
+    global $pdo;
+    
+    $user_id = intval($_POST['user_id'] ?? 0);
+    $status = trim($_POST['status'] ?? '');
+    
+    if ($user_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
+        exit();
+    }
+    
+    if (!in_array($status, ['Active', 'Inactive', 'Suspend'])) {
+        echo json_encode(['success' => false, 'message' => 'Invalid status']);
+        exit();
+    }
+    
     try {
         $stmt = $pdo->prepare("UPDATE users SET status = ? WHERE user_id = ?");
-        $stmt->execute([$status, $user_id]);
-        echo json_encode(['success' => true]);
+        $success = $stmt->execute([$status, $user_id]);
+        
+        if ($success) {
+            // Get updated counts
+            $suspended_count = $pdo->query("SELECT COUNT(*) FROM users WHERE status = 'Suspend'")->fetchColumn();
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Status updated successfully',
+                'suspended_count' => $suspended_count
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update status']);
+        }
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        error_log('Update status error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+    exit();
+}
+
+// Function to get user details
+function handleGetUserDetails() {
+    global $pdo;
+    
+    $user_id = intval($_GET['user_id'] ?? 0);
+    
+    if ($user_id <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
+        exit();
+    }
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
+        
+        if ($user) {
+            // Remove sensitive data
+            unset($user['password_hash']);
+            
+            // Format dates for better display
+            if ($user['birthday']) {
+                $user['birthday_formatted'] = date('F j, Y', strtotime($user['birthday']));
+            }
+            
+            if ($user['created_at']) {
+                $user['created_at_formatted'] = date('F j, Y, g:i a', strtotime($user['created_at']));
+            }
+            
+            if ($user['updated_at']) {
+                $user['updated_at_formatted'] = date('F j, Y, g:i a', strtotime($user['updated_at']));
+            }
+            
+            if ($user['last_login']) {
+                $user['last_login_formatted'] = date('F j, Y, g:i a', strtotime($user['last_login']));
+                $user['last_login_relative'] = getRelativeTime($user['last_login']);
+            } else {
+                $user['last_login_formatted'] = 'Never';
+                $user['last_login_relative'] = 'Never';
+            }
+            
+            // Get user type display name
+            $user['user_type_display'] = ucfirst($user['user_type']);
+            $user['status_display'] = $user['status'] ?? 'Active';
+            
+            echo json_encode(['success' => true, 'user' => $user]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'User not found']);
+        }
+    } catch (Exception $e) {
+        error_log('Get user details error: ' . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Database error']);
+    }
+    exit();
+}
+
+// Function to delete a user
+function handleDeleteUser() {
+    global $pdo;
+    
+    $user_id = intval($_GET['id'] ?? 0);
+    
+    if ($user_id <= 0) {
+        header('Location: ../pages/User_management.php?error=invalid_id');
+        exit();
+    }
+    
+    try {
+        // Prevent deleting own account
+        if (isset($_SESSION['user_id']) && $user_id == $_SESSION['user_id']) {
+            header('Location: ../pages/User_management.php?error=cannot_delete_self');
+            exit();
+        }
+        
+        // First, get user details for logging
+        $stmt = $pdo->prepare("SELECT username, email FROM users WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            header('Location: ../pages/User_management.php?error=user_not_found');
+            exit();
+        }
+        
+        // Delete the user
+        $stmt = $pdo->prepare("DELETE FROM users WHERE user_id = ?");
+        $success = $stmt->execute([$user_id]);
+        
+        if ($success && $stmt->rowCount() > 0) {
+            // Log the activity
+            logActivity($_SESSION['admin_id'] ?? 1, 'delete_user', "Deleted user: {$user['username']} ({$user['email']})");
+            
+            header('Location: ../pages/User_management.php?success=user_deleted');
+        } else {
+            header('Location: ../pages/User_management.php?error=delete_failed');
+        }
+    } catch (Exception $e) {
+        error_log('Delete user error: ' . $e->getMessage());
+        header('Location: ../pages/User_management.php?error=database_error');
     }
     exit();
 }
@@ -185,7 +321,7 @@ function handleAddUser() {
             $user_id = $pdo->lastInsertId();
             
             // Log the activity
-            logActivity($_SESSION['user_id'], 'add_user', "Added new user: $username (ID: $user_id)");
+            logActivity($_SESSION['admin_id'] ?? 1, 'add_user', "Added new user: $username (ID: $user_id)");
             
             echo json_encode([
                 'success' => true,
@@ -199,106 +335,7 @@ function handleAddUser() {
         error_log('Add user error: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
-}
-
-// Function to get user details
-function handleGetUserDetails() {
-    global $pdo;
-    
-    $user_id = intval($_GET['user_id'] ?? 0);
-    
-    if ($user_id <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
-        exit();
-    }
-    
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch();
-        
-        if ($user) {
-            // Remove sensitive data
-            unset($user['password_hash']);
-            
-            // Format dates for better display
-            if ($user['birthday']) {
-                $user['birthday_formatted'] = date('F j, Y', strtotime($user['birthday']));
-            }
-            
-            if ($user['created_at']) {
-                $user['created_at_formatted'] = date('F j, Y, g:i a', strtotime($user['created_at']));
-            }
-            
-            if ($user['updated_at']) {
-                $user['updated_at_formatted'] = date('F j, Y, g:i a', strtotime($user['updated_at']));
-            }
-            
-            if ($user['last_login']) {
-                $user['last_login_formatted'] = date('F j, Y, g:i a', strtotime($user['last_login']));
-                $user['last_login_relative'] = getRelativeTime($user['last_login']);
-            } else {
-                $user['last_login_formatted'] = 'Never';
-                $user['last_login_relative'] = 'Never';
-            }
-            
-            // Get user type display name
-            $user['user_type_display'] = ucfirst($user['user_type']);
-            
-            echo json_encode(['success' => true, 'user' => $user]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'User not found']);
-        }
-    } catch (Exception $e) {
-        error_log('Get user details error: ' . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Database error']);
-    }
-}
-
-// Function to delete a user
-function handleDeleteUser() {
-    global $pdo;
-    
-    $user_id = intval($_GET['user_id'] ?? 0);
-    
-    if ($user_id <= 0) {
-        echo json_encode(['success' => false, 'message' => 'Invalid user ID']);
-        exit();
-    }
-    
-    try {
-        // Prevent deleting own account
-        if ($user_id == $_SESSION['user_id']) {
-            echo json_encode(['success' => false, 'message' => 'Cannot delete your own account']);
-            exit();
-        }
-        
-        // First, get user details for logging
-        $stmt = $pdo->prepare("SELECT username, email FROM users WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch();
-        
-        if (!$user) {
-            echo json_encode(['success' => false, 'message' => 'User not found']);
-            exit();
-        }
-        
-        // Delete the user
-        $stmt = $pdo->prepare("DELETE FROM users WHERE user_id = ?");
-        $success = $stmt->execute([$user_id]);
-        
-        if ($success && $stmt->rowCount() > 0) {
-            // Log the activity
-            logActivity($_SESSION['user_id'], 'delete_user', "Deleted user: {$user['username']} ({$user['email']})");
-            
-            echo json_encode(['success' => true, 'message' => 'User deleted successfully']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete user']);
-        }
-    } catch (Exception $e) {
-        error_log('Delete user error: ' . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Database error']);
-    }
+    exit();
 }
 
 // Function to export users to CSV
@@ -345,7 +382,7 @@ function handleExportUsers() {
                 $user['birthday'] ?? 'N/A',
                 $user['country'],
                 ucfirst($user['user_type']),
-                $user['is_active'] ? 'Active' : 'Inactive',
+                $user['status'] ?? 'Active',
                 $user['email_verified'] ? 'Verified' : 'Not Verified',
                 $user['created_at'],
                 $user['last_login'] ?: 'Never',
@@ -354,7 +391,7 @@ function handleExportUsers() {
         }
         
         // Log the activity
-        logActivity($_SESSION['user_id'], 'export_users', 'Exported users list to CSV');
+        logActivity($_SESSION['admin_id'] ?? 1, 'export_users', 'Exported users list to CSV');
         
         fclose($output);
         exit();
@@ -369,6 +406,7 @@ function handleExportUsers() {
         
         echo json_encode(['success' => false, 'message' => 'Failed to export users: ' . $e->getMessage()]);
     }
+    exit();
 }
 
 // Function to search users
@@ -393,23 +431,13 @@ function handleSearchUsers() {
     }
     
     if (!empty($status)) {
-        if ($status == 'active') {
-            $sql .= " AND is_active = 1";
-        } elseif ($status == 'inactive') {
-            $sql .= " AND is_active = 0";
-        } elseif ($status == 'suspended') {
-            $sql .= " AND user_type = 'suspended'";
-        }
+        $sql .= " AND status = ?";
+        $params[] = ucfirst($status);
     }
     
     if (!empty($subscription)) {
-        if ($subscription == 'premium') {
-            $sql .= " AND user_type = 'premium'";
-        } elseif ($subscription == 'basic') {
-            $sql .= " AND user_type = 'normal'";
-        } elseif ($subscription == 'free') {
-            $sql .= " AND user_type = 'normal'";
-        }
+        $sql .= " AND user_type = ?";
+        $params[] = $subscription;
     }
     
     $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
@@ -437,9 +465,8 @@ function handleSearchUsers() {
                 'full_name' => $user['first_name'] . ' ' . $user['last_name'],
                 'user_type' => $user['user_type'],
                 'user_type_display' => ucfirst($user['user_type']),
-                'is_active' => $user['is_active'],
-                'status' => $user['is_active'] ? 'active' : 'inactive',
-                'status_display' => $user['is_active'] ? 'Active' : 'Inactive',
+                'status' => $user['status'] ?? 'Active',
+                'status_display' => $user['status'] ?? 'Active',
                 'email_verified' => $user['email_verified'],
                 'country' => $user['country'],
                 'birthday' => $user['birthday'],
@@ -463,6 +490,7 @@ function handleSearchUsers() {
         error_log('Search users error: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Database error during search']);
     }
+    exit();
 }
 
 // Function to get statistics
@@ -484,8 +512,8 @@ function handleGetStats() {
         $stmt->execute([$today]);
         $active_today = $stmt->fetchColumn();
         
-        // Suspended/inactive users
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM users WHERE is_active = 0");
+        // Suspended users
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM users WHERE status = 'Suspend'");
         $suspended_users = $stmt->fetchColumn();
         
         // New users this month
@@ -525,6 +553,7 @@ function handleGetStats() {
         error_log('Get stats error: ' . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Database error fetching statistics']);
     }
+    exit();
 }
 
 // Helper function to log activities
