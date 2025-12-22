@@ -293,6 +293,9 @@ ALTER TABLE `user_favorites`
 --
 ALTER TABLE `user_sessions`
   ADD CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+  ALTER TABLE users ADD COLUMN status ENUM('Active', 'Inactive', 'Suspend') DEFAULT 'Active' AFTER user_type;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
