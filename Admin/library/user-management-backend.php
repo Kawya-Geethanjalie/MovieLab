@@ -50,6 +50,17 @@ switch ($action) {
     default:
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
         break;
+    case 'update_status':
+    $user_id = $_POST['user_id'];
+    $status = $_POST['status'];
+    try {
+        $stmt = $pdo->prepare("UPDATE users SET status = ? WHERE user_id = ?");
+        $stmt->execute([$status, $user_id]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit();
 }
 
 // Function to handle adding a new user

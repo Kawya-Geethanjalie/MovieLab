@@ -10,18 +10,53 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit();
 }
 
-// Session timeout (30 minutes)
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php?error=session_expired');
-    exit();
+// --- 1. DATABASE CONNECTION & DATA FETCHING ---
+$host = 'localhost';
+$dbname = 'movielab';
+$db_user = 'root';
+$db_pass = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $db_user, $db_pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    $search = isset($_GET['search']) ? $_GET['search'] : '';
+    
+    $sql = "SELECT * FROM users WHERE username LIKE :search OR email LIKE :search ORDER BY created_at DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['search' => "%$search%"]);
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
-$_SESSION['last_activity'] = time();
 
-$admin_username = $_SESSION['admin_username'] ?? 'Admin';
 
-// Include header
+// සංඛ්‍යාලේඛන ලබා ගැනීම සඳහා SQL Queries
+try {
+    // 1. Total Users
+    $total_users = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+
+    // 2. Premium Users
+    $premium_users = $pdo->query("SELECT COUNT(*) FROM users WHERE user_type = 'Premium'")->fetchColumn();
+
+    // 3. Active Today (අද දිනයේ Login වූ පරිශීලකයින්)
+    $active_today = $pdo->query("SELECT COUNT(*) FROM users WHERE DATE(last_login) = CURDATE()")->fetchColumn();
+
+    // 4. Suspended Users
+   // Suspended Users ගණන ලබා ගැනීම
+    $suspended_users = $pdo->query("SELECT COUNT(*) FROM users WHERE status = 'Suspend'")->fetchColumn() ?: 0;
+
+    // --- ප්‍රතිශත (Growth Percentages) ගණනය කිරීම ---
+    // පසුගිය දින 30 තුළ ලියාපදිංචි වූ පිරිස (උදාහරණයක් ලෙස)
+    $last_month_users = $pdo->query("SELECT COUNT(*) FROM users WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+    $growth_rate = ($total_users > 0) ? round(($last_month_users / $total_users) * 100, 1) : 0;
+
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+}
+
+
 include("../include/header.php");
 ?>
 
@@ -247,24 +282,32 @@ include("../include/header.php");
         background: rgba(255, 255, 255, 0.02);
     }
 
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #E50914 0%, #B80710 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 14px;
-    }
+    /* Profile Image & Avatar Styling */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+.profile-img, .user-avatar {
+    width: 40px;      /* ඔබට අවශ්‍ය ප්‍රමාණය මෙතැනින් වෙනස් කළ හැක */
+    height: 40px;
+    border-radius: 50%; /* රවුමක් කිරීමට */
+    object-fit: cover;  /* රූපය ඇද නොවී පෙනීමට */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    flex-shrink: 0;    /* Table එක කුඩා වූවත් රූපය හැකිලීම වැලැක්වීමට */
+    border: 2px solid rgba(229, 9, 20, 0.5); /* රතු පැහැති සිහින් බෝඩරයක් */
+}
+
+.user-avatar {
+    background: var(--primary-red);
+    font-size: 16px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
 
     .user-details {
         display: flex;
@@ -548,6 +591,22 @@ include("../include/header.php");
             justify-content: center;
         }
     }
+
+    .status-select {
+    padding: 6px 10px;
+    border-radius: 20px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Status අනුව පාට වෙනස් කිරීම */
+.status-active { color: #10B981; border-color: #10B981; }
+.status-inactive { color: #888; border-color: #888; }
+.status-suspend { color: #EF4444; border-color: #EF4444; }
 </style>
 
 <!-- User Management -->
@@ -568,54 +627,54 @@ include("../include/header.php");
 
     <!-- Stats Overview -->
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-title">
-                <i class="fas fa-users"></i>
-                Total Users
-            </div>
-            <div class="stat-value">15,892</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-up"></i>
-                12.5% from last month
-            </div>
+    <div class="stat-card">
+        <div class="stat-title">
+            <i class="fas fa-users"></i>
+            Total Users
         </div>
-
-        <div class="stat-card">
-            <div class="stat-title">
-                <i class="fas fa-crown"></i>
-                Premium Users
-            </div>
-            <div class="stat-value">4,567</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-up"></i>
-                8.3% from last month
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-title">
-                <i class="fas fa-user-clock"></i>
-                Active Today
-            </div>
-            <div class="stat-value">2,345</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-up"></i>
-                5.2% from yesterday
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-title">
-                <i class="fas fa-ban"></i>
-                Suspended Users
-            </div>
-            <div class="stat-value">127</div>
-            <div class="stat-change">
-                <i class="fas fa-arrow-down"></i>
-                3.1% from last week
-            </div>
-        </div>
+        <div class="stat-value"><?php echo number_format($total_users); ?></div>
+       <div class="stat-change positive">
+                    <i class="fas fa-database"></i>
+                    Active Users
+                </div>
     </div>
+
+    <div class="stat-card">
+        <div class="stat-title">
+            <i class="fas fa-crown"></i>
+            Premium Users
+        </div>
+        <div class="stat-value"><?php echo number_format($premium_users); ?></div>
+       <div class="stat-change positive">
+                    <i class="fas fa-database"></i>
+                    Active Premium Users
+                </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">
+            <i class="fas fa-user-clock"></i>
+            Active Today
+        </div>
+        <div class="stat-value"><?php echo number_format($active_today); ?></div>
+        <div class="stat-change positive">
+                    <i class="fas fa-database"></i>
+                    Today Active Users
+                </div>
+    </div>
+
+  <div class="stat-card">
+    <div class="stat-title">
+        <i class="fas fa-ban"></i>
+        Suspended Users
+    </div>
+    <div class="stat-value" id="suspended-count"><?php echo number_format($suspended_users ?? 0); ?></div>
+    <div class="stat-change positive">
+                    <i class="fas fa-database"></i>
+                    Suspend Users
+                </div>
+</div>
+</div>
 
     <!-- Filters Section -->
     <div class="filters-section">
@@ -625,10 +684,14 @@ include("../include/header.php");
                 <i class="fas fa-search"></i>
                 Search
             </button>
-            <button class="btn btn-secondary">
+            <a href="User_management.php" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-filter"></i>
+            Clear
+        </a>
+            <!-- <button class="btn btn-secondary">
                 <i class="fas fa-filter"></i>
                 Advanced Filters
-            </button>
+            </button> -->
         </div>
         <div class="filter-grid">
             <div class="filter-group">
@@ -674,16 +737,7 @@ include("../include/header.php");
     <div class="users-table-container">
         <div class="table-header">
             <h3 class="table-title">All Users</h3>
-            <div class="table-actions">
-                <button class="btn btn-secondary btn-sm">
-                    <i class="fas fa-sync"></i>
-                    Refresh
-                </button>
-                <button class="btn btn-secondary btn-sm">
-                    <i class="fas fa-columns"></i>
-                    Columns
-                </button>
-            </div>
+           
         </div>
 
         <table class="users-table">
@@ -697,172 +751,71 @@ include("../include/header.php");
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- User 1 -->
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">JD</div>
-                            <div class="user-details">
-                                <div class="user-name">John Doe</div>
-                                <div class="user-email">john.doe@email.com</div>
-                            </div>
+   <tbody>
+    <?php if (count($users) > 0): ?>
+        <?php foreach ($users as $row): ?>
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <?php if (!empty($row['profile_image'])): ?>
+                            <img src="../../uploads/profile_images/<?php echo $row['profile_image']; ?>" alt="Profile" class="profile-img">
+                        <?php else: ?>
+                            <div class="user-avatar"><?php echo strtoupper(substr($row['username'], 0, 1)); ?></div>
+                        <?php endif; ?>
+                        
+                        <div class="user-details">
+                            <span class="user-name"><?php echo htmlspecialchars($row['username']); ?></span>
+                            <span class="user-email"><?php echo htmlspecialchars($row['email']); ?></span>
                         </div>
-                    </td>
-                    <td><span class="status-badge status-active">Active</span></td>
-                    <td><span class="subscription-badge subscription-premium">Premium</span></td>
-                    <td>2024-01-15</td>
-                    <td>2 hours ago</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn-sm btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                    </div>
+                </td>
 
-                <!-- User 2 -->
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">AS</div>
-                            <div class="user-details">
-                                <div class="user-name">Alice Smith</div>
-                                <div class="user-email">alice.smith@email.com</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="status-badge status-active">Active</span></td>
-                    <td><span class="subscription-badge subscription-basic">Basic</span></td>
-                    <td>2024-02-20</td>
-                    <td>1 day ago</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn-sm btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                <td>
+                  
+    <?php $currentStatus = $row['status'] ?? 'Active'; ?>
+    
+    <select class="status-select status-<?php echo strtolower($currentStatus); ?>" 
+            onchange="updateUserStatus(<?php echo $row['user_id']; ?>, this.value)">
+        <option value="Active" <?php echo ($currentStatus == 'Active') ? 'selected' : ''; ?>>Active</option>
+        <option value="Inactive" <?php echo ($currentStatus == 'Inactive') ? 'selected' : ''; ?>>Inactive</option>
+        <option value="Suspend" <?php echo ($currentStatus == 'Suspend') ? 'selected' : ''; ?>>Suspend</option>
+    </select>
+</td>
+                
 
-                <!-- User 3 -->
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">BJ</div>
-                            <div class="user-details">
-                                <div class="user-name">Bob Johnson</div>
-                                <div class="user-email">bob.johnson@email.com</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="status-badge status-inactive">Inactive</span></td>
-                    <td><span class="subscription-badge subscription-free">Free</span></td>
-                    <td>2024-03-10</td>
-                    <td>2 weeks ago</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn-sm btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                <td>
+                    <span class="subscription-badge">
+                        <?php echo ucfirst($row['user_type']); ?>
+                    </span>
+                </td>
 
-                <!-- User 4 -->
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">CE</div>
-                            <div class="user-details">
-                                <div class="user-name">Carol Evans</div>
-                                <div class="user-email">carol.evans@email.com</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="status-badge status-suspended">Suspended</span></td>
-                    <td><span class="subscription-badge subscription-premium">Premium</span></td>
-                    <td>2024-01-05</td>
-                    <td>1 month ago</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn-sm btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
 
-                <!-- User 5 -->
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">DW</div>
-                            <div class="user-details">
-                                <div class="user-name">David Wilson</div>
-                                <div class="user-email">david.wilson@email.com</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td><span class="status-badge status-active">Active</span></td>
-                    <td><span class="subscription-badge subscription-premium">Premium</span></td>
-                    <td>2024-02-28</td>
-                    <td>5 hours ago</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-view">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="btn-sm btn-edit">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="btn-sm btn-delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
+                <td><?php echo $row['last_login'] ? date('M d, H:i', strtotime($row['last_login'])) : 'Never'; ?></td>
+
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-sm" style="background: rgba(59, 130, 246, 0.2); color: #3B82F6;"><i class="fas fa-eye"></i></button>
+                        <a href="user-management-backend.php?action=delete&id=<?php echo $row['user_id']; ?>" 
+                           class="btn-sm btn-delete" 
+                           onclick="return confirm('Are you sure?')">
+                           <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="6" style="text-align: center; padding: 20px;">No users found.</td>
+        </tr>
+    <?php endif; ?>
+</tbody>
         </table>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination">
+    <!-- <div class="pagination">
         <div class="pagination-info">
             Showing 1-5 of 15,892 users
         </div>
@@ -882,7 +835,7 @@ include("../include/header.php");
             </button>
         </div>
     </div>
-</div>
+</div> -->
 
 <script>
     // Search functionality
@@ -934,6 +887,29 @@ include("../include/header.php");
             }
         });
     });
+
+    function updateUserStatus(userId, newStatus) {
+    if (confirm('Are you sure you want to change this status?')) {
+        fetch('user-management-backend.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=update_status&user_id=${userId}&status=${newStatus}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Status updated successfully!');
+                
+                // පිටුව reload කර අලුත් සංඛ්‍යාලේඛන පෙන්වීම
+                location.reload(); 
+                
+                // ඔබට පිටුව reload නොවී අගය වෙනස් වීමට අවශ්‍ය නම් backend එකෙන් අලුත් count එක එවිය යුතුය.
+            } else {
+                alert('Error: ' + data.message);
+            }
+        });
+    }
+}
 </script>
 
 </body>
