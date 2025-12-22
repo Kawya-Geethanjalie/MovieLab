@@ -614,7 +614,6 @@
                                 <option value="Pop">Pop</option>
                                 <option value="Rock">Rock</option>
                                 <option value="Hip Hop">Hip Hop</option>
-                                <option value="R&B">R&B</option>
                                 <option value="Country">Country</option>
                                 <option value="Jazz">Jazz</option>
                                 <option value="Classical">Classical</option>
