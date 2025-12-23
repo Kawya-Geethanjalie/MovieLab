@@ -17,185 +17,53 @@ include("../include/header.php");
     <title>Content Management - Movie Lab Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary-red: #E50914;
-            --dark-bg: #0c0c0c;
-            --card-bg: #1a1a1a;
-            --modal-bg: #121212;
-            --text-gray: #888;
-            --success: #10B981;
-            --input-bg: #2a2a2a;
-        }
-
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a1a 100%);
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        .content-management {
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .page-header {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(229, 9, 20, 0.3);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .page-title {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(90deg, #fff 0%, var(--primary-red) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 15px;
-            border-radius: 10px;
-            align-items: center;
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 250px;
-            position: relative;
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-gray);
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 10px 10px 10px 35px;
-            background: var(--input-bg);
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: #fff;
-        }
-
-        .filter-select {
-            padding: 10px;
-            background: var(--input-bg);
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: #fff;
-            min-width: 150px;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --primary-red: #E50914; --dark-bg: #0c0c0c; --card-bg: #1a1a1a; --modal-bg: #121212; --text-gray: #888; --success: #10B981; --input-bg: #2a2a2a; }
+        body { min-height: 100vh; background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a1a 100%); color: #fff; overflow-x: hidden; }
+        .content-management { padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .page-header { display: flex; flex-direction: column; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(229, 9, 20, 0.3); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 28px; font-weight: 700; background: linear-gradient(90deg, #fff 0%, var(--primary-red) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; align-items: center; }
+        .search-box { flex: 1; min-width: 250px; position: relative; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-gray); }
+        .search-box input { width: 100%; padding: 10px 10px 10px 35px; background: var(--input-bg); border: 1px solid #333; border-radius: 6px; color: #fff; }
+        .filter-select { padding: 10px; background: var(--input-bg); border: 1px solid #333; border-radius: 6px; color: #fff; min-width: 150px; }
         .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         .content-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); transition: transform 0.3s ease; }
         .content-card:hover { transform: translateY(-5px); border-color: rgba(229, 9, 20, 0.3); }
-        
         .content-poster { height: 200px; position: relative; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
         .content-poster img { width: 100%; height: 100%; object-fit: cover; }
         .no-image-text { padding: 20px; color: #444; font-weight: bold; font-size: 14px; text-transform: uppercase; }
-        
         .content-info { padding: 18px; }
         .content-title { font-size: 18px; margin-bottom: 8px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .content-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-gray); margin-bottom: 15px; }
-        
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; color: white; }
         .btn-primary { background: var(--primary-red); }
         .btn-sm { padding: 8px 14px; font-size: 13px; flex: 1; justify-content: center; }
-
+        
         /* MODAL STYLES */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
         .modal-overlay.active { display: flex; opacity: 1; }
-
-        .modal-container {
-            background: var(--modal-bg);
-            width: 95%;
-            max-width: 650px;
-            max-height: 90vh;
-            border-radius: 15px;
-            position: relative;
-            border: 2px solid var(--primary-red);
-            box-shadow: 0 0 30px rgba(229, 9, 20, 0.5);
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-        }
-        .modal-container::-webkit-scrollbar { width: 8px; }
-        .modal-container::-webkit-scrollbar-thumb { background: var(--primary-red); border-radius: 10px; }
-
+        .modal-container { background: var(--modal-bg); width: 95%; max-width: 650px; max-height: 90vh; border-radius: 15px; position: relative; border: 2px solid var(--primary-red); box-shadow: 0 0 30px rgba(229, 9, 20, 0.5); transform: translateY(20px); transition: transform 0.3s ease; overflow-y: auto; }
         .modal-overlay.active .modal-container { transform: translateY(0); }
-
-        .close-modal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 45px; 
-            line-height: 1;
-            cursor: pointer;
-            z-index: 101;
-            padding: 5px 15px;
-            transition: all 0.2s ease;
-        }
-        .close-modal:hover {
-            color: var(--primary-red);
-            background: rgba(229, 9, 20, 0.1);
-            text-shadow: 0 0 10px var(--primary-red);
-        }
-
+        .close-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #fff; font-size: 45px; line-height: 1; cursor: pointer; z-index: 101; padding: 5px 15px; transition: all 0.2s ease; }
+        .close-modal:hover { color: var(--primary-red); background: rgba(229, 9, 20, 0.1); text-shadow: 0 0 10px var(--primary-red); }
         .modal-banner { width: 100%; height: 220px; background: #000; display: flex; align-items: center; justify-content: center; }
         .modal-banner img { width: 100%; height: 100%; object-fit: contain; }
-
         .modal-body { padding: 25px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 11px; color: var(--text-gray); margin-bottom: 5px; text-transform: uppercase; font-weight: 700; }
         .form-control { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid #333; border-radius: 5px; color: #fff; font-size: 14px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
         .movie-only, .song-only { display: none; }
         .is-movie .movie-only { display: block; }
         .is-song .song-only { display: block; }
-
         .alert { position: fixed; top: 20px; right: 20px; z-index: 2000; padding: 15px 25px; border-radius: 8px; color: #fff; background: var(--success); box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        
+        /* Audio Player Styling */
+        #audioPreviewContainer { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #333; }
+        audio::-webkit-media-controls-panel { background-color: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -235,7 +103,6 @@ include("../include/header.php");
         <div class="content-grid" id="contentGrid"></div>
     </div>
 
-    <!-- MAIN MODAL -->
     <div class="modal-overlay" id="editModal">
         <div class="modal-container" id="modalFrame">
             <button class="close-modal" id="closeModal">&times;</button>
@@ -256,8 +123,17 @@ include("../include/header.php");
                             <label id="imageLabel">Image / Poster</label>
                             <input type="file" name="poster_image" id="editImage" class="form-control" accept="image/*" onchange="previewFile()">
                         </div>
+                        
                         <div class="form-group song-only">
                             <label>Audio File (MP3)</label>
+                            
+                            <div id="audioPreviewContainer" style="display:none;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                    <span style="font-size:10px; color:var(--primary-red);">CURRENT FILE LOADED</span>
+                                </div>
+                                <audio id="audioPlayer" controls style="width: 100%; height: 30px;"></audio>
+                            </div>
+
                             <input type="file" name="audio_file" id="editAudio" class="form-control" accept="audio/*">
                         </div>
                     </div>
@@ -267,7 +143,6 @@ include("../include/header.php");
                         <input type="text" name="title" id="editTitle" class="form-control" required>
                     </div>
 
-                    <!-- Song Specific Fields -->
                     <div class="song-only">
                         <div class="form-row">
                             <div class="form-group">
@@ -291,7 +166,6 @@ include("../include/header.php");
                         </div>
                     </div>
 
-                    <!-- Movie Specific Fields -->
                     <div class="movie-only">
                         <div class="form-row">
                             <div class="form-group">
@@ -309,7 +183,6 @@ include("../include/header.php");
                         </div>
                     </div>
 
-                    <!-- DYNAMIC GENRE SELECTION -->
                     <div class="form-group">
                         <label>Genre</label>
                         
@@ -340,10 +213,10 @@ include("../include/header.php");
                             <option value="Romantic">Romantic</option>
                             <option value="Sad">Sad</option>
                             <option value="Dance">Dance</option>
-                            <option value="Entertatment">Entertatment</option>
+                            <option value="Entertainment">Entertainment</option>
                             <option value="Dj">Dj</option>
                             <option value="Mix">Mix</option>
-                            <option value="Mushup">Mushup</option>
+                            <option value="Mushup">Mashup</option>
                             <option value="Pop">Pop</option>
                             <option value="Rock">Rock</option>
                             <option value="Hip Hop">Hip Hop</option>
@@ -381,10 +254,10 @@ include("../include/header.php");
 
     async function loadContent() {
         try {
+            // Note: Make sure your backend file is returning ALL columns (album, language, audio_file)
             const response = await fetch('../library/content_manage_backend.php');
             const data = await response.json();
             if (data.success) {
-                // Backend might return property named 'content'
                 allContent = data.content || [];
                 updateGenreFilterOptions();
                 applyFilters();
@@ -413,7 +286,6 @@ include("../include/header.php");
             genreFilter.innerHTML += `<option value="${g}">${g}</option>`;
         });
 
-        // Restore selection if still valid
         if (genres.includes(currentGenreValue)) {
             genreFilter.value = currentGenreValue;
         } else {
@@ -441,7 +313,6 @@ include("../include/header.php");
             return matchesSearch && matchesType && matchesGenre;
         });
 
-        // Sort
         if (sortTerm === 'newest') {
             filtered.sort((a, b) => (parseInt(b.movie_id || b.content_id) || 0) - (parseInt(a.movie_id || a.content_id) || 0));
         } else if (sortTerm === 'oldest') {
@@ -463,9 +334,11 @@ include("../include/header.php");
         }
 
         items.forEach(item => {
-            const id = item.movie_id || item.content_id;
+            const id = item.movie_id || item.content_id || item.song_id;
             const hasPoster = item.poster_image && item.poster_image !== "";
-            const imgPath = hasPoster ? '../' + item.poster_image : null;
+            // Use cover_image for songs if poster_image is empty
+            const imageSource = item.type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+            const imgPath = imageSource ? '../' + imageSource : null;
             const noImageMsg = item.type === 'movie' ? 'No Poster Yet' : 'No Cover Image Yet';
 
             grid.innerHTML += `
@@ -490,7 +363,8 @@ include("../include/header.php");
     }
 
     function openEditModal(id, type) {
-        const item = allContent.find(c => (c.movie_id || c.content_id) == id && c.type == type);
+        // Find the specific item based on ID and Type
+        const item = allContent.find(c => (c.movie_id == id || c.content_id == id || c.song_id == id) && c.type == type);
         if (!item) return;
 
         const modalFrame = document.getElementById('modalFrame');
@@ -502,6 +376,17 @@ include("../include/header.php");
         document.getElementById('editType').value = type;
         document.getElementById('editTitle').value = item.title || "";
 
+        const previewImg = document.getElementById('posterPreview');
+        const imageSource = type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+        
+        if (imageSource) {
+            previewImg.src = '../' + imageSource;
+            previewImg.style.display = 'block';
+        } else {
+            previewImg.src = "";
+            previewImg.style.display = 'none';
+        }
+
         if (type === 'movie') {
             document.getElementById('movie_genre').value = item.genre || "";
             document.getElementById('editDuration').value = item.duration || "";
@@ -509,20 +394,32 @@ include("../include/header.php");
             document.getElementById('editYear').value = item.year || item.release_year || "";
             document.getElementById('editDescription').value = item.description || "";
         } else {
+            // --- SONG DATA MAPPING ---
             document.getElementById('song_genre').value = item.genre || "";
             document.getElementById('editArtist').value = item.artist || item.artist_name || "";
-            document.getElementById('editAlbum').value = item.album || item.album_name || "";
-            document.getElementById('editDurationSec').value = item.duration_sec || item.duration || "";
-            document.getElementById('editLanguage').value = item.language || item.lang || "";
-        }
+            
+            // Map Album (Checking database column 'album')
+            document.getElementById('editAlbum').value = item.album || ""; 
+            
+            // Map Duration (Checking 'duration' from DB)
+            document.getElementById('editDurationSec').value = item.duration || item.duration_sec || "";
+            
+            // Map Language (Checking 'language' from DB)
+            document.getElementById('editLanguage').value = item.language || ""; 
 
-        const previewImg = document.getElementById('posterPreview');
-        if (item.poster_image) {
-            previewImg.src = '../' + item.poster_image;
-            previewImg.style.display = 'block';
-        } else {
-            previewImg.src = "";
-            previewImg.style.display = 'none';
+            // --- AUDIO PLAYER LOGIC ---
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioContainer = document.getElementById('audioPreviewContainer');
+            
+            if (item.audio_file) {
+                // Assuming audio files are in uploads/songs/audio/
+                // Adjust the '../' path if your folder structure is different
+                audioPlayer.src = '../' + item.audio_file; 
+                audioContainer.style.display = 'block';
+            } else {
+                audioPlayer.src = '';
+                audioContainer.style.display = 'none';
+            }
         }
 
         const modal = document.getElementById('editModal');
@@ -533,8 +430,12 @@ include("../include/header.php");
 
     function closeModal() {
         const modal = document.getElementById('editModal');
+        // Stop audio when closing modal
+        const audio = document.getElementById('audioPlayer');
+        if(audio) audio.pause();
+
         modal.classList.remove('active');
-        setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; }, 300);
+        setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; }, 3000);
     }
 
     function previewFile() {
