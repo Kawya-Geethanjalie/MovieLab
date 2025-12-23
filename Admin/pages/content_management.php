@@ -177,9 +177,15 @@ include("../include/header.php");
                                 <input type="number" step="0.1" name="rating" id="editRating" class="form-control">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Release Year</label>
-                            <input type="number" name="year" id="editYear" class="form-control">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Release Year</label>
+                                <input type="number" name="year" id="editYear" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Trailer URL (YouTube)</label>
+                                <input type="text" name="trailer_url" id="editTrailerUrl" class="form-control" placeholder="https://youtube.com/...">
+                            </div>
                         </div>
                     </div>
 
@@ -254,7 +260,6 @@ include("../include/header.php");
 
     async function loadContent() {
         try {
-            // Note: Make sure your backend file is returning ALL columns (album, language, audio_file)
             const response = await fetch('../library/content_manage_backend.php');
             const data = await response.json();
             if (data.success) {
@@ -336,7 +341,6 @@ include("../include/header.php");
         items.forEach(item => {
             const id = item.movie_id || item.content_id || item.song_id;
             const hasPoster = item.poster_image && item.poster_image !== "";
-            // Use cover_image for songs if poster_image is empty
             const imageSource = item.type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
             const imgPath = imageSource ? '../' + imageSource : null;
             const noImageMsg = item.type === 'movie' ? 'No Poster Yet' : 'No Cover Image Yet';
@@ -363,7 +367,6 @@ include("../include/header.php");
     }
 
     function openEditModal(id, type) {
-        // Find the specific item based on ID and Type
         const item = allContent.find(c => (c.movie_id == id || c.content_id == id || c.song_id == id) && c.type == type);
         if (!item) return;
 
@@ -393,27 +396,19 @@ include("../include/header.php");
             document.getElementById('editRating').value = item.rating || "";
             document.getElementById('editYear').value = item.year || item.release_year || "";
             document.getElementById('editDescription').value = item.description || "";
+            // Trailer URL mapping
+            document.getElementById('editTrailerUrl').value = item.trailer_url || "";
         } else {
-            // --- SONG DATA MAPPING ---
             document.getElementById('song_genre').value = item.genre || "";
             document.getElementById('editArtist').value = item.artist || item.artist_name || "";
-            
-            // Map Album (Checking database column 'album')
             document.getElementById('editAlbum').value = item.album || ""; 
-            
-            // Map Duration (Checking 'duration' from DB)
             document.getElementById('editDurationSec').value = item.duration || item.duration_sec || "";
-            
-            // Map Language (Checking 'language' from DB)
             document.getElementById('editLanguage').value = item.language || ""; 
 
-            // --- AUDIO PLAYER LOGIC ---
             const audioPlayer = document.getElementById('audioPlayer');
             const audioContainer = document.getElementById('audioPreviewContainer');
             
             if (item.audio_file) {
-                // Assuming audio files are in uploads/songs/audio/
-                // Adjust the '../' path if your folder structure is different
                 audioPlayer.src = '../' + item.audio_file; 
                 audioContainer.style.display = 'block';
             } else {
@@ -430,12 +425,11 @@ include("../include/header.php");
 
     function closeModal() {
         const modal = document.getElementById('editModal');
-        // Stop audio when closing modal
         const audio = document.getElementById('audioPlayer');
         if(audio) audio.pause();
 
         modal.classList.remove('active');
-        setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; }, 3000);
+        setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; }, 300);
     }
 
     function previewFile() {
