@@ -17,707 +17,471 @@ include("../include/header.php");
     <title>Content Management - Movie Lab Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary-red: #E50914;
-            --dark-bg: #0c0c0c;
-            --card-bg: #1a1a1a;
-            --text-light: #e0e0e0;
-            --text-gray: #888;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-        }
-
-        body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a1a 100%);
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        /* Content Management Styles */
-        .content-management {
-            padding: 20px;
-            min-height: 100vh;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(229, 9, 20, 0.3);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .page-title {
-            font-size: clamp(24px, 4vw, 28px);
-            font-weight: 700;
-            background: linear-gradient(90deg, #fff 0%, var(--primary-red) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        .btn-primary {
-            background: var(--primary-red);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #b8070f;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-light);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Alerts */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-success {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #10B981;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #EF4444;
-        }
-
-        /* Filters and Search */
-        .filters-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .search-input {
-            flex: 1;
-            min-width: 250px;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: var(--text-light);
-            font-size: 14px;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-        }
-
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-label {
-            font-size: 14px;
-            color: var(--text-gray);
-            font-weight: 500;
-        }
-
-        .filter-select {
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-            color: #ffffff; /* White text */
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .filter-select option {
-            background-color: var(--card-bg);
-            color: #ffffff; /* White text for options */
-        }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--primary-red);
-        }
-
-        /* Content Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .content-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .content-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            border-color: rgba(229, 9, 20, 0.3);
-        }
-
-        .content-poster {
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(135deg, #333 0%, #555 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-gray);
-            font-size: 48px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .content-poster img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .content-type {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            background: var(--primary-red);
-            color: white;
-        }
-
-        .content-type.movie {
-            background: var(--primary-red);
-        }
-
-        .content-type.song {
-            background: #8B5CF6;
-        }
-
-        .content-info {
-            padding: 20px;
-        }
-
-        .content-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-light);
-            line-height: 1.3;
-        }
-
-        .content-meta {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: var(--text-gray);
-        }
-
-        .content-description {
-            font-size: 14px;
-            color: var(--text-light);
-            line-height: 1.5;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .content-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 6px;
-            flex: 1;
-            text-align: center;
-            min-width: 60px;
-        }
-
-        .btn-edit {
-            background: rgba(59, 130, 246, 0.2);
-            color: #3B82F6;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-edit:hover {
-            background: rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-delete {
-            background: rgba(239, 68, 68, 0.2);
-            color: #EF4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-delete:hover {
-            background: rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-view {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10B981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-view:hover {
-            background: rgba(16, 185, 129, 0.3);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-gray);
-            grid-column: 1 / -1;
-        }
-
-        .empty-state i {
-            font-size: 64px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: var(--text-light);
-        }
-
-        /* Loading State */
-        .loading-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-gray);
-            grid-column: 1 / -1;
-        }
-
-        .loading-spinner {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-left-color: var(--primary-red);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .content-management {
-                padding: 15px;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .header-actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .filters-section {
-                padding: 15px;
-            }
-
-            .search-box {
-                flex-direction: column;
-            }
-
-            .search-input {
-                min-width: 100%;
-            }
-
-            .filter-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .content-actions {
-                justify-content: center;
-            }
-
-            .btn-sm {
-                flex: none;
-                min-width: 80px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .content-management {
-                padding: 10px;
-            }
-
-            .content-info {
-                padding: 15px;
-            }
-
-            .content-meta {
-                flex-direction: column;
-                gap: 8px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --primary-red: #E50914; --dark-bg: #0c0c0c; --card-bg: #1a1a1a; --modal-bg: #121212; --text-gray: #888; --success: #10B981; --input-bg: #2a2a2a; }
+        body { min-height: 100vh; background: linear-gradient(135deg, var(--dark-bg) 0%, #1a1a1a 100%); color: #fff; overflow-x: hidden; }
+        .content-management { padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .page-header { display: flex; flex-direction: column; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(229, 9, 20, 0.3); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 28px; font-weight: 700; background: linear-gradient(90deg, #fff 0%, var(--primary-red) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 15px; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; align-items: center; }
+        .search-box { flex: 1; min-width: 250px; position: relative; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-gray); }
+        .search-box input { width: 100%; padding: 10px 10px 10px 35px; background: var(--input-bg); border: 1px solid #333; border-radius: 6px; color: #fff; }
+        .filter-select { padding: 10px; background: var(--input-bg); border: 1px solid #333; border-radius: 6px; color: #fff; min-width: 150px; }
+        .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .content-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); transition: transform 0.3s ease; }
+        .content-card:hover { transform: translateY(-5px); border-color: rgba(229, 9, 20, 0.3); }
+        .content-poster { height: 200px; position: relative; background: #000; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; }
+        .content-poster img { width: 100%; height: 100%; object-fit: cover; }
+        .no-image-text { padding: 20px; color: #444; font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .content-info { padding: 18px; }
+        .content-title { font-size: 18px; margin-bottom: 8px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .content-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-gray); margin-bottom: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; color: white; }
+        .btn-primary { background: var(--primary-red); }
+        .btn-sm { padding: 8px 14px; font-size: 13px; flex: 1; justify-content: center; }
+        
+        /* MODAL STYLES */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-container { background: var(--modal-bg); width: 95%; max-width: 650px; max-height: 90vh; border-radius: 15px; position: relative; border: 2px solid var(--primary-red); box-shadow: 0 0 30px rgba(229, 9, 20, 0.5); transform: translateY(20px); transition: transform 0.3s ease; overflow-y: auto; }
+        .modal-overlay.active .modal-container { transform: translateY(0); }
+        .close-modal { position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: #fff; font-size: 45px; line-height: 1; cursor: pointer; z-index: 101; padding: 5px 15px; transition: all 0.2s ease; }
+        .close-modal:hover { color: var(--primary-red); background: rgba(229, 9, 20, 0.1); text-shadow: 0 0 10px var(--primary-red); }
+        .modal-banner { width: 100%; height: 220px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .modal-banner img { width: 100%; height: 100%; object-fit: contain; }
+        .modal-body { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 11px; color: var(--text-gray); margin-bottom: 5px; text-transform: uppercase; font-weight: 700; }
+        .form-control { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid #333; border-radius: 5px; color: #fff; font-size: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .movie-only, .song-only { display: none; }
+        .is-movie .movie-only { display: block; }
+        .is-song .song-only { display: block; }
+        .alert { position: fixed; top: 20px; right: 20px; z-index: 2000; padding: 15px 25px; border-radius: 8px; color: #fff; background: var(--success); box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        
+        /* Audio Player Styling */
+        #audioPreviewContainer { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #333; }
+        audio::-webkit-media-controls-panel { background-color: #f0f0f0; }
     </style>
 </head>
 <body>
-    <!-- Content Management -->
+
     <div class="content-management">
         <div class="page-header">
-            <h1 class="page-title">Content Management</h1>
-            <div class="header-actions">
-                <button class="btn btn-secondary" id="exportBtn">
-                    <i class="fas fa-download"></i>
-                    Export
-                </button>
-                <a href="add-content.php" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Add New Content
-                </a>
+            <div class="header-top">
+                <h1 class="page-title">Content Management</h1>
+                <a href="add-content.php" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Content</a>
             </div>
-        </div>
-
-        <!-- Alerts Container -->
-        <div id="alertsContainer"></div>
-
-        <!-- Filters Section -->
-        <div class="filters-section">
-            <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search movies, songs..." >
-                <button class="btn btn-primary" id="searchBtn">
+            
+            <div class="filter-bar">
+                <div class="search-box">
                     <i class="fas fa-search"></i>
-                    Search
-                </button>
-                <button class="btn btn-secondary" id="resetFiltersBtn">
-                    <i class="fas fa-redo"></i>
-                    Reset
-                </button>
-            </div>
-            <div class="filter-grid">
-                <div class="filter-group">
-                    <label class="filter-label">Content Type</label>
-                    <select class="filter-select" id="contentTypeFilter">
-                        <option value="">All Types</option>
-                        <option value="movie">Movies</option>
-                        <option value="song">Songs</option>
-                    </select>
+                    <input type="text" id="searchInput" placeholder="Search by Title, Artist or Genre..." oninput="applyFilters()">
                 </div>
-                <div class="filter-group">
-                    <label class="filter-label">Genre</label>
-                    <select class="filter-select" id="genreFilter">
-                        <option value="">All Genres</option>
-                        <!-- Genres will be loaded dynamically -->
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Sort By</label>
-                    <select class="filter-select" id="sortFilter">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="title">Title A-Z</option>
-                        <option value="views">Most Viewed</option>
-                    </select>
-                </div>
+                
+                <select id="typeFilter" class="filter-select" onchange="handleTypeChange()">
+                    <option value="all">All Types</option>
+                    <option value="movie">Movies</option>
+                    <option value="song">Songs</option>
+                </select>
+
+                <select id="genreFilter" class="filter-select" onchange="applyFilters()">
+                    <option value="all">All Genres</option>
+                </select>
+
+                <select id="sortFilter" class="filter-select" onchange="applyFilters()">
+                    <option value="newest">Recently Added</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="az">Alphabetical (A-Z)</option>
+                </select>
             </div>
         </div>
 
-        <!-- Content Grid -->
-        <div class="content-grid" id="contentGrid">
-            <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>Loading content...</p>
+        <div id="alertsContainer"></div>
+        <div class="content-grid" id="contentGrid"></div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-container" id="modalFrame">
+            <button class="close-modal" id="closeModal">&times;</button>
+            
+            <div class="modal-banner" id="bannerArea">
+                <img id="posterPreview" src="" alt="Preview">
+            </div>
+
+            <div class="modal-body">
+                <h3 id="modalHeadTitle" style="color: var(--primary-red); margin-bottom: 20px; text-transform: uppercase; font-size: 20px;">Edit Content</h3>
+                
+                <form id="updateForm" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="editId">
+                    <input type="hidden" name="type" id="editType">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label id="imageLabel">Image / Poster</label>
+                            <input type="file" name="poster_image" id="editImage" class="form-control" accept="image/*" onchange="previewFile()">
+                        </div>
+                        
+                        <div class="form-group song-only">
+                            <label>Audio File (MP3)</label>
+                            
+                            <div id="audioPreviewContainer" style="display:none;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                    <span style="font-size:10px; color:var(--primary-red);">CURRENT FILE LOADED</span>
+                                </div>
+                                <audio id="audioPlayer" controls style="width: 100%; height: 30px;"></audio>
+                            </div>
+
+                            <input type="file" name="audio_file" id="editAudio" class="form-control" accept="audio/*">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" id="editTitle" class="form-control" required>
+                    </div>
+
+                    <div class="song-only">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Artist</label>
+                                <input type="text" name="artist" id="editArtist" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Album</label>
+                                <input type="text" name="album" id="editAlbum" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duration (Seconds)</label>
+                                <input type="number" name="duration_sec" id="editDurationSec" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Language</label>
+                                <input type="text" name="language" id="editLanguage" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="movie-only">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duration (min)</label>
+                                <input type="number" name="duration" id="editDuration" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>IMDb Rating</label>
+                                <input type="number" step="0.1" name="rating" id="editRating" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Release Year</label>
+                            <input type="number" name="year" id="editYear" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Genre</label>
+                        
+                        <select id="movie_genre" name="genre_movie" class="form-control movie-only">
+                            <option value="">Select Genre</option>
+                            <option value="Action">Action</option>
+                            <option value="Adventure">Adventure</option>
+                            <option value="Animation">Animation</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Crime">Crime</option>
+                            <option value="Drama">Drama</option>
+                            <option value="Family">Family</option>
+                            <option value="Fantasy">Fantasy</option>
+                            <option value="History">History</option>
+                            <option value="Horror">Horror</option>
+                            <option value="Musical">Musical</option>
+                            <option value="Mystery">Mystery</option>
+                            <option value="Romance">Romance</option>
+                            <option value="Sci-Fi">Sci-Fi</option>
+                            <option value="Thriller">Thriller</option>
+                            <option value="War">War</option>
+                            <option value="Western">Western</option>
+                        </select>
+
+                        <select id="song_genre" name="genre_song" class="form-control song-only">
+                            <option value="">Select Genre</option>
+                            <option value="Romantic">Romantic</option>
+                            <option value="Sad">Sad</option>
+                            <option value="Dance">Dance</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Dj">Dj</option>
+                            <option value="Mix">Mix</option>
+                            <option value="Mushup">Mashup</option>
+                            <option value="Pop">Pop</option>
+                            <option value="Rock">Rock</option>
+                            <option value="Hip Hop">Hip Hop</option>
+                            <option value="Country">Country</option>
+                            <option value="Jazz">Jazz</option>
+                            <option value="Classical">Classical</option>
+                            <option value="Electronic">Electronic</option>
+                            <option value="Reggae">Reggae</option>
+                            <option value="Blues">Blues</option>
+                            <option value="Metal">Metal</option>
+                            <option value="Folk">Folk</option>
+                            <option value="Soul">Soul</option>
+                            <option value="Funk">Funk</option>
+                            <option value="Reggaeton">Reggaeton</option>
+                            <option value="Latin">Latin</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group movie-only">
+                        <label>Description / Storyline</label>
+                        <textarea name="description" id="editDescription" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 25px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 2;">Save Updates</button>
+                        <button type="button" class="btn" style="background: #333; flex: 1;" onclick="closeModal()">Discard</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
- <script>
-    
-    // Global variables
+<script>
     let allContent = [];
-    let genres = [];
-    let filteredContent = [];
 
-    // පිටුව Load වන විට දත්ත ලබා ගැනීම
     async function loadContent() {
         try {
-            // ඔබේ backend ගොනුවේ නම නිවැරදි දැයි බලන්න (content_manage_backend.php)
+            // Note: Make sure your backend file is returning ALL columns (album, language, audio_file)
             const response = await fetch('../library/content_manage_backend.php');
             const data = await response.json();
-            
             if (data.success) {
-                allContent = data.content;
-                genres = data.genres || [];
-                
-                displayAlerts(data);
-                populateGenreFilter();
-                applyFilters(); // දත්ත ලැබුණු පසු Filter apply කර Cards පෙන්වයි
+                allContent = data.content || [];
+                updateGenreFilterOptions();
+                applyFilters();
             } else {
-                showError(data.error_message || 'Failed to load content');
-                displayContent([]);
+                console.error("Failed to load content:", data.error_message);
             }
-        } catch (error) {
-            console.error('Error loading content:', error);
-            showError('Failed to load content. Please try again.');
-            displayContent([]);
+        } catch (e) { 
+            console.error("Connection error:", e); 
         }
     }
 
-    // Alerts පෙන්වීම (Success/Error messages)
-    function displayAlerts(data) {
-        const alertsContainer = document.getElementById('alertsContainer');
-        if(!alertsContainer) return;
-        alertsContainer.innerHTML = '';
-        
-        if (data.success_message || data.error_message) {
-            const isError = !!data.error_message;
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
-            alertDiv.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${data.success_message || data.error_message}`;
-            alertsContainer.appendChild(alertDiv);
-            
-            setTimeout(() => { alertDiv.remove(); }, 5000);
-        }
-    }
-
-    // Genre filter එකට දත්ත ඇතුළත් කිරීම
-    function populateGenreFilter() {
+    function updateGenreFilterOptions() {
+        const typeFilter = document.getElementById('typeFilter').value;
         const genreFilter = document.getElementById('genreFilter');
-        if(!genreFilter) return;
+        const currentGenreValue = genreFilter.value;
+
+        genreFilter.innerHTML = '<option value="all">All Genres</option>';
         
-        while (genreFilter.options.length > 1) { genreFilter.remove(1); }
-        
-        const uniqueGenres = [...new Set(allContent.map(item => item.genre))].filter(g => g);
-        
-        uniqueGenres.forEach(genre => {
-            const option = document.createElement('option');
-            option.value = genre;
-            option.textContent = genre;
-            genreFilter.appendChild(option);
+        const genres = [...new Set(allContent
+            .filter(item => typeFilter === 'all' || item.type === typeFilter)
+            .map(item => item.genre)
+            .filter(g => g && g !== "")
+        )].sort();
+
+        genres.forEach(g => {
+            genreFilter.innerHTML += `<option value="${g}">${g}</option>`;
         });
+
+        if (genres.includes(currentGenreValue)) {
+            genreFilter.value = currentGenreValue;
+        } else {
+            genreFilter.value = 'all';
+        }
     }
 
-    // දත්ත CARDS ආකාරයෙන් පෙන්වීමේ ප්‍රධාන Function එක
-    function displayContent(contentArray) {
-        const contentGrid = document.getElementById('contentGrid');
-        if(!contentGrid) return;
-        
-        contentGrid.innerHTML = '';
+    function handleTypeChange() {
+        updateGenreFilterOptions();
+        applyFilters();
+    }
 
-        if (contentArray.length === 0) {
-            contentGrid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 50px; color: #888;">
-                    <i class="fas fa-search-minus" style="font-size: 50px; margin-bottom: 20px; display: block;"></i>
-                    <h3 style="color: #fff;">No Content Found</h3>
-                    <p>There is no content matching your criteria.</p>
-                </div>`;
+    function applyFilters() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const typeTerm = document.getElementById('typeFilter').value;
+        const genreTerm = document.getElementById('genreFilter').value;
+        const sortTerm = document.getElementById('sortFilter').value;
+
+        let filtered = allContent.filter(item => {
+            const matchesSearch = item.title.toLowerCase().includes(searchTerm) || 
+                                 (item.artist && item.artist.toLowerCase().includes(searchTerm)) ||
+                                 (item.genre && item.genre.toLowerCase().includes(searchTerm));
+            const matchesType = typeTerm === 'all' || item.type === typeTerm;
+            const matchesGenre = genreTerm === 'all' || item.genre === genreTerm;
+            return matchesSearch && matchesType && matchesGenre;
+        });
+
+        if (sortTerm === 'newest') {
+            filtered.sort((a, b) => (parseInt(b.movie_id || b.content_id) || 0) - (parseInt(a.movie_id || a.content_id) || 0));
+        } else if (sortTerm === 'oldest') {
+            filtered.sort((a, b) => (parseInt(a.movie_id || a.content_id) || 0) - (parseInt(b.movie_id || b.content_id) || 0));
+        } else if (sortTerm === 'az') {
+            filtered.sort((a, b) => a.title.localeCompare(b.title));
+        }
+
+        displayContent(filtered);
+    }
+
+    function displayContent(items) {
+        const grid = document.getElementById('contentGrid');
+        grid.innerHTML = '';
+        
+        if (items.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-gray);">No content found matching your filters.</div>';
             return;
         }
 
-        contentArray.forEach(content => {
-            const imageSrc = (content.image && content.image !== null) 
-                 ? '..' + content.image 
-                 : '../assets/mdif.jpeg';
-            const badgeColor = content.type === 'movie' ? '#E50914' : '#007bff';
-            
-            contentGrid.innerHTML += `
-                <div class="content-card" style="background: #1a1a1a; border-radius: 10px; overflow: hidden; border: 1px solid #333; position: relative;">
-                    <div class="content-poster" style="position: relative; height: 250px;">
-                        <img src="${imageSrc}" style="width: 100%; height: 100%; object-fit: cover;">
-                        <span style="position: absolute; top: 10px; right: 10px; background: ${badgeColor}; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: #fff;">
-                            ${content.type.toUpperCase()}
-                        </span>
+        items.forEach(item => {
+            const id = item.movie_id || item.content_id || item.song_id;
+            const hasPoster = item.poster_image && item.poster_image !== "";
+            // Use cover_image for songs if poster_image is empty
+            const imageSource = item.type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+            const imgPath = imageSource ? '../' + imageSource : null;
+            const noImageMsg = item.type === 'movie' ? 'No Poster Yet' : 'No Cover Image Yet';
+
+            grid.innerHTML += `
+                <div class="content-card">
+                    <div class="content-poster">
+                        ${imgPath ? `<img src="${imgPath}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">` : ''}
+                        <div class="no-image-text" style="${imgPath ? 'display:none' : 'display:block'}">${noImageMsg}</div>
                     </div>
-                    <div class="content-info" style="padding: 15px;">
-                        <h3 style="color: #fff; font-size: 16px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            ${escapeHtml(content.title)}
-                        </h3>
-                        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">
-                            <span><i class="fas fa-tag"></i> ${content.genre}</span> | 
-                            <span><i class="fas fa-clock"></i> ${content.duration} min</span>
+                    <div class="content-info">
+                        <h3 class="content-title">${item.title}</h3>
+                        <div class="content-meta">
+                            <span style="color: var(--primary-red)"><i class="fas ${item.type === 'movie' ? 'fa-film' : 'fa-music'}"></i> ${item.type.toUpperCase()}</span>
+                            <span>${item.genre || 'N/A'}</span>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <a href="edit-content.php?type=${content.type}&id=${content.id}" class="btn-edit" style="flex: 1; text-align: center; background: #333; color: #fff; padding: 6px; border-radius: 4px; text-decoration: none; font-size: 12px;">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                            <button onclick="deleteContent(${content.id}, '${content.type}')" style="flex: 1; background: rgba(229, 9, 20, 0.1); color: #E50914; border: 1px solid #E50914; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
+                            <button onclick="openEditModal(${id}, '${item.type}')" class="btn btn-sm" style="background: #2a2a2a;">Edit</button>
+                            <button onclick="deleteContent(${id}, '${item.type}')" class="btn btn-sm" style="background: rgba(229,9,20,0.1); color: #ff4d4d;">Delete</button>
                         </div>
                     </div>
                 </div>`;
         });
     }
 
-    // Filters ක්‍රියාත්මක කිරීම
-    function applyFilters() {
-        const contentType = document.getElementById('contentTypeFilter').value;
-        const genre = document.getElementById('genreFilter').value;
-        const sortBy = document.getElementById('sortFilter').value;
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        
-        filteredContent = allContent.filter(content => {
-            const matchesType = !contentType || content.type === contentType;
-            const matchesGenre = !genre || content.genre === genre;
-            const matchesSearch = !searchTerm || 
-                                 content.title.toLowerCase().includes(searchTerm) || 
-                                 (content.genre && content.genre.toLowerCase().includes(searchTerm));
-            
-            return matchesType && matchesGenre && matchesSearch;
-        });
-        
-        sortContent(filteredContent, sortBy);
-        displayContent(filteredContent);
-    }
+    function openEditModal(id, type) {
+        // Find the specific item based on ID and Type
+        const item = allContent.find(c => (c.movie_id == id || c.content_id == id || c.song_id == id) && c.type == type);
+        if (!item) return;
 
-    function sortContent(contentArray, sortBy) {
-        if (sortBy === 'title') {
-            contentArray.sort((a, b) => a.title.localeCompare(b.title));
-        } else if (sortBy === 'views') {
-            contentArray.sort((a, b) => (b.views || 0) - (a.views || 0));
-        } else if (sortBy === 'oldest') {
-            contentArray.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        const modalFrame = document.getElementById('modalFrame');
+        modalFrame.className = 'modal-container is-' + type;
+        document.getElementById('modalHeadTitle').innerText = 'Edit ' + type;
+        document.getElementById('imageLabel').innerText = type === 'movie' ? 'Movie Poster' : 'Cover Image';
+
+        document.getElementById('editId').value = id;
+        document.getElementById('editType').value = type;
+        document.getElementById('editTitle').value = item.title || "";
+
+        const previewImg = document.getElementById('posterPreview');
+        const imageSource = type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+        
+        if (imageSource) {
+            previewImg.src = '../' + imageSource;
+            previewImg.style.display = 'block';
         } else {
-            contentArray.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            previewImg.src = "";
+            previewImg.style.display = 'none';
         }
-    }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+        if (type === 'movie') {
+            document.getElementById('movie_genre').value = item.genre || "";
+            document.getElementById('editDuration').value = item.duration || "";
+            document.getElementById('editRating').value = item.rating || "";
+            document.getElementById('editYear').value = item.year || item.release_year || "";
+            document.getElementById('editDescription').value = item.description || "";
+        } else {
+            // --- SONG DATA MAPPING ---
+            document.getElementById('song_genre').value = item.genre || "";
+            document.getElementById('editArtist').value = item.artist || item.artist_name || "";
+            
+            // Map Album (Checking database column 'album')
+            document.getElementById('editAlbum').value = item.album || ""; 
+            
+            // Map Duration (Checking 'duration' from DB)
+            document.getElementById('editDurationSec').value = item.duration || item.duration_sec || "";
+            
+            // Map Language (Checking 'language' from DB)
+            document.getElementById('editLanguage').value = item.language || ""; 
 
-    function deleteContent(id, type) {
-        if (confirm(`Are you sure you want to delete this ${type}?`)) {
-            window.location.href = `../library/content_manage_backend.php?delete_id=${id}&type=${type}`;
+            // --- AUDIO PLAYER LOGIC ---
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioContainer = document.getElementById('audioPreviewContainer');
+            
+            if (item.audio_file) {
+                // Assuming audio files are in uploads/songs/audio/
+                // Adjust the '../' path if your folder structure is different
+                audioPlayer.src = '../' + item.audio_file; 
+                audioContainer.style.display = 'block';
+            } else {
+                audioPlayer.src = '';
+                audioContainer.style.display = 'none';
+            }
         }
+
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+        document.body.style.overflow = 'hidden';
     }
 
-    function showError(message) {
-        alert(message);
+    function closeModal() {
+        const modal = document.getElementById('editModal');
+        // Stop audio when closing modal
+        const audio = document.getElementById('audioPlayer');
+        if(audio) audio.pause();
+
+        modal.classList.remove('active');
+        setTimeout(() => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; }, 3000);
     }
 
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', () => {
-        loadContent();
-        
-        document.getElementById('contentTypeFilter').addEventListener('change', applyFilters);
-        document.getElementById('genreFilter').addEventListener('change', applyFilters);
-        document.getElementById('sortFilter').addEventListener('change', applyFilters);
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('searchBtn').addEventListener('click', applyFilters);
+    function previewFile() {
+        const preview = document.getElementById('posterPreview');
+        const file = document.getElementById('editImage').files[0];
+        const reader = new FileReader();
+        reader.onloadend = () => { preview.src = reader.result; preview.style.display = 'block'; }
+        if (file) reader.readAsDataURL(file);
+    }
 
-        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
-            document.getElementById('contentTypeFilter').value = '';
-            document.getElementById('genreFilter').value = '';
-            document.getElementById('sortFilter').value = 'newest';
-            document.getElementById('searchInput').value = '';
-            applyFilters();
-        });
-    });
+    document.getElementById('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeModal(); });
+    document.getElementById('closeModal').onclick = closeModal;
+
+    document.getElementById('updateForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const type = document.getElementById('editType').value;
+        const finalGenre = type === 'movie' ? formData.get('genre_movie') : formData.get('genre_song');
+        formData.append('genre', finalGenre);
+
+        try {
+            const res = await fetch('../library/content_manage_backend.php?action=update', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) { showAlert('Successfully Updated!'); closeModal(); loadContent(); }
+            else { showAlert('Update Failed: ' + data.message); }
+        } catch (e) { showAlert('Update Failed'); }
+    };
+
+    async function deleteContent(id, type) {
+        if (!confirm('Delete this permanently?')) return;
+        try {
+            const res = await fetch(`../library/content_manage_backend.php?action=delete&id=${id}&type=${type}`);
+            const data = await res.json();
+            if (data.success) { showAlert('Content Deleted!'); loadContent(); }
+        } catch (e) { showAlert('Error deleting'); }
+    }
+
+    function showAlert(msg) {
+        const alert = document.createElement('div');
+        alert.className = 'alert';
+        alert.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+        document.getElementById('alertsContainer').appendChild(alert);
+        setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 500); }, 3000);
+    }
+
+    window.onload = loadContent;
 </script>
 </body>
 </html>
