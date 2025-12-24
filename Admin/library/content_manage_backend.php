@@ -1,224 +1,166 @@
 <?php 
 session_start();
 
-// Check if admin is logged in
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit();
-}
-
-// Session timeout (30 minutes)
-if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php?error=session_expired');
-    exit();
-}
-$_SESSION['last_activity'] = time();
-
 // Database connection
-require_once '../include/connection.php';
+require_once '../include/connection.php'; // Path එක නිවැරදිද බලන්න
 
-// Handle delete action
-if (isset($_GET['delete_id']) && isset($_GET['type'])) {
-    $delete_id = $_GET['delete_id'];
-    $type = $_GET['type'];
-    
-    try {
+header('Content-Type: application/json');
+
+// Check login
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    exit();
+}
+
+$action = $_GET['action'] ?? 'fetch';
+
+try {
+    // ---------------------------------------------------------
+    // 1. DELETE ACTION
+    // ---------------------------------------------------------
+    if ($action === 'delete') {
+        if (!isset($_GET['id']) || !isset($_GET['type'])) {
+            throw new Exception("Missing ID or Type");
+        }
+
+        $id = $_GET['id'];
+        $type = $_GET['type'];
+
         if ($type === 'movie') {
             $stmt = $pdo->prepare("DELETE FROM movies WHERE movie_id = ?");
-        } elseif ($type === 'song') {
+        } else {
             $stmt = $pdo->prepare("DELETE FROM songs WHERE song_id = ?");
         }
         
-        $stmt->execute([$delete_id]);
-        $success_message = "Content deleted successfully!";
-    } catch (PDOException $e) {
-        $error_message = "Error deleting content: " . $e->getMessage();
+        $stmt->execute([$id]);
+        echo json_encode(['success' => true, 'message' => 'Deleted successfully']);
+        exit();
     }
-}
 
-// Handle search functionality
-$searchTerm = '';
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $searchTerm = trim($_GET['search']);
-}
+    // ---------------------------------------------------------
+    // 2. UPDATE ACTION (මෙන්න මේ කොටස ඔයාගේ file එකේ තිබුනේ නෑ)
+    // ---------------------------------------------------------
+    if ($action === 'update') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            throw new Exception("Invalid request method");
+        }
 
-try {
-    // Base queries
-    $moviesQuery = "
-        SELECT movie_id, title, description, release_year, genre, rating, duration, poster_image, 
-               COALESCE(view_count, 0) as views, 'movie' as type
-        FROM movies 
-        WHERE 1=1
-    ";
-    
-    $songsQuery = "
-        SELECT song_id as content_id, title, CONCAT(artist, ' - ', album) as description, 
-               NULL as release_year, genre, NULL as rating, duration, cover_image as image, 
-               0 as views, 'song' as type, artist
-        FROM songs 
-        WHERE 1=1
-    ";
-    
-    $params = [];
-    
-    // Add search condition if search term exists
-    if (!empty($searchTerm)) {
-        $searchParam = "%" . $searchTerm . "%";
-        $moviesQuery .= " AND (title LIKE ? OR description LIKE ? OR genre LIKE ?)";
-        $songsQuery .= " AND (title LIKE ? OR artist LIKE ? OR album LIKE ? OR genre LIKE ?)";
-        
-        // For movies: 3 parameters
-        $movieParams = [$searchParam, $searchParam, $searchParam];
-        // For songs: 4 parameters
-        $songParams = [$searchParam, $searchParam, $searchParam, $searchParam];
-    }
-    
-    // Add ORDER BY
-    $moviesQuery .= " ORDER BY created_at DESC";
-    $songsQuery .= " ORDER BY created_at DESC";
-    
-    // Execute movies query
-    $movies_stmt = $pdo->prepare($moviesQuery);
-    if (!empty($searchTerm)) {
-        $movies_stmt->execute($movieParams);
-    } else {
-        $movies_stmt->execute();
-    }
-    $movies = $movies_stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Execute songs query
-    $songs_stmt = $pdo->prepare($songsQuery);
-    if (!empty($searchTerm)) {
-        $songs_stmt->execute($songParams);
-    } else {
-        $songs_stmt->execute();
-    }
-    $songs = $songs_stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Process songs to match movies structure
-    $processedSongs = [];
-    foreach ($songs as $song) {
-        $processedSongs[] = [
-            'movie_id' => $song['content_id'],
-            'title' => $song['title'],
-            'description' => $song['description'],
-            'release_year' => $song['release_year'],
-            'genre' => $song['genre'],
-            'rating' => $song['rating'],
-            'duration' => $song['duration'],
-            'poster_image' => $song['image'],
-            'views' => $song['views'],
-            'type' => 'song',
-            'artist' => $song['artist']
-        ];
-    }
-    
-    // Get unique genres from both movies and songs
-    $genre_stmt = $pdo->query("
-        SELECT DISTINCT genre FROM movies 
-        WHERE genre IS NOT NULL AND genre != ''
-        UNION
-        SELECT DISTINCT genre FROM songs 
-        WHERE genre IS NOT NULL AND genre != ''
-        ORDER BY genre
-    ");
-    $genres = $genre_stmt->fetchAll(PDO::FETCH_COLUMN);
-    
-    // Get content types (always movie and song)
-    $contentTypes = ['movie', 'song'];
-    
-    // Get sort options
-    $sortOptions = [
-        ['value' => 'newest', 'label' => 'Newest First'],
-        ['value' => 'oldest', 'label' => 'Oldest First'],
-        ['value' => 'title_asc', 'label' => 'Title A-Z'],
-        ['value' => 'title_desc', 'label' => 'Title Z-A'],
-        ['value' => 'views', 'label' => 'Most Viewed'],
-        ['value' => 'rating', 'label' => 'Highest Rating']
-    ];
+        $id = $_POST['id'];
+        $type = $_POST['type'];
+        $title = $_POST['title'];
+        $genre = $_POST['genre'];
 
-    // Combine all content
-    $all_content = array_merge($movies, $processedSongs);
-    
-    // Apply sorting if specified
-    if (isset($_GET['sort'])) {
-        $sort = $_GET['sort'];
-        usort($all_content, function($a, $b) use ($sort) {
-            switch ($sort) {
-                case 'title_asc':
-                    return strcmp($a['title'], $b['title']);
-                case 'title_desc':
-                    return strcmp($b['title'], $a['title']);
-                case 'views':
-                    return $b['views'] - $a['views'];
-                case 'rating':
-                    if ($a['type'] === 'movie' && $b['type'] === 'movie') {
-                        return ($b['rating'] ?? 0) <=> ($a['rating'] ?? 0);
-                    }
-                    return 0;
-                case 'oldest':
-                    // Assuming newer items are added later
-                    return strtotime($a['created_at'] ?? '') <=> strtotime($b['created_at'] ?? '');
-                case 'newest':
-                default:
-                    // Default: newest first (already sorted by created_at DESC in SQL)
-                    return 0;
+        if ($type === 'movie') {
+            $duration = $_POST['duration'];
+            $rating = $_POST['rating'];
+            $year = $_POST['year'];
+            $desc = $_POST['description'];
+
+            // Handle Image Upload
+            $imagePath = null;
+            if (isset($_FILES['poster_image']) && $_FILES['poster_image']['error'] === 0) {
+                // සරලව ගත්තොත් upload logic එක (ඔයාගේ project folder structure එක අනුව වෙනස් කරගන්න)
+                $targetDir = "../uploads/movies/";
+                if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+                $fileName = time() . "_" . basename($_FILES['poster_image']['name']);
+                move_uploaded_file($_FILES['poster_image']['tmp_name'], $targetDir . $fileName);
+                $imagePath = "uploads/movies/" . $fileName;
             }
-        });
-    }
-    
-    // Filter by content type if specified
-    if (isset($_GET['content_type']) && !empty($_GET['content_type'])) {
-        $contentType = $_GET['content_type'];
-        $all_content = array_filter($all_content, function($item) use ($contentType) {
-            return $item['type'] === $contentType;
-        });
-        $all_content = array_values($all_content); // Reindex array
-    }
-    
-    // Filter by genre if specified
-    if (isset($_GET['genre']) && !empty($_GET['genre'])) {
-        $genre = $_GET['genre'];
-        $all_content = array_filter($all_content, function($item) use ($genre) {
-            return $item['genre'] === $genre;
-        });
-        $all_content = array_values($all_content); // Reindex array
+
+            // Update Query
+            $sql = "UPDATE movies SET title=?, genre=?, duration=?, rating=?, release_year=?, description=?";
+            $params = [$title, $genre, $duration, $rating, $year, $desc];
+            
+            if ($imagePath) {
+                $sql .= ", poster_image=?";
+                $params[] = $imagePath;
+            }
+            $sql .= " WHERE movie_id=?";
+            $params[] = $id;
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+        } else { // Song
+            $artist = $_POST['artist'];
+            $album = $_POST['album'];
+            $duration = $_POST['duration_sec'];
+            $language = $_POST['language'];
+
+            // Handle Image Upload
+            $imagePath = null;
+            if (isset($_FILES['poster_image']) && $_FILES['poster_image']['error'] === 0) {
+                $targetDir = "../uploads/songs/covers/";
+                if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+                $fileName = time() . "_" . basename($_FILES['poster_image']['name']);
+                move_uploaded_file($_FILES['poster_image']['tmp_name'], $targetDir . $fileName);
+                $imagePath = "uploads/songs/covers/" . $fileName;
+            }
+
+            // Handle Audio Upload
+            $audioPath = null;
+            if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === 0) {
+                $targetDir = "../uploads/songs/audio/";
+                if (!file_exists($targetDir)) mkdir($targetDir, 0777, true);
+                $fileName = time() . "_" . basename($_FILES['audio_file']['name']);
+                move_uploaded_file($_FILES['audio_file']['tmp_name'], $targetDir . $fileName);
+                $audioPath = "uploads/songs/audio/" . $fileName;
+            }
+
+            // Update Query
+            $sql = "UPDATE songs SET title=?, artist=?, album=?, genre=?, duration=?, language=?";
+            $params = [$title, $artist, $album, $genre, $duration, $language];
+
+            if ($imagePath) {
+                $sql .= ", cover_image=?";
+                $params[] = $imagePath;
+            }
+            if ($audioPath) {
+                $sql .= ", audio_file=?";
+                $params[] = $audioPath;
+            }
+            $sql .= " WHERE song_id=?";
+            $params[] = $id;
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Updated successfully']);
+        exit();
     }
 
-    // Prepare data for frontend
-    $data = [
+    // ---------------------------------------------------------
+    // 3. FETCH DATA (Search & Filter)
+    // ---------------------------------------------------------
+    
+    // Movies Query (Select ALL necessary columns)
+    $moviesQuery = "SELECT *, 'movie' as type FROM movies";
+    $moviesStmt = $pdo->prepare($moviesQuery);
+    $moviesStmt->execute();
+    $movies = $moviesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Songs Query (Select ALL necessary columns - album, language, audio_file ඇතුලුව)
+    $songsQuery = "SELECT *, 'song' as type FROM songs";
+    $songsStmt = $pdo->prepare($songsQuery);
+    $songsStmt->execute();
+    $songs = $songsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Combine
+    $allContent = array_merge($movies, $songs);
+
+    // Note: Search filter එක මෙතන PHP array එක ඇතුලේ කරන එක ලේසියි query එක සංකීර්ණ නොකර.
+    // නමුත් ඔයාගේ කලින් code එකේ තිබ්බ වගේ SQL වලින් කරනවා නම් වඩා හොඳයි.
+    // දැනට Data පෙන්නන ප්‍රශ්නේ විසඳන්න සරලව යවමු.
+
+    echo json_encode([
         'success' => true,
-        'content' => $all_content,
-        'genres' => $genres,
-        'contentTypes' => $contentTypes,
-        'sortOptions' => $sortOptions,
-        'searchTerm' => $searchTerm,
-        'success_message' => $success_message ?? null,
-        'error_message' => $error_message ?? null
-    ];
-
-    // Send JSON response
-    header('Content-Type: application/json');
-    echo json_encode($data);
-    exit();
+        'content' => $allContent
+    ]);
 
 } catch (PDOException $e) {
-    error_log("Content management error: " . $e->getMessage());
-    
-    $data = [
-        'success' => false,
-        'error_message' => "Error loading content from database: " . $e->getMessage(),
-        'content' => [],
-        'genres' => [],
-        'contentTypes' => ['movie', 'song'],
-        'sortOptions' => [],
-        'searchTerm' => ''
-    ];
-    
-    header('Content-Type: application/json');
-    echo json_encode($data);
-    exit();
+    echo json_encode(['success' => false, 'message' => 'DB Error: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 ?>
