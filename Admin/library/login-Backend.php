@@ -41,11 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     }
 
     try {
-        // Check if user exists and is Admin - INCLUDE profile_image and other fields
+        // Check if user exists and is Admin - INCLUDE profile_image, status and other fields
         $stmt = $pdo->prepare("
-            SELECT user_id, username, email, password_hash, user_type, first_name, last_name, profile_image
+            SELECT user_id, username, email, password_hash, user_type, first_name, last_name, profile_image, status, is_active
             FROM users 
-            WHERE (username = :username OR email = :email) AND is_active = 1
+            WHERE (username = :username OR email = :email)
         ");
         
         $stmt->execute([
@@ -56,6 +56,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user) {
+            // Check if account is active (is_active field)
+            if ($user['is_active'] != 1) {
+                sendJsonResponse([
+                    'status' => 'error',
+                    'message' => 'Your account has been deactivated. Please contact support.'
+                ]);
+            }
+
+            // Check user status (Active, Inactive, Suspend)
+            $userStatus = $user['status'] ?? 'Active';
+            
+            if ($userStatus === 'Inactive') {
+                sendJsonResponse([
+                    'status' => 'error',
+                    'message' => 'Your account is currently inactive. Please contact support to reactivate your account.'
+                ]);
+            }
+            
+            if ($userStatus === 'Suspend') {
+                sendJsonResponse([
+                    'status' => 'error',
+                    'message' => 'Your account has been suspended. Please contact support for more information.'
+                ]);
+            }
+
             // Verify password
             if (password_verify($password, $user['password_hash'])) {
                 // Check if user is admin
@@ -100,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 ]);
             }
         } else {
-            // User not found or inactive
+            // User not found
             sendJsonResponse([
                 'status' => 'error',
                 'message' => 'Invalid username or password.'
