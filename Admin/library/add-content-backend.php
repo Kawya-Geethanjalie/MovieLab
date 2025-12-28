@@ -144,7 +144,7 @@ function uploadFile($file, $subfolder, $allowedExts, $maxSize = 5242880) {
     if (!file_exists($uploadDir)) mkdir($uploadDir, 0755, true);
     
     if (move_uploaded_file($file['tmp_name'], $uploadDir . $newFileName)) {
-        return ['success' => true, 'path' => "/uploads/$subfolder/$newFileName"];
+        return ['success' => true, 'path' => "uploads/$subfolder/$newFileName"];
     }
     return ['success' => false, 'message' => 'Upload failed'];
 }

@@ -46,7 +46,7 @@ function fixImagePath($path) {
     }
     
     // Default: return as is
-    return $path;
+    return '../Admin/'.$path;
 }
 
 // Get filter parameters from URL
@@ -824,13 +824,7 @@ $conn->close();
                                                 </audio>
                                                 
                                                 <!-- Manual play button for browsers that block autoplay -->
-                                                <button 
-                                                    id="manual-play-<?php echo $song['song_id']; ?>"
-                                                    class="audio-control-btn audio-play-btn hidden"
-                                                    onclick="manualPlayAudio(<?php echo $song['song_id']; ?>)"
-                                                >
-                                                    <i class="fas fa-play"></i>
-                                                </button>
+                                                
                                             </div>
                                             <button 
                                                 onclick="closeAudioPlayer(<?php echo $song['song_id']; ?>)"
@@ -1297,7 +1291,7 @@ $conn->close();
                 return;
             }
             
-            fetch('library/add_favorite.php', {
+            fetch('../library/add_favorite.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
