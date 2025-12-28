@@ -1,5 +1,3 @@
-[file name]: index.php
-[file content begin]
 <?php 
 include("../include/header.php");
 
@@ -418,55 +416,6 @@ $conn->close();
             background: rgba(37, 99, 235, 0.9);
             color: white;
         }
-        
-        /* Audio player custom styles */
-        .audio-player-container {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .audio-player-content {
-            text-align: center;
-            width: 100%;
-        }
-        
-        .audio-controls {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-        
-        .audio-control-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .audio-control-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-        
-        .audio-play-btn {
-            background: #10B981;
-            border-color: #10B981;
-        }
-        
-        .audio-play-btn:hover {
-            background: #059669;
-        }
     </style>
 </head>
 <body class="bg-black text-white font-sans">
@@ -805,26 +754,21 @@ $conn->close();
                                         <?php endif; ?>
                                     </div>
                                     
-                                    <!-- Audio Player (Initially Hidden) - UPDATED STRUCTURE -->
+                                    <!-- Audio Player (Initially Hidden) -->
                                     <div id="audio-player-<?php echo $song['song_id']; ?>" class="player-container hidden">
-                                        <div class="audio-player-container bg-gradient-to-r from-blue-900 to-purple-900">
-                                            <div class="audio-player-content">
+                                        <div class="relative h-full bg-gradient-to-r from-blue-900 to-purple-900 flex items-center justify-center p-4">
+                                            <div class="text-center">
                                                 <i class="fas fa-music text-4xl text-white mb-4"></i>
                                                 <h4 class="text-white font-bold mb-2"><?php echo htmlspecialchars($song['title']); ?></h4>
-                                                <p class="text-gray-300 text-sm mb-6"><?php echo htmlspecialchars($song['artist']); ?></p>
-                                                
-                                                <!-- Audio element with controls -->
+                                                <p class="text-gray-300 text-sm mb-4"><?php echo htmlspecialchars($song['artist']); ?></p>
                                                 <audio 
                                                     id="audio-<?php echo $song['song_id']; ?>" 
                                                     controls 
-                                                    class="w-full mb-4"
+                                                    class="w-full"
                                                 >
                                                     <source src="<?php echo htmlspecialchars(fixImagePath($song['audio_file'] ?? '')); ?>" type="audio/mpeg">
                                                     Your browser does not support the audio element.
                                                 </audio>
-                                                
-                                                <!-- Manual play button for browsers that block autoplay -->
-                                                
                                             </div>
                                             <button 
                                                 onclick="closeAudioPlayer(<?php echo $song['song_id']; ?>)"
@@ -1021,61 +965,56 @@ $conn->close();
         }
 
         /**
-         * Scroll thumbnails to show active thumbnail in the center
-         */
-        function scrollThumbnailsToActive() {
-            const container = thumbnailsContainer.parentElement;
-            const activeThumb = thumbnailsContainer.querySelector('.thumbnail.active');
-            
-            if (activeThumb && container) {
-                const containerWidth = container.offsetWidth;
-                const thumbWidth = activeThumb.offsetWidth;
-                const thumbLeft = activeThumb.offsetLeft;
-                const thumbCenter = thumbLeft - (containerWidth / 2) + (thumbWidth / 2);
-                
-                container.scrollTo({
-                    left: thumbCenter,
-                    behavior: 'smooth'
-                });
-            }
-        }
-
-        /**
          * Updates the main hero slide content and background.
          */
-        function updateSlide() {
-            const movie = movies[currentIndex];
+        /**
+ * Updates the main hero slide content and background.
+ */
+function updateSlide() {
+    const movie = movies[currentIndex];
 
-            // 1. Update background image
-            bgImage.style.backgroundImage = `url('${movie.image}')`;
-            
-            // 2. Update the text content
-            titleEl.textContent = movie.title;
-            descEl.textContent = movie.desc;
-            yearEl.textContent = movie.year;
-            ratingEl.textContent = movie.rating;
-            genreEl.textContent = movie.genre;
+    // 1. Update background image
+    bgImage.style.backgroundImage = `url('${movie.image}')`;
+    
+    // 2. Update the text content
+    titleEl.textContent = movie.title;
+    descEl.textContent = movie.desc;
+    yearEl.textContent = movie.year;
+    ratingEl.textContent = movie.rating;
+    genreEl.textContent = movie.genre;
 
-            // 3. Apply entrance animation for text
-            textContainer.classList.remove('animate-fade-in-up');
-            void textContainer.offsetWidth; // Force reflow to restart animation
-            textContainer.classList.add('animate-fade-in-up');
+    // 3. Apply entrance animation for text
+    textContainer.classList.remove('animate-fade-in-up');
+    void textContainer.offsetWidth; // Force reflow to restart animation
+    textContainer.classList.add('animate-fade-in-up');
 
-            // 4. Update Thumbnails Active State
-            const thumbs = document.querySelectorAll('.thumbnail');
-            
-            thumbs.forEach((t, i) => {
-                if (i === currentIndex) {
-                    t.classList.add('active');
-                } else {
-                    t.classList.remove('active');
-                }
-            });
-            
-            // 5. Auto scroll to active thumbnail
-            scrollThumbnailsToActive();
-        }
-
+    // 4. Update Thumbnails Active State and scroll
+    const thumbs = document.querySelectorAll('.thumbnail');
+    const thumbnailsContainer = document.getElementById('thumbnails-container');
+    const activeThumb = thumbs[currentIndex];
+    
+    // Remove active class from all thumbs
+    thumbs.forEach(t => t.classList.remove('active'));
+    
+    // Add active class to current thumb
+    if (activeThumb) {
+        activeThumb.classList.add('active');
+        
+        // Calculate scroll position to center the active thumbnail
+        const containerRect = thumbnailsContainer.getBoundingClientRect();
+        const thumbRect = activeThumb.getBoundingClientRect();
+        const scrollLeft = thumbnailsContainer.scrollLeft;
+        const thumbCenter = thumbRect.left - containerRect.left + thumbRect.width / 2;
+        const containerCenter = containerRect.width / 2;
+        const targetScroll = scrollLeft + (thumbCenter - containerCenter);
+        
+        // Smooth scroll to center the thumbnail
+        thumbnailsContainer.scrollTo({
+            left: targetScroll,
+            behavior: 'smooth'
+        });
+    }
+}
         /**
          * Moves to the next slide, wrapping around.
          */
@@ -1148,90 +1087,22 @@ $conn->close();
         }
 
         /**
-         * Plays audio inside the card - FIXED VERSION
+         * Plays audio inside the card
          */
         function playAudio(contentId, audioUrl) {
             const poster = document.getElementById(`song-poster-${contentId}`);
             const player = document.getElementById(`audio-player-${contentId}`);
+            const audio = document.getElementById(`audio-${contentId}`);
             
-            if (poster && player) {
+            if (poster && player && audio) {
                 // Hide poster, show player
                 poster.classList.add('hidden');
                 player.classList.remove('hidden');
                 
-                // Get or create audio element
-                let audioElement = document.getElementById(`audio-${contentId}`);
-                
-                if (!audioElement) {
-                    // Create audio element if it doesn't exist
-                    audioElement = document.createElement('audio');
-                    audioElement.id = `audio-${contentId}`;
-                    audioElement.controls = true;
-                    audioElement.className = 'w-full mb-4';
-                    
-                    const source = document.createElement('source');
-                    source.src = audioUrl;
-                    source.type = 'audio/mpeg';
-                    
-                    audioElement.appendChild(source);
-                    audioElement.innerHTML += 'Your browser does not support the audio element.';
-                    
-                    // Add to player
-                    const playerContent = player.querySelector('.audio-player-content');
-                    if (playerContent) {
-                        playerContent.insertBefore(audioElement, playerContent.querySelector('.audio-control-btn'));
-                    }
-                } else {
-                    // Update existing audio source if needed
-                    const source = audioElement.querySelector('source');
-                    if (source && source.src !== audioUrl) {
-                        source.src = audioUrl;
-                        audioElement.load();
-                    }
-                }
-                
-                // Try to play automatically (may be blocked by browser)
+                // Play audio
                 setTimeout(() => {
-                    const playPromise = audioElement.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            console.log("Audio playing successfully");
-                            // Hide manual play button if autoplay succeeds
-                            const manualBtn = document.getElementById(`manual-play-${contentId}`);
-                            if (manualBtn) {
-                                manualBtn.classList.add('hidden');
-                            }
-                        }).catch(error => {
-                            console.log("Auto-play blocked:", error);
-                            // Show manual play button
-                            const manualBtn = document.getElementById(`manual-play-${contentId}`);
-                            if (manualBtn) {
-                                manualBtn.classList.remove('hidden');
-                            }
-                            showSuccess("Click the play button to start audio");
-                        });
-                    }
+                    audio.play().catch(e => console.log("Audio play failed:", e));
                 }, 100);
-            }
-        }
-
-        /**
-         * Manual play function for audio (when autoplay is blocked)
-         */
-        function manualPlayAudio(contentId) {
-            const audioElement = document.getElementById(`audio-${contentId}`);
-            if (audioElement) {
-                audioElement.play().then(() => {
-                    // Hide manual button on success
-                    const manualBtn = document.getElementById(`manual-play-${contentId}`);
-                    if (manualBtn) {
-                        manualBtn.classList.add('hidden');
-                    }
-                }).catch(error => {
-                    console.log("Manual play failed:", error);
-                    showSuccess("Please use the audio player controls");
-                });
             }
         }
 
@@ -1241,22 +1112,16 @@ $conn->close();
         function closeAudioPlayer(contentId) {
             const poster = document.getElementById(`song-poster-${contentId}`);
             const player = document.getElementById(`audio-player-${contentId}`);
-            const audioElement = document.getElementById(`audio-${contentId}`);
+            const audio = document.getElementById(`audio-${contentId}`);
             
-            if (poster && player && audioElement) {
+            if (poster && player && audio) {
                 // Hide player, show poster
                 player.classList.add('hidden');
                 poster.classList.remove('hidden');
                 
-                // Pause audio and reset
-                audioElement.pause();
-                audioElement.currentTime = 0;
-                
-                // Hide manual play button
-                const manualBtn = document.getElementById(`manual-play-${contentId}`);
-                if (manualBtn) {
-                    manualBtn.classList.add('hidden');
-                }
+                // Pause audio
+                audio.pause();
+                audio.currentTime = 0;
             }
         }
 
@@ -1279,19 +1144,12 @@ $conn->close();
         }
 
         function addToFavorites(contentId, contentType) {
-            // Check if user is logged in
-            const isLoggedIn = <?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>;
-            
             if (!isLoggedIn) {
-                showSuccess("Please login to add to favorites");
-                // Redirect to login page or show login modal
-                setTimeout(() => {
-                    window.location.href = "login.php";
-                }, 1500);
+                openLoginModal();
                 return;
             }
             
-            fetch('../library/add_favorite.php', {
+            fetch('library/add_favorite.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1356,5 +1214,4 @@ function remove_filter($filter_name) {
     return 'index.php?' . http_build_query($params);
 }
 include("../include/footer.php");
-?>
-[file content end]
+?> 
