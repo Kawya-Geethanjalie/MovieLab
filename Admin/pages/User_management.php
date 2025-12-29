@@ -766,11 +766,7 @@ include("../include/header.php");
     <div class="page-header">
         <h1 class="page-title">User Management</h1>
         <div class="header-actions">
-            <button class="btn btn-secondary">
-                <i class="fas fa-download"></i>
-                Export Users
-            </button>
-            <a href="add_user.php" class="btn btn-primary">
+                <a href="add_user.php" class="btn btn-primary">
                     <i class="fas fa-plus"></i>
                     Add New User
                 </a>
@@ -845,37 +841,37 @@ include("../include/header.php");
             <div class="filter-group">
                 <label class="filter-label">Status</label>
                 <select class="filter-select">
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="" style="background:black;">All Status</option>
+                    <option value="active" style="background:black;">Active</option>
+                    <option value="inactive" style="background:black;">Inactive</option>
+                    <option value="suspended" style="background:black;">Suspended</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label class="filter-label">Subscription</label>
                 <select class="filter-select">
-                    <option value="">All Subscriptions</option>
-                    <option value="premium">Premium</option>
-                    <option value="basic">Basic</option>
-                    <option value="free">Free</option>
+                    <option value="" style="background:black;">All Subscriptions</option>
+                    <option value="premium" style="background:black;">Premium</option>
+                    <option value="basic" style="background:black;">Basic</option>
+                    <option value="free" style="background:black;">Free</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label class="filter-label">Registration Date</label>
                 <select class="filter-select">
-                    <option value="">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
+                    <option value="" style="background:black;">All Time</option>
+                    <option value="today" style="background:black;">Today</option>
+                    <option value="week" style="background:black;">This Week</option>
+                    <option value="month" style="background:black;">This Month</option>
                 </select>
             </div>
             <div class="filter-group">
                 <label class="filter-label">Sort By</label>
                 <select class="filter-select">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="name">Name A-Z</option>
-                    <option value="activity">Last Active</option>
+                    <option value="newest" style="background:black;">Newest First</option>
+                    <option value="oldest" style="background:black;">Oldest First</option>
+                    <option value="name" style="background:black;">Name A-Z</option>
+                    <option value="activity" style="background:black;">Last Active</option>
                 </select>
             </div>
         </div>
