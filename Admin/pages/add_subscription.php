@@ -255,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Add New Subscription - MovieLab Admin</title>
     <style>
         :root {
-            --primary-red: #d32f2f;
+            --primary-red: #cf0505ff;
             --dark-red: #b71c1c;
             --gold: #ffd700;
             --silver: #c0c0c0;
