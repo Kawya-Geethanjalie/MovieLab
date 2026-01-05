@@ -273,7 +273,7 @@ $conn->close();
         
         .song-cover {
             height: 250px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #9966eaff 0%, #a24b68ff 100%);
         }
         
         .movie-poster {
@@ -416,6 +416,20 @@ $conn->close();
             background: rgba(37, 99, 235, 0.9);
             color: white;
         }
+        
+        /* Favorite button styles */
+        .favorite-btn-small {
+            transition: all 0.2s ease;
+        }
+        
+        .favorite-btn-small:hover {
+            transform: scale(1.5);
+        }
+        
+        .favorite-btn-small.active {
+            color: #EF4444;
+        }
+        
     </style>
 </head>
 <body class="bg-black text-white font-sans">
@@ -654,41 +668,56 @@ $conn->close();
                                 <!-- Content Info -->
                                 <div class="content-info p-4">
                                     <div class="content-details">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <h2 class="text-lg font-bold text-white"><?php echo htmlspecialchars($movie['title']); ?></h2>
-                                            <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                                <?php echo htmlspecialchars($movie['rating'] ?? 'N/A'); ?>
+                                        <!-- Movie Title -->
+                                        <h2 class="text-lg font-bold text-white mb-2"><?php echo htmlspecialchars($movie['title']); ?></h2>
+                                        
+                                        <div class="flex items-center justify-between mb-3">
+                                            <!-- Rating and Favorite on left side -->
+                                            <div class="flex items-center gap-2">
+                                                <!-- Rating badge -->
+                                                <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                                                    <?php echo htmlspecialchars($movie['rating'] ?? 'N/A'); ?>
+                                                </span>
+                                                
+                                                <!-- Favorite button (small heart icon) -->
+                                                <button 
+                                                    onclick="addToFavorites(<?php echo $movie['movie_id']; ?>, 'movie')"
+                                                    class="text-gray-300 hover:text-red-500 transition-colors duration-300 favorite-btn-small hover:-translate-y-2"
+                                                    title="Add to favorites"
+                                                >
+                                                    <i class="fas fa-heart text-sm"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Movie details on right side -->
+                                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    <span><?php echo htmlspecialchars($movie['duration'] ?? 'N/A'); ?>m</span>
+                                                </div>
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-calendar mr-1"></i>
+                                                    <span><?php echo htmlspecialchars($movie['release_year'] ?? 'N/A'); ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Genre -->
+                                        <div class="mb-3">
+                                            <span class="text-gray-400 text-sm">
+                                                <i class="fas fa-tag mr-1"></i>
+                                                <?php echo htmlspecialchars($movie['genre'] ?? 'N/A'); ?>
                                             </span>
                                         </div>
+                                        
+                                        <!-- Description -->
                                         <p class="text-gray-400 text-sm mb-3 line-clamp-2">
                                             <?php echo htmlspecialchars($movie['description'] ?? 'No description available'); ?>
                                         </p>
-                                        
-                                        <div class="flex justify-between text-sm text-gray-400">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-clock mr-1"></i>
-                                                <span><?php echo htmlspecialchars($movie['duration'] ?? 'N/A'); ?>m</span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-calendar mr-1"></i>
-                                                <span><?php echo htmlspecialchars($movie['release_year'] ?? 'N/A'); ?></span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-tag mr-1"></i>
-                                                <span><?php echo htmlspecialchars($movie['genre'] ?? 'N/A'); ?></span>
-                                            </div>
-                                        </div>
                                     </div>
                                     
-                                    <!-- Action Buttons -->
+                                    <!-- Action Buttons - Trailer and Play buttons -->
                                     <div class="action-buttons-container flex gap-2">
-                                        <button 
-                                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
-                                            onclick="addToFavorites(<?php echo $movie['movie_id']; ?>, 'movie')"
-                                        >
-                                            <i class="fas fa-heart mr-2"></i>
-                                            Favorite
-                                        </button>
                                         <?php if (!empty($movie['trailer_url'])): ?>
                                             <button 
                                                 class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
@@ -698,6 +727,15 @@ $conn->close();
                                                 Trailer
                                             </button>
                                         <?php endif; ?>
+                                        
+                                        <!-- Play/Details button -->
+                                        <button 
+    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
+    onclick="playMovies('<?php echo $movie['play_url']; ?>')"
+>
+    <i class="fas fa-play-circle mr-2"></i>
+    Play
+</button>
                                     </div>
                                 </div>
                             </div>
@@ -783,44 +821,60 @@ $conn->close();
                                 <!-- Content Info -->
                                 <div class="content-info p-4">
                                     <div class="content-details">
-                                        <div class="flex justify-between items-start mb-2">
-                                            <h2 class="text-lg font-bold text-white"><?php echo htmlspecialchars($song['title']); ?></h2>
-                                            <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
-                                                <?php echo htmlspecialchars($song['genre'] ?? 'Music'); ?>
-                                            </span>
-                                        </div>
+                                        <!-- Song Title -->
+                                        <h2 class="text-lg font-bold text-white mb-2"><?php echo htmlspecialchars($song['title']); ?></h2>
+                                        
+                                        <!-- Artist -->
                                         <p class="text-gray-400 text-sm mb-3">
                                             By <?php echo htmlspecialchars($song['artist']); ?>
-                                            <?php if (!empty($song['album'])): ?>
-                                                <br>Album: <?php echo htmlspecialchars($song['album']); ?>
-                                            <?php endif; ?>
                                         </p>
                                         
-                                        <div class="flex justify-between text-sm text-gray-400">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-clock mr-1"></i>
-                                                <span><?php echo htmlspecialchars(floor($song['duration'] / 60) . ':' . sprintf('%02d', $song['duration'] % 60)); ?></span>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <!-- Genre and Favorite on left side -->
+                                            <div class="flex items-center gap-2">
+                                                <!-- Genre badge -->
+                                                <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">
+                                                    <?php echo htmlspecialchars($song['genre'] ?? 'Music'); ?>
+                                                </span>
+                                                
+                                                <!-- Favorite button (small heart icon) -->
+                                                <button 
+                                                    onclick="addToFavorites(<?php echo $song['song_id']; ?>, 'song')"
+                                                    class="text-gray-400 hover:text-red-500 transition-colors duration-200 favorite-btn-small"
+                                                    title="Add to favorites"
+                                                >
+                                                    <i class="fas fa-heart text-sm"></i>
+                                                </button>
                                             </div>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-globe mr-1"></i>
-                                                <span><?php echo htmlspecialchars($song['language'] ?? 'N/A'); ?></span>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <i class="fas fa-compact-disc mr-1"></i>
-                                                <span><?php echo htmlspecialchars($song['genre'] ?? 'N/A'); ?></span>
+                                            
+                                            <!-- Song details on right side -->
+                                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-clock mr-1"></i>
+                                                    <span><?php echo htmlspecialchars(floor($song['duration'] / 60) . ':' . sprintf('%02d', $song['duration'] % 60)); ?></span>
+                                                </div>
+                                                <?php if (!empty($song['album'])): ?>
+                                                <div class="flex items-center">
+                                                    <i class="fas fa-compact-disc mr-1"></i>
+                                                    <span class="truncate max-w-[60px]"><?php echo htmlspecialchars($song['album']); ?></span>
+                                                </div>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
+                                        
+                                        <!-- Language -->
+                                        <?php if (!empty($song['language'])): ?>
+                                        <div class="mb-3">
+                                            <span class="text-gray-400 text-sm">
+                                                <i class="fas fa-globe mr-1"></i>
+                                                <?php echo htmlspecialchars($song['language']); ?>
+                                            </span>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                     
-                                    <!-- Action Buttons -->
+                                    <!-- Action Buttons - Play and Details -->
                                     <div class="action-buttons-container flex gap-2">
-                                        <button 
-                                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
-                                            onclick="addToFavorites(<?php echo $song['song_id']; ?>, 'song')"
-                                        >
-                                            <i class="fas fa-heart mr-2"></i>
-                                            Favorite
-                                        </button>
                                         <?php if (!empty($song['audio_file'])): ?>
                                             <button 
                                                 class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
@@ -830,6 +884,15 @@ $conn->close();
                                                 Play
                                             </button>
                                         <?php endif; ?>
+                                        
+                                        <!-- Details button -->
+                                        <button 
+                                            class="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
+                                            onclick="window.location.href='song_details.php?id=<?php echo $song['song_id']; ?>'"
+                                        >
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Details
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -967,54 +1030,51 @@ $conn->close();
         /**
          * Updates the main hero slide content and background.
          */
-        /**
- * Updates the main hero slide content and background.
- */
-function updateSlide() {
-    const movie = movies[currentIndex];
+        function updateSlide() {
+            const movie = movies[currentIndex];
 
-    // 1. Update background image
-    bgImage.style.backgroundImage = `url('${movie.image}')`;
-    
-    // 2. Update the text content
-    titleEl.textContent = movie.title;
-    descEl.textContent = movie.desc;
-    yearEl.textContent = movie.year;
-    ratingEl.textContent = movie.rating;
-    genreEl.textContent = movie.genre;
+            // 1. Update background image
+            bgImage.style.backgroundImage = `url('${movie.image}')`;
+            
+            // 2. Update the text content
+            titleEl.textContent = movie.title;
+            descEl.textContent = movie.desc;
+            yearEl.textContent = movie.year;
+            ratingEl.textContent = movie.rating;
+            genreEl.textContent = movie.genre;
 
-    // 3. Apply entrance animation for text
-    textContainer.classList.remove('animate-fade-in-up');
-    void textContainer.offsetWidth; // Force reflow to restart animation
-    textContainer.classList.add('animate-fade-in-up');
+            // 3. Apply entrance animation for text
+            textContainer.classList.remove('animate-fade-in-up');
+            void textContainer.offsetWidth; // Force reflow to restart animation
+            textContainer.classList.add('animate-fade-in-up');
 
-    // 4. Update Thumbnails Active State and scroll
-    const thumbs = document.querySelectorAll('.thumbnail');
-    const thumbnailsContainer = document.getElementById('thumbnails-container');
-    const activeThumb = thumbs[currentIndex];
-    
-    // Remove active class from all thumbs
-    thumbs.forEach(t => t.classList.remove('active'));
-    
-    // Add active class to current thumb
-    if (activeThumb) {
-        activeThumb.classList.add('active');
-        
-        // Calculate scroll position to center the active thumbnail
-        const containerRect = thumbnailsContainer.getBoundingClientRect();
-        const thumbRect = activeThumb.getBoundingClientRect();
-        const scrollLeft = thumbnailsContainer.scrollLeft;
-        const thumbCenter = thumbRect.left - containerRect.left + thumbRect.width / 2;
-        const containerCenter = containerRect.width / 2;
-        const targetScroll = scrollLeft + (thumbCenter - containerCenter);
-        
-        // Smooth scroll to center the thumbnail
-        thumbnailsContainer.scrollTo({
-            left: targetScroll,
-            behavior: 'smooth'
-        });
-    }
-}
+            // 4. Update Thumbnails Active State and scroll
+            const thumbs = document.querySelectorAll('.thumbnail');
+            const activeThumb = thumbs[currentIndex];
+            
+            // Remove active class from all thumbs
+            thumbs.forEach(t => t.classList.remove('active'));
+            
+            // Add active class to current thumb
+            if (activeThumb) {
+                activeThumb.classList.add('active');
+                
+                // Calculate scroll position to center the active thumbnail
+                const containerRect = thumbnailsContainer.getBoundingClientRect();
+                const thumbRect = activeThumb.getBoundingClientRect();
+                const scrollLeft = thumbnailsContainer.scrollLeft;
+                const thumbCenter = thumbRect.left - containerRect.left + thumbRect.width / 2;
+                const containerCenter = containerRect.width / 2;
+                const targetScroll = scrollLeft + (thumbCenter - containerCenter);
+                
+                // Smooth scroll to center the thumbnail
+                thumbnailsContainer.scrollTo({
+                    left: targetScroll,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
         /**
          * Moves to the next slide, wrapping around.
          */
@@ -1098,7 +1158,10 @@ function updateSlide() {
                 // Hide poster, show player
                 poster.classList.add('hidden');
                 player.classList.remove('hidden');
-                
+                audio.style.width = "220px";
+                audio.style.height = "38px";
+
+
                 // Play audio
                 setTimeout(() => {
                     audio.play().catch(e => console.log("Audio play failed:", e));
@@ -1144,10 +1207,16 @@ function updateSlide() {
         }
 
         function addToFavorites(contentId, contentType) {
-            if (!isLoggedIn) {
-                openLoginModal();
+            // Note: You need to define isLoggedIn and openLoginModal in your actual code
+            if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) {
+                if (typeof openLoginModal !== 'undefined') {
+                    openLoginModal();
+                }
                 return;
             }
+            
+            // Find the button that was clicked
+            const button = event.target.closest('button');
             
             fetch('library/add_favorite.php', {
                 method: 'POST',
@@ -1163,6 +1232,11 @@ function updateSlide() {
             .then(data => {
                 if (data.status === 'success') {
                     showSuccess('Added to favorites!');
+                    // Add visual feedback
+                    if (button) {
+                        button.classList.add('active');
+                        button.innerHTML = '<i class="fas fa-heart text-sm text-red-500"></i>';
+                    }
                 } else {
                     showSuccess('Already in favorites!');
                 }
@@ -1202,6 +1276,28 @@ function updateSlide() {
             startTimer();
         }
 
+
+
+//PLAY BTN
+            function playMovies(playUrl) {
+    // 1. පරිශීලකයා ලොගින් වී ඇත්දැයි පරීක්ෂා කිරීම
+    // සටහන: මෙහි isLoggedIn යන්න ඔබේ පද්ධතියේ සත්‍ය වශයෙන්ම අර්ථ දක්වා තිබිය යුතුය
+    if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) {
+        if (typeof openLoginModal !== 'undefined') {
+            openLoginModal();
+        } else {
+            alert("Please login to watch movies.");
+        }
+        return;
+    }
+
+    // 2. play_url එක හිස් නොවේ නම් එය අලුත් ටැබ් එකක විවෘත කිරීම
+    if (playUrl && playUrl !== 'NULL' && playUrl !== '') {
+        window.open(playUrl, '_blank');
+    } else {
+        alert("Sorry, the play URL is not available for this movie.");
+    }
+}
     </script>
 </body>
 </html>
@@ -1214,4 +1310,4 @@ function remove_filter($filter_name) {
     return 'index.php?' . http_build_query($params);
 }
 include("../include/footer.php");
-?> 
+?>

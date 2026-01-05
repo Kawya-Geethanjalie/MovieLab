@@ -99,15 +99,29 @@ function handleMovieSubmission($pdo) {
         if ($upload['success']) $poster_path = $upload['path'];
     }
 
-    $sql = "INSERT INTO movies (title, description, release_year, genre, rating, duration, poster_image, trailer_url, view_count, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())";
+    // Get play_url and download_url from POST data
+    $play_url = isset($_POST['play_url']) ? trim($_POST['play_url']) : '';
+    $download_url = isset($_POST['download_url']) ? trim($_POST['download_url']) : '';
+
+    // FIXED SQL: Added play_url and download_url fields
+    $sql = "INSERT INTO movies (title, description, release_year, genre, rating, duration, poster_image, trailer_url, play_url, download_url, view_count, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())";
+    
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $_POST['title'], $_POST['description'] ?? '', $_POST['release_year'] ?? 0, 
-        $_POST['genre'], $_POST['rating'] ?? null, $_POST['duration'] ?? 0, 
-        $poster_path, $_POST['trailer_url'] ?? ''
+        $_POST['title'], 
+        $_POST['description'] ?? '', 
+        $_POST['release_year'] ?? 0, 
+        $_POST['genre'], 
+        $_POST['rating'] ?? null, 
+        $_POST['duration'] ?? 0, 
+        $poster_path, 
+        $_POST['trailer_url'] ?? '',
+        $play_url,           // play_url added
+        $download_url        // download_url added
     ]);
-    return ['success' => true, 'message' => 'Movie added!'];
+    
+    return ['success' => true, 'message' => 'Movie added successfully with URLs!'];
 }
 
 function handleSongSubmission($pdo) {
@@ -125,14 +139,27 @@ function handleSongSubmission($pdo) {
         if ($upload['success']) $audio_path = $upload['path'];
     }
 
+    // Get play_url and download_url from POST data
+    
+
+    // FIXED SQL: Added play_url and download_url fields
     $sql = "INSERT INTO songs (title, artist, album, genre, duration, language, cover_image, audio_file, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $_POST['title'], $_POST['artist'], $_POST['album'] ?? '', $_POST['genre'],
-        $_POST['duration'] ?? 0, $_POST['language'] ?? '', $cover_path, $audio_path
+        $_POST['title'], 
+        $_POST['artist'], 
+        $_POST['album'] ?? '', 
+        $_POST['genre'],
+        $_POST['duration'] ?? 0, 
+        $_POST['language'] ?? '', 
+        $cover_path, 
+        $audio_path,
+           // download_url added
     ]);
-    return ['success' => true, 'message' => 'Song added!'];
+    
+    return ['success' => true, 'message' => 'Song added successfully with URLs!'];
 }
 
 function uploadFile($file, $subfolder, $allowedExts, $maxSize = 5242880) {

@@ -6,7 +6,6 @@
     <title>MovieLab - Add Content</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ... your existing CSS remains the same ... */
         * {
             margin: 0;
             padding: 0;
@@ -532,6 +531,21 @@
                                    placeholder="https://youtube.com/watch?v=...">
                         </div>
 
+                        <!-- New Fields: Play URL and Download URL for Movies -->
+                        <div class="form-group">
+                            <label for="movie_play_url">Play URL</label>
+                            <input type="url" id="movie_play_url" name="play_url" 
+                                   placeholder="https://example.com/play/movie123">
+                            <div class="helper-text">Optional: Direct play URL for the movie</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="movie_download_url">Download URL</label>
+                            <input type="url" id="movie_download_url" name="download_url" 
+                                   placeholder="https://example.com/download/movie123">
+                            <div class="helper-text">Optional: Direct download URL for the movie</div>
+                        </div>
+
                         <div class="form-group full-width">
                             <label for="poster_image">Poster Image</label>
                             <div class="file-input-wrapper">
@@ -601,16 +615,13 @@
                             <label for="song_genre" class="required">Genre</label>
                             <select id="song_genre" name="genre" required>
                                 <option value="">Select Genre</option>
-                                
                                 <option value="Romantic">Romantic</option>
                                 <option value="Sad">Sad</option>
-                                                                <option value="Dance">Dance</option>
-
-                                                                <option value="Entertatment">Entertatment</option>
+                                <option value="Dance">Dance</option>
+                                <option value="Entertatment">Entertainment</option>
                                 <option value="Dj">Dj</option>
                                 <option value="Mix">Mix</option>
-                                <option value="Mushup">Mushup</option>
-
+                                <option value="Mashup">Mashup</option>
                                 <option value="Pop">Pop</option>
                                 <option value="Rock">Rock</option>
                                 <option value="Hip Hop">Hip Hop</option>
@@ -642,6 +653,7 @@
                             <input type="text" id="language" name="language" 
                                    placeholder="English">
                         </div>
+
 
                         <div class="form-group full-width">
                             <label for="cover_image">Cover Image</label>
@@ -932,14 +944,13 @@
             await submitForm(songFormElement, songSubmitBtn, 'song');
         });
 
-        // Submit form function - FIXED VERSION
+        // Submit form function
         async function submitForm(formElement, submitBtn, type) {
             console.log(`Submitting ${type} form...`);
             
             // Validate form
             if (!formElement.checkValidity()) {
                 showToast('Please fill in all required fields correctly', 'error');
-                // Trigger HTML5 validation
                 formElement.reportValidity();
                 return;
             }
@@ -1001,13 +1012,10 @@
             try {
                 console.log('Sending request to server...');
                 
-                // Send request to backend - CORRECTED ENDPOINT
-                // Note: Your backend file is add-content.php, not add_content.php
+                // Send request to backend
                 const response = await fetch('../library/add-content-backend.php', {
                     method: 'POST',
-                    body: formData,
-                    // Do NOT set Content-Type header when sending FormData
-                    // Let the browser set it automatically with boundary
+                    body: formData
                 });
 
                 console.log('Response received:', response.status, response.statusText);
@@ -1125,6 +1133,17 @@
                     }
                 });
             }
+            
+            // Clean play and download URLs
+            const urlInputs = document.querySelectorAll('input[type="url"]');
+            urlInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    let url = this.value.trim();
+                    if (url && !url.startsWith('http://') && !url.startsWith('https://') && url !== '') {
+                        this.value = 'https://' + url;
+                    }
+                });
+            });
         });
     </script>
 </body>

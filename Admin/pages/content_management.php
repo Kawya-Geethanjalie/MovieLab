@@ -117,6 +117,7 @@ include("../include/header.php");
                 <form id="updateForm" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="editId">
                     <input type="hidden" name="type" id="editType">
+                    <input type="hidden" name="csrf_token" id="csrfToken">
 
                     <div class="form-row">
                         <div class="form-group">
@@ -187,6 +188,18 @@ include("../include/header.php");
                                 <input type="text" name="trailer_url" id="editTrailerUrl" class="form-control" placeholder="https://youtube.com/...">
                             </div>
                         </div>
+                        
+                        <!-- Play URL සහ Download URL fields Movies වලට පමණක් -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Play URL</label>
+                                <input type="text" name="play_url" id="editPlayUrl" class="form-control" placeholder="https://example.com/play/movie123">
+                            </div>
+                            <div class="form-group">
+                                <label>Download URL</label>
+                                <input type="text" name="download_url" id="editDownloadUrl" class="form-control" placeholder="https://example.com/download/movie123">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -222,7 +235,7 @@ include("../include/header.php");
                             <option value="Entertainment">Entertainment</option>
                             <option value="Dj">Dj</option>
                             <option value="Mix">Mix</option>
-                            <option value="Mushup">Mashup</option>
+                            <option value="Mashup">Mashup</option>
                             <option value="Pop">Pop</option>
                             <option value="Rock">Rock</option>
                             <option value="Hip Hop">Hip Hop</option>
@@ -257,20 +270,33 @@ include("../include/header.php");
 
 <script>
     let allContent = [];
+    let csrfToken = '';
 
     async function loadContent() {
         try {
-            const response = await fetch('../library/content_manage_backend.php');
+            const response = await fetch('../library/content_manage_backend.php?t=' + new Date().getTime());
             const data = await response.json();
             if (data.success) {
                 allContent = data.content || [];
+                csrfToken = data.csrf_token || '';
+                document.getElementById('csrfToken').value = csrfToken;
                 updateGenreFilterOptions();
                 applyFilters();
+                
+                // Debug: Check if play_url and download_url are coming
+                const movies = allContent.filter(item => item.type === 'movie');
+                if (movies.length > 0) {
+                    console.log('First movie data:', movies[0]);
+                    console.log('Play URL:', movies[0].play_url);
+                    console.log('Download URL:', movies[0].download_url);
+                }
             } else {
-                console.error("Failed to load content:", data.error_message);
+                console.error("Failed to load content:", data.message);
+                showAlert('Failed to load content: ' + data.message);
             }
         } catch (e) { 
             console.error("Connection error:", e); 
+            showAlert('Connection error: ' + e.message);
         }
     }
 
@@ -319,9 +345,9 @@ include("../include/header.php");
         });
 
         if (sortTerm === 'newest') {
-            filtered.sort((a, b) => (parseInt(b.movie_id || b.content_id) || 0) - (parseInt(a.movie_id || a.content_id) || 0));
+            filtered.sort((a, b) => (parseInt(b.id) || 0) - (parseInt(a.id) || 0));
         } else if (sortTerm === 'oldest') {
-            filtered.sort((a, b) => (parseInt(a.movie_id || a.content_id) || 0) - (parseInt(b.movie_id || b.content_id) || 0));
+            filtered.sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
         } else if (sortTerm === 'az') {
             filtered.sort((a, b) => a.title.localeCompare(b.title));
         }
@@ -339,9 +365,8 @@ include("../include/header.php");
         }
 
         items.forEach(item => {
-            const id = item.movie_id || item.content_id || item.song_id;
-            const hasPoster = item.poster_image && item.poster_image !== "";
-            const imageSource = item.type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+            const id = item.id;
+            const imageSource = item.type === 'song' ? (item.poster_image) : item.poster_image;
             const imgPath = imageSource ? '../' + imageSource : null;
             const noImageMsg = item.type === 'movie' ? 'No Poster Yet' : 'No Cover Image Yet';
 
@@ -356,6 +381,8 @@ include("../include/header.php");
                         <div class="content-meta">
                             <span style="color: var(--primary-red)"><i class="fas ${item.type === 'movie' ? 'fa-film' : 'fa-music'}"></i> ${item.type.toUpperCase()}</span>
                             <span>${item.genre || 'N/A'}</span>
+                            ${item.type === 'movie' && item.play_url ? '<span style="color: #10B981;"><i class="fas fa-play"></i> Play URL Available</span>' : ''}
+                            ${item.type === 'movie' && item.download_url ? '<span style="color: #3B82F6;"><i class="fas fa-download"></i> Download URL Available</span>' : ''}
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button onclick="openEditModal(${id}, '${item.type}')" class="btn btn-sm" style="background: #2a2a2a;">Edit</button>
@@ -367,8 +394,11 @@ include("../include/header.php");
     }
 
     function openEditModal(id, type) {
-        const item = allContent.find(c => (c.movie_id == id || c.content_id == id || c.song_id == id) && c.type == type);
-        if (!item) return;
+        const item = allContent.find(c => c.id == id && c.type == type);
+        if (!item) {
+            showAlert('Content not found');
+            return;
+        }
 
         const modalFrame = document.getElementById('modalFrame');
         modalFrame.className = 'modal-container is-' + type;
@@ -378,9 +408,10 @@ include("../include/header.php");
         document.getElementById('editId').value = id;
         document.getElementById('editType').value = type;
         document.getElementById('editTitle').value = item.title || "";
+        document.getElementById('csrfToken').value = csrfToken;
 
         const previewImg = document.getElementById('posterPreview');
-        const imageSource = type === 'song' ? (item.cover_image || item.poster_image) : item.poster_image;
+        const imageSource = item.poster_image;
         
         if (imageSource) {
             previewImg.src = '../' + imageSource;
@@ -394,15 +425,16 @@ include("../include/header.php");
             document.getElementById('movie_genre').value = item.genre || "";
             document.getElementById('editDuration').value = item.duration || "";
             document.getElementById('editRating').value = item.rating || "";
-            document.getElementById('editYear').value = item.year || item.release_year || "";
+            document.getElementById('editYear').value = item.year || "";
             document.getElementById('editDescription').value = item.description || "";
-            // Trailer URL mapping
             document.getElementById('editTrailerUrl').value = item.trailer_url || "";
+            document.getElementById('editPlayUrl').value = item.play_url || "";
+            document.getElementById('editDownloadUrl').value = item.download_url || "";
         } else {
             document.getElementById('song_genre').value = item.genre || "";
-            document.getElementById('editArtist').value = item.artist || item.artist_name || "";
+            document.getElementById('editArtist').value = item.artist || "";
             document.getElementById('editAlbum').value = item.album || ""; 
-            document.getElementById('editDurationSec').value = item.duration || item.duration_sec || "";
+            document.getElementById('editDurationSec').value = item.duration || "";
             document.getElementById('editLanguage').value = item.language || ""; 
 
             const audioPlayer = document.getElementById('audioPlayer');
@@ -449,33 +481,88 @@ include("../include/header.php");
         const type = document.getElementById('editType').value;
         const finalGenre = type === 'movie' ? formData.get('genre_movie') : formData.get('genre_song');
         formData.append('genre', finalGenre);
+        
+        // Add CSRF token
+        formData.append('csrf_token', csrfToken);
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
 
         try {
-            const res = await fetch('../library/content_manage_backend.php?action=update', { method: 'POST', body: formData });
+            const res = await fetch('../library/content_manage_backend.php?action=update', { 
+                method: 'POST', 
+                body: formData 
+            });
             const data = await res.json();
-            if (data.success) { showAlert('Successfully Updated!'); closeModal(); loadContent(); }
-            else { showAlert('Update Failed: ' + data.message); }
-        } catch (e) { showAlert('Update Failed'); }
+            
+            if (data.success) { 
+                showAlert('Successfully Updated!'); 
+                closeModal(); 
+                loadContent(); 
+            } else { 
+                showAlert('Update Failed: ' + data.message); 
+            }
+            
+            // Update CSRF token
+            if (data.csrf_token) {
+                csrfToken = data.csrf_token;
+            }
+        } catch (e) { 
+            showAlert('Update Failed: Network error'); 
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
     };
 
     async function deleteContent(id, type) {
-        if (!confirm('Delete this permanently?')) return;
+        if (!confirm('Are you sure you want to delete this permanently?')) return;
+        
         try {
-            const res = await fetch(`../library/content_manage_backend.php?action=delete&id=${id}&type=${type}`);
+            const res = await fetch(`../library/content_manage_backend.php?action=delete&id=${id}&type=${type}&csrf_token=${csrfToken}`);
             const data = await res.json();
-            if (data.success) { showAlert('Content Deleted!'); loadContent(); }
-        } catch (e) { showAlert('Error deleting'); }
+            if (data.success) { 
+                showAlert('Content Deleted!'); 
+                loadContent(); 
+            } else {
+                showAlert('Delete Failed: ' + data.message);
+            }
+        } catch (e) { 
+            showAlert('Error deleting: Network error'); 
+        }
     }
 
-    function showAlert(msg) {
+    function showAlert(msg, type = 'success') {
         const alert = document.createElement('div');
         alert.className = 'alert';
+        alert.style.background = type === 'success' ? 'var(--success)' : '#EF4444';
         alert.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
         document.getElementById('alertsContainer').appendChild(alert);
-        setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 500); }, 3000);
+        setTimeout(() => { 
+            alert.style.opacity = '0'; 
+            setTimeout(() => alert.remove(), 500); 
+        }, 3000);
     }
 
-    window.onload = loadContent;
+    // Test function
+    async function testSystem() {
+        console.log('🔍 Testing Content Management System...');
+        await loadContent();
+        const movies = allContent.filter(item => item.type === 'movie');
+        if (movies.length > 0) {
+            console.log('✅ System ready. Found', movies.length, 'movies');
+            return true;
+        }
+        return false;
+    }
+
+    window.onload = function() {
+        loadContent();
+        // Auto-test on load (optional)
+        // setTimeout(testSystem, 1000);
+    };
 </script>
 </body>
 </html>
