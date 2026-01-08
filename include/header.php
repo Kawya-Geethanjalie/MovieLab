@@ -1,5 +1,4 @@
 <header class="sticky top-0 z-50">
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +7,8 @@
     <title>Movie Lab</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert2 for beautiful notifications -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -276,6 +277,26 @@
                 height: 32px;
             }
         }
+        
+        /* Filter dropdown active state */
+        .filter-active {
+            background-color: #E50914;
+            color: white;
+        }
+        
+        .filter-active:hover {
+            background-color: #d40813;
+        }
+        
+        /* Search results styles */
+        .search-results-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .search-result-item:hover {
+            background-color: #2d2d2d;
+        }
     </style>
 
     
@@ -296,6 +317,16 @@
         // Global variables for user state
         let currentUser = null;
         let isLoggedIn = false;
+        
+        // Search and Filter variables
+        let currentSearchTerm = '';
+        let currentFilters = {
+            genre: '',
+            year: '',
+            language: '',
+            type: 'all',
+            filter: 'all'
+        };
 
         // JavaScript for mobile menu toggle and dropdowns
         function toggleMenu() {
@@ -393,10 +424,98 @@
             const searchTerm = searchInput.value.trim();
             
             if (searchTerm) {
-                alert(`Searching for: ${searchTerm}`);
-                // Here you would typically redirect to a search results page or perform an API call
-                // For example: window.location.href = `/search?q=${encodeURIComponent(searchTerm)}`;
+                currentSearchTerm = searchTerm;
+                // Redirect to search results page with search term
+                window.location.href = '../Site/search.php?q=' + encodeURIComponent(searchTerm);
             }
+        }
+
+        // Handle real-time search
+        function handleRealTimeSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchTerm = searchInput.value.trim();
+            
+            if (searchTerm.length >= 2) {
+                // Perform AJAX search
+                performSearch(searchTerm);
+            } else {
+                hideSearchResults();
+            }
+        }
+
+        // Perform AJAX search
+        function performSearch(searchTerm) {
+            // You can implement AJAX search here
+            // For now, we'll just redirect to search page
+            // fetch('../library/search.php?q=' + encodeURIComponent(searchTerm))
+            // .then(response => response.json())
+            // .then(data => {
+            //     displaySearchResults(data);
+            // });
+        }
+
+        // Display search results
+        function displaySearchResults(results) {
+            // Implement search results display
+        }
+
+        // Hide search results
+        function hideSearchResults() {
+            // Implement hide search results
+        }
+
+        // Apply filter from dropdown
+        function applyFilter(filterType, value) {
+            // Update current filters
+            currentFilters[filterType] = value;
+            
+            // Build URL with filters
+            let url = '../Site/index.php?';
+            let params = [];
+            
+            // Add active filters to URL
+            if (currentFilters.genre) params.push('genre=' + encodeURIComponent(currentFilters.genre));
+            if (currentFilters.year) params.push('year=' + encodeURIComponent(currentFilters.year));
+            if (currentFilters.language) params.push('language=' + encodeURIComponent(currentFilters.language));
+            if (currentFilters.type !== 'all') params.push('type=' + currentFilters.type);
+            if (currentFilters.filter !== 'all') params.push('filter=' + currentFilters.filter);
+            
+            // Redirect to filtered page
+            if (params.length > 0) {
+                url += params.join('&');
+            }
+            
+            window.location.href = url;
+            
+            // Close dropdown
+            toggleDropdown(filterType + 's-dropdown');
+        }
+
+        // Apply content type filter
+        function applyContentType(type) {
+            currentFilters.type = type;
+            applyFilter('type', type);
+        }
+
+        // Apply sort filter
+        function applySortFilter(filter) {
+            currentFilters.filter = filter;
+            applyFilter('filter', filter);
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            // Reset all filters
+            currentFilters = {
+                genre: '',
+                year: '',
+                language: '',
+                type: 'all',
+                filter: 'all'
+            };
+            
+            // Redirect to index page without filters
+            window.location.href = '../Site/index.php';
         }
 
         // Check user session on page load
@@ -494,6 +613,16 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkUserSession();
+            
+            // Get current URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Update current filters from URL
+            currentFilters.genre = urlParams.get('genre') || '';
+            currentFilters.year = urlParams.get('year') || '';
+            currentFilters.language = urlParams.get('language') || '';
+            currentFilters.type = urlParams.get('type') || 'all';
+            currentFilters.filter = urlParams.get('filter') || 'all';
         });
     </script>
 </head>
@@ -516,26 +645,26 @@
                       </a></div>
                       
                     <!-- Primary Desktop Links (Home + Dropdowns) -->
-                    <!-- *** TV Series dropdown eka lagata ewith, gap eka nathi karala thiyenawa (space-x-4) *** -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-4 lg:space-x-6 items-center">
-                        <!-- HOME Link using the new underline class -->
-                        
+                        <!-- HOME Link -->
+                        <a href="../Site/index.php" class="nav-link-underline inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300">
+                            Home
+                        </a>
 
                         <!-- Dropdown: Movies -->
                         <div class="relative">
-                            <!-- Dropdown Button using a wrapper to apply underline effect on hover/focus -->
                             <button onclick="toggleDropdown('movies-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Movies</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </button>
                             <div id="movies-dropdown" class="absolute hidden mt-3 w-48 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20">
                                 <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="movies-menu-button">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Now Playing</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Popular</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Top Rated</a>
+                                    <a href="javascript:void(0);" onclick="applyContentType('movies')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">All Movies</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('popular')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Popular Movies</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('new')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">New Movies</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('top_rated')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Top Rated Movies</a>
                                 </div>
                             </div>
                         </div>
@@ -544,26 +673,24 @@
                         <div class="relative">
                             <button onclick="toggleDropdown('songs-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Songs</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </button>
                             <div id="songs-dropdown" class="absolute hidden mt-3 w-48 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20">
                                 <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="songs-menu-button">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">New Releases</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Top Charts</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Playlists</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Artists</a>
+                                    <a href="javascript:void(0);" onclick="applyContentType('songs')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">All Songs</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('new')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">New Releases</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('top')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Top Charts</a>
+                                    <a href="javascript:void(0);" onclick="applySortFilter('playlists')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Playlists</a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Dropdown: TV Series - Removed the margin on the right by using px-1 instead of default padding/margin -->
+                        <!-- Dropdown: TV Series -->
                         <div class="relative">
                             <button onclick="toggleDropdown('tv-series-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">TV Series</span>
-                                <!-- Down Arrow Icon -->
                                 <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -580,7 +707,6 @@
                 </div>
 
                 <!-- 2. Right Side: Genres, Years, Languages, Search, Notifications, PRO, Sign In -->
-                <!-- *** space-x-0 class eka use karala Genres/Years/Languages atara thibuna gap eka ain karala, eka search button eka lagata damma *** -->
                 <div class="flex items-center">
                     <!-- Genres, Years, and Languages are now grouped together with minimal space -->
                     <div class="hidden sm:flex items-center space-x-0 lg:space-x-0">
@@ -594,23 +720,23 @@
                             </button>
                             <div id="genres-dropdown" class="absolute hidden mt-3 w-72 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-24">
                                 <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="genres-menu-button">
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Action</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Horror</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Comedy</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sci-Fi</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Drama</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Romance</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Thriller</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Documentary</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Animation</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Fantasy</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Crime</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Mystery</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Action')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Action</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Horror')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Horror</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Comedy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Comedy</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Sci-Fi')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sci-Fi</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Drama')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Drama</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Romance')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Romance</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Thriller')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Thriller</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Documentary')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Documentary</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Animation')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Animation</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Fantasy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Fantasy</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Crime')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Crime</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Mystery')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Mystery</a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Dropdown: Years - Removed the margin on the left by using px-3 instead of default padding/margin -->
+                        <!-- Dropdown: Years -->
                         <div class="relative">
                             <button onclick="toggleDropdown('years-dropdown')" class="nav-dropdown-btn inline-flex items-center px-3 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Years</span>
@@ -618,23 +744,21 @@
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </button>
-                            <div id="years-dropdown" class="absolute hidden mt-3 w-32 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20">
+                            <div id="years-dropdown" class="absolute hidden mt-3 w-48 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-8">
                                 <div class="py-1 grid grid-cols-2 gap-x-1 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="years-menu-button">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2025</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2024</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2023</a>
-                                      <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2023</a>
-                                        <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2022</a>
-                                          <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2021</a>
-                                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2020</a>
-                                              <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2019</a>
-                                                <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2018</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Older</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2024')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2024</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2023')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2023</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2022')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2022</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2021')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2021</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2020')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2020</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2019')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2019</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2018')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2018</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', 'older')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Older</a>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Dropdown: Languages (UPDATED to multi-column) -->
+                        <!-- Dropdown: Languages -->
                         <div class="relative">
                             <button onclick="toggleDropdown('languages-dropdown')" class="nav-dropdown-btn inline-flex items-center px-3 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
                                 <span class="nav-link-underline">Languages</span>
@@ -642,27 +766,22 @@
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
                             </button>
-                            <!-- Dropdown Menu for Languages: Wider, 2-column grid -->
                             <div id="languages-dropdown" class="absolute hidden mt-3 w-72 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-16">
                                 <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="languages-menu-button">
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">All</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">English</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Hindi</a>
-                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Korean</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">French</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sinhala</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Tamil</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Malayalam</a>
-                                     <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Kannada</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Italian</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Telugu</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Russian</a>
-                                                                   
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Arabic</a>
-                                    <a href="#" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Turkish</a>
-                                    
-                                   
-                                
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'All')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">All</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'English')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">English</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Hindi')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Hindi</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Korean')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Korean</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'French')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">French</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Sinhala')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sinhala</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Tamil')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Tamil</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Malayalam')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Malayalam</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Kannada')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Kannada</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Italian')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Italian</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Telugu')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Telugu</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Russian')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Russian</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Arabic')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Arabic</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Turkish')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Turkish</a>
                                 </div>
                             </div>
                         </div>
@@ -670,24 +789,20 @@
                     </div>
                     
                     <!-- Search, Notifications, PRO, and Sign In -->
-                    <div class="flex items-center space-x-4 lg:space-x-6 ml-4"> <!-- ml-4 (left margin) is the new gap between Years/Languages and Search -->
+                    <div class="flex items-center space-x-4 lg:space-x-6 ml-4">
                         
                         <!-- Search Button -->
                         <button type="button" onclick="toggleSearchBar()" class="p-2 text-gray-400 hover:text-white transition duration-300 focus:outline-none rounded-full hover:bg-dark-card hidden sm:block">
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <i class="fas fa-search"></i>
                         </button>
                         
                         <!-- Bell/Notifications Button -->
                         <button type="button" class="p-2 text-gray-400 hover:text-primary-red transition duration-300 focus:outline-none rounded-full hover:bg-dark-card hidden sm:block">
-                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
+                            <i class="fas fa-bell"></i>
                         </button>
                         
 
-                     <!-- Sign In Link (FIXED → modal now opens) -->
+                     <!-- Sign In Link -->
                     <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
                         Sign In
                     </button>
@@ -698,9 +813,7 @@
                         <button onclick="toggleProfileDropdown()" class="flex items-center space-x-2 text-white hover:text-primary-red transition duration-300">
                             <img id="user-profile-img" src="https://via.placeholder.com/40x40/E50914/FFFFFF?text=U" alt="Profile" class="profile-image">
                             <span id="user-name-display" class="hidden sm:inline text-sm font-medium">User</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                            <i class="fas fa-chevron-down"></i>
                         </button>
                         
                         <!-- Profile Dropdown -->
@@ -722,7 +835,6 @@
                         <button onclick="openProModal()" class="pro-button-gradient px-4 py-2 text-sm font-bold text-white rounded-md transition duration-300 shadow-md shadow-theme-orange/50 uppercase tracking-widest hidden sm:inline-flex">
                             PRO
                         </button>
-                        <!-- Sign Up CTA Button - REMOVED -->
                     </div>
                     
                     <!-- 3. Mobile Menu Button -->
@@ -730,13 +842,7 @@
                         <button onclick="toggleMenu()" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-dark-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-red transition duration-300" aria-expanded="false">
                             <span class="sr-only">Open main menu</span>
                             <!-- Hamburger icon -->
-                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                            </svg>
-                            <!-- Close icon (hidden by default) -->
-                            <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <i class="fas fa-bars"></i>
                         </button>
                     </div>
                 </div>
@@ -753,107 +859,123 @@
                             type="text" 
                             placeholder="Search for movies, TV series, songs..." 
                             class="w-full bg-dark-bg text-white placeholder-gray-500 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red border border-gray-700"
+                            oninput="handleRealTimeSearch()"
                         >
-                        <svg class="absolute left-4 top-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                        <i class="fas fa-search absolute left-4 top-3 h-5 w-5 text-gray-500"></i>
                     </div>
                     <button type="submit" class="ml-4 bg-primary-red text-white font-medium py-3 px-6 rounded-full hover:bg-red-600 transition duration-200">
                         Search
                     </button>
                 </form>
+                
+                <!-- Search Results Container -->
+                <div id="search-results" class="search-results-container mt-4 bg-dark-bg rounded-lg p-4 hidden">
+                    <div class="text-gray-400 text-sm mb-2">Search results will appear here...</div>
+                </div>
             </div>
         </div>
 
         <!-- 4. Mobile Menu (Flattened Navigation) -->
         <div class="sm:hidden hidden" id="mobile-menu">
             <div class="pt-2 pb-3 space-y-1 bg-dark-bg border-t border-primary-red/10 max-h-[calc(100vh-4rem)] overflow-y-auto">
-                <!-- PRO Button for Mobile - Using the new theme color -->
+                <!-- PRO Button for Mobile -->
                 <button onclick="openProModal()" class="pro-button-mobile w-full px-3 py-2 text-base font-bold text-white rounded-md transition duration-300 hover:bg-red-700 hover:shadow-lg uppercase tracking-widest sm:hidden">
                     GET PRO ACCESS
                 </button>
                 
-                <a href="#" class="bg-dark-card text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                <a href="../Site/index.php" class="bg-dark-card text-white block px-3 py-2 rounded-md text-base font-medium">Home</a>
                 
                 <!-- Sign In Mobile Link -->
-                 <!-- SIGN IN BUTTON -->
                 <button id="mobile-sign-in-btn" onclick="openLoginModal()"
                     class="px-4 py-1.5 text-sm text-white hover:bg-red-600 rounded-md">
                     Sign In
                 </button>
-                <!-- Sign Up Mobile Link - REMOVED -->
 
-                <!-- Notifications Mobile Link (Bell Icon) with primary-red hover -->
+                <!-- Mobile Filter Links -->
+                <div class="px-3 pt-3">
+                    <h4 class="text-sm text-gray-500 font-semibold uppercase mb-2">Content Type</h4>
+                    <div class="flex flex-wrap gap-1">
+                        <button onclick="applyContentType('all')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">All</button>
+                        <button onclick="applyContentType('movies')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">Movies</button>
+                        <button onclick="applyContentType('songs')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">Songs</button>
+                    </div>
+                </div>
+                
+                <!-- Mobile Sort Filters -->
+                <div class="px-3 pt-3">
+                    <h4 class="text-sm text-gray-500 font-semibold uppercase mb-2">Sort By</h4>
+                    <div class="flex flex-wrap gap-1">
+                        <button onclick="applySortFilter('popular')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">Popular</button>
+                        <button onclick="applySortFilter('new')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">New</button>
+                        <button onclick="applySortFilter('top_rated')" class="px-3 py-1 text-sm bg-dark-card text-gray-300 rounded hover:bg-primary-red hover:text-white">Top Rated</button>
+                    </div>
+                </div>
+                
+                <!-- Clear Filters Button -->
+                <div class="px-3 pt-3">
+                    <button onclick="clearFilters()" class="w-full px-3 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+                        <i class="fas fa-times mr-2"></i>Clear All Filters
+                    </button>
+                </div>
+
+                <!-- Notifications Mobile Link -->
                 <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-primary-red flex items-center px-3 py-2 rounded-md text-base font-medium">
-                    <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
+                    <i class="fas fa-bell mr-2"></i>
                     Notifications
                 </a>
                 
                 <!-- Genres (Mobile Section) -->
                 <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Genres (12)</h4>
                 <div class="grid grid-cols-2 gap-y-1">
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Action</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Horror</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Comedy</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Sci-Fi</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Drama</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Romance</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Thriller</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Documentary</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Animation</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Fantasy</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Crime</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Mystery</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Action')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Action</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Horror')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Horror</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Comedy')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Comedy</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Sci-Fi')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Sci-Fi</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Drama')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Drama</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Romance')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Romance</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Thriller')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Thriller</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Documentary')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Documentary</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Animation')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Animation</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Fantasy')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Fantasy</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Crime')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Crime</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Mystery')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Mystery</a>
                 </div>
 
-                <!-- Languages (Mobile Section) - UPDATED to 20 languages and 2 columns -->
-                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Languages (20)</h4>
+                <!-- Languages (Mobile Section) -->
+                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Languages</h4>
                 <div class="grid grid-cols-2 gap-y-1">
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">English</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">French</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Sinhala</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">German</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Tamil</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Italian</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Hindi</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Spanish</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Telugu</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Russian</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Malayalam</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Portuguese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Kannada</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Arabic</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Japanese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Turkish</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Korean</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Thai</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Chinese</a>
-                    <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Indonesian</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'English')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">English</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'French')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">French</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Sinhala')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Sinhala</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Tamil')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Tamil</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Italian')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Italian</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Hindi')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Hindi</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Telugu')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Telugu</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('language', 'Russian')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Russian</a>
                 </div>
-
 
                 <!-- Years (Common Filter) -->
                 <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Filter by Year</h4>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2024</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2023</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2022</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Older</a>
+                <div class="grid grid-cols-2 gap-y-1">
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2024')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2024</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2023')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2023</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2022')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2022</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2021')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2021</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2020')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2020</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2019')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2019</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', '2018')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">2018</a>
+                    <a href="javascript:void(0);" onclick="applyFilter('year', 'older')" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Older</a>
+                </div>
 
-                <!-- Movies Categories (Other filters) -->
-                <h4 class="text-sm px-3 pt-3 text-gray-500 font-semibold uppercase">Movies</h4>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Now Playing</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Popular</a>
-                <a href="#" class="text-gray-300 hover:bg-dark-card hover:text-white block pl-6 pr-3 py-1 rounded-md text-sm transition duration-150">Top Rated</a>
-                
                 <!-- Mobile Search -->
-                <div class="mt-4 relative">
-                    
-                    <input type="text" placeholder="Search..." class="w-full bg-dark-card text-white placeholder-gray-500 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red">
-                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                <div class="mt-4 px-3">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="Search..." 
+                               class="w-full bg-dark-card text-white placeholder-gray-500 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red"
+                               oninput="handleRealTimeSearch()">
+                        <i class="fas fa-search absolute left-3 top-2.5 h-5 w-5 text-gray-500"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -863,28 +985,26 @@
     <!-- PRO SUBSCRIPTION MODAL START (hidden by default) -->
     <div id="pro-modal" class="fixed inset-0 bg-black bg-opacity-80 z-[100] hidden flex items-center justify-center p-4 overflow-y-auto" onclick="closeProModal(event)">
         
-        <!-- Modal Content Container: Added flex-col and removed internal overflow -->
-        <!-- The flex-col structure makes the header stick to the top and the body take up the rest of the available height -->
+        <!-- Modal Content Container -->
         <div class="bg-dark-bg rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-4xl transform transition-all duration-300 scale-100 border border-primary-red/50 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
             
-            <!-- Header and Close Button (FIXED PART: shrink-0 ensures it doesn't shrink when content scrolls) -->
-            <!-- The horizontal padding (p-6/p-8) of the container applies to this header -->
+            <!-- Header and Close Button -->
             <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4 shrink-0">
                 <h2 class="text-3xl font-bold text-white text-glow-red">
                     Unlock <span class="text-theme-orange">PRO</span> Features
                 </h2>
                 <!-- Close Button -->
                 <button onclick="closeProModal()" class="text-gray-400 hover:text-primary-red transition duration-200 p-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Scrollable Content Wrapper (SCROLLING PART: flex-grow ensures it fills the remaining vertical space) -->
+            <!-- Scrollable Content Wrapper -->
             <div class="overflow-y-auto flex-grow">
                 <!-- Pricing Tiers (Early, Monthly, Weekly) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    <!-- 1. Early Tier (Annual Plan) - Updated to use Red/Orange accents instead of Yellow -->
+                    <!-- 1. Early Tier (Annual Plan) -->
                     <div class="bg-dark-card p-6 rounded-xl border-2 border-theme-orange/80 shadow-lg relative overflow-hidden flex flex-col">
                         <!-- Updated Tag to be Red/White -->
                         <div class="absolute top-0 right-0 bg-primary-red text-white text-xs font-bold py-1 px-4 rounded-bl-lg">BEST VALUE</div>
@@ -1039,9 +1159,7 @@
                     <input type="file" id="profile_image" name="profile_image" accept="image/*" class="hidden" onchange="previewImage(this)">
                     <label for="profile_image" class="cursor-pointer block">
                         <div class="w-20 h-20 mx-auto rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center hover:border-primary-red transition duration-300">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
+                            <i class="fas fa-plus text-gray-400 text-2xl"></i>
                         </div>
                         <p class="text-xs text-gray-400 mt-2">Click to upload</p>
                     </label>
@@ -1628,4 +1746,3 @@ function togglePassword(fieldId) {
 
 
 <div class="mid_container" style="height:auto;">
-    

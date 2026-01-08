@@ -758,7 +758,6 @@ function getActivityIcon($activityType) {
                 <div class="chart-header">
                     <h3 class="chart-title">Movies by Genre</h3>
                     <div class="chart-actions">
-                        <button class="chart-action-btn">View All</button>
                     </div>
                 </div>
                 <div class="chart-container">

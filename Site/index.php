@@ -54,8 +54,75 @@ $genre = isset($_GET['genre']) ? $_GET['genre'] : '';
 $year = isset($_GET['year']) ? $_GET['year'] : '';
 $language = isset($_GET['language']) ? $_GET['language'] : '';
 
-// Function to get movies
-function getMovies($conn, $filter, $genre, $year, $language) {
+// Pagination parameters
+$items_per_page = 4; // Each page shows 4 content cards
+$current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$offset = ($current_page - 1) * $items_per_page;
+
+// Function to get total count of movies
+function getMoviesCount($conn, $filter, $genre, $year, $language) {
+    $sql = "SELECT COUNT(*) as total FROM movies WHERE 1=1";
+    $params = [];
+    $types = "";
+
+    if (!empty($genre)) {
+        $sql .= " AND genre LIKE ?";
+        $params[] = "%$genre%";
+        $types .= "s";
+    }
+
+    if (!empty($year) && $year !== 'older') {
+        $sql .= " AND release_year = ?";
+        $params[] = $year;
+        $types .= "s";
+    } elseif ($year === 'older') {
+        $sql .= " AND release_year < 2018";
+    }
+
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $row['total'] ?? 0;
+}
+
+// Function to get total count of songs
+function getSongsCount($conn, $filter, $genre, $language) {
+    $sql = "SELECT COUNT(*) as total FROM songs WHERE 1=1";
+    $params = [];
+    $types = "";
+
+    if (!empty($genre)) {
+        $sql .= " AND genre LIKE ?";
+        $params[] = "%$genre%";
+        $types .= "s";
+    }
+
+    if (!empty($language)) {
+        $sql .= " AND language LIKE ?";
+        $params[] = "%$language%";
+        $types .= "s";
+    }
+
+    $stmt = $conn->prepare($sql);
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $row['total'] ?? 0;
+}
+
+// Function to get paginated movies
+function getMovies($conn, $filter, $genre, $year, $language, $limit, $offset) {
     $sql = "SELECT * FROM movies WHERE 1=1";
     $params = [];
     $types = "";
@@ -77,21 +144,27 @@ function getMovies($conn, $filter, $genre, $year, $language) {
     // Add ordering based on filter
     switch($filter) {
         case 'now_playing':
-            $sql .= " ORDER BY release_year DESC LIMIT 20";
+            $sql .= " ORDER BY release_year DESC";
             break;
         case 'top_rated':
-            $sql .= " ORDER BY rating DESC LIMIT 20";
+            $sql .= " ORDER BY rating DESC";
             break;
         case 'new':
-            $sql .= " ORDER BY created_at DESC LIMIT 20";
+            $sql .= " ORDER BY created_at DESC";
             break;
         case 'popular':
-            $sql .= " ORDER BY view_count DESC, rating DESC LIMIT 20";
+            $sql .= " ORDER BY view_count DESC, rating DESC";
             break;
         default:
-            $sql .= " ORDER BY created_at DESC LIMIT 20";
+            $sql .= " ORDER BY created_at DESC";
             break;
     }
+    
+    // Add pagination
+    $sql .= " LIMIT ? OFFSET ?";
+    $params[] = $limit;
+    $params[] = $offset;
+    $types .= "ii";
 
     $stmt = $conn->prepare($sql);
     if (!empty($params)) {
@@ -116,8 +189,8 @@ function getMovies($conn, $filter, $genre, $year, $language) {
     return $movies;
 }
 
-// Function to get songs
-function getSongs($conn, $filter, $genre, $language) {
+// Function to get paginated songs
+function getSongs($conn, $filter, $genre, $language, $limit, $offset) {
     $sql = "SELECT * FROM songs WHERE 1=1";
     $params = [];
     $types = "";
@@ -137,18 +210,24 @@ function getSongs($conn, $filter, $genre, $language) {
     // Add ordering based on filter
     switch($filter) {
         case 'top':
-            $sql .= " ORDER BY RAND() LIMIT 20";
+            $sql .= " ORDER BY RAND()";
             break;
         case 'new':
-            $sql .= " ORDER BY created_at DESC LIMIT 20";
+            $sql .= " ORDER BY created_at DESC";
             break;
         case 'playlists':
-            $sql .= " ORDER BY artist ASC LIMIT 20";
+            $sql .= " ORDER BY artist ASC";
             break;
         default:
-            $sql .= " ORDER BY created_at DESC LIMIT 20";
+            $sql .= " ORDER BY created_at DESC";
             break;
     }
+    
+    // Add pagination
+    $sql .= " LIMIT ? OFFSET ?";
+    $params[] = $limit;
+    $params[] = $offset;
+    $types .= "ii";
 
     $stmt = $conn->prepare($sql);
     if (!empty($params)) {
@@ -173,16 +252,32 @@ function getSongs($conn, $filter, $genre, $language) {
     return $songs;
 }
 
-// Get content based on type
+// Get counts and content based on type
+$movies_count = 0;
+$songs_count = 0;
+$total_count = 0;
 $movies = [];
 $songs = [];
 
 if ($content_type === 'all' || $content_type === 'movies') {
-    $movies = getMovies($conn, $filter, $genre, $year, $language);
+    $movies_count = getMoviesCount($conn, $filter, $genre, $year, $language);
+    $movies = getMovies($conn, $filter, $genre, $year, $language, $items_per_page, $offset);
 }
 
 if ($content_type === 'all' || $content_type === 'songs') {
-    $songs = getSongs($conn, $filter, $genre, $language);
+    $songs_count = getSongsCount($conn, $filter, $genre, $language);
+    $songs = getSongs($conn, $filter, $genre, $language, $items_per_page, $offset);
+}
+
+// Calculate total items
+$total_count = $movies_count + $songs_count;
+
+// Calculate total pages
+$total_pages = ceil($total_count / $items_per_page);
+
+// Ensure current page is valid
+if ($current_page > $total_pages && $total_pages > 0) {
+    $current_page = $total_pages;
 }
 
 $conn->close();
@@ -430,6 +525,65 @@ $conn->close();
             color: #EF4444;
         }
         
+        /* Pagination Styles */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            padding: 20px 0;
+        }
+        
+        .pagination-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #1f2937;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .pagination-btn:hover {
+            background: #374151;
+            transform: translateY(-2px);
+        }
+        
+        .pagination-btn.active {
+            background: #dc2626;
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        
+        .pagination-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #111827;
+        }
+        
+        .pagination-btn.disabled:hover {
+            background: #111827;
+            transform: none;
+        }
+        
+        .pagination-ellipsis {
+            color: #9ca3af;
+            font-size: 18px;
+            padding: 0 8px;
+        }
+        
+        .page-info {
+            color: #9ca3af;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
     </style>
 </head>
 <body class="bg-black text-white font-sans">
@@ -497,7 +651,7 @@ $conn->close();
                                 <button id="mobile-prev-btn" class="w-10 h-10 rounded-full bg-black/70 border border-white/20 flex items-center justify-center text-white hover:bg-red-600 hover:border-red-600 transition duration-300 pointer-events-auto">
                                     <i class="fas fa-chevron-left text-sm"></i>
                                 </button>
-                                <button id="mobile-next-btn" class="w-10 h-10 rounded-full bg-black/70 border border-white/20 flex items-center justify-center text-white hover:bg-red-600 hover:border-red-600 transition duration-300 pointer-events-auto">
+                                <button id="mobile-next-btn" class="w-10 h-10 rounded-full bg-black/70 border border-white/20 flex items-center justify-content text-white hover:bg-red-600 hover:border-red-600 transition duration-300 pointer-events-auto">
                                     <i class="fas fa-chevron-right text-sm"></i>
                                 </button>
                             </div>
@@ -520,25 +674,25 @@ $conn->close();
         <!-- Content Type Filter Buttons -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div class="flex flex-wrap gap-2">
-                <a href="index.php?type=all" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo ($content_type === 'all' || empty($_GET['type'])) ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=all&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo ($content_type === 'all' || empty($_GET['type'])) ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     <i class="fas fa-layer-group mr-1"></i> All Content
                 </a>
-                <a href="index.php?type=movies" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo $content_type === 'movies' ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=movies&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo $content_type === 'movies' ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     <i class="fas fa-film mr-1"></i> Movies
                 </a>
-                <a href="index.php?type=songs" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo $content_type === 'songs' ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=songs&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo $content_type === 'songs' ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     <i class="fas fa-music mr-1"></i> Songs
                 </a>
             </div>
             
             <div class="flex flex-wrap gap-2">
-                <a href="index.php?type=<?php echo $content_type; ?>&filter=popular" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'popular') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=<?php echo $content_type; ?>&filter=popular&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'popular') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     Popular
                 </a>
-                <a href="index.php?type=<?php echo $content_type; ?>&filter=new" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'new') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=<?php echo $content_type; ?>&filter=new&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'new') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     New
                 </a>
-                <a href="index.php?type=<?php echo $content_type; ?>&filter=top_rated" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'top_rated') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
+                <a href="index.php?type=<?php echo $content_type; ?>&filter=top_rated&page=1" class="px-3 py-1.5 md:px-4 md:py-2 <?php echo (isset($_GET['filter']) && $_GET['filter'] == 'top_rated') ? 'bg-red-600 text-white' : 'bg-gray-900 text-gray-300 hover:bg-gray-800'; ?> rounded-lg transition-colors text-sm">
                     Top Rated
                 </a>
             </div>
@@ -588,6 +742,9 @@ $conn->close();
                         echo "All Content";
                     }
                 ?>
+                <span class="text-gray-400 text-sm ml-2">
+                    (Page <?php echo $current_page; ?> of <?php echo $total_pages; ?>)
+                </span>
             </h2>
             
             <?php 
@@ -730,12 +887,12 @@ $conn->close();
                                         
                                         <!-- Play/Details button -->
                                         <button 
-    class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
-    onclick="playMovies('<?php echo $movie['play_url']; ?>')"
->
-    <i class="fas fa-play-circle mr-2"></i>
-    Play
-</button>
+                                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-3 rounded-lg transition-colors duration-300 flex items-center justify-center text-sm"
+                                            onclick="playMovies('<?php echo $movie['play_url']; ?>')"
+                                        >
+                                            <i class="fas fa-play-circle mr-2"></i>
+                                            Play
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -809,7 +966,7 @@ $conn->close();
                                                 </audio>
                                             </div>
                                             <button 
-                                                onclick="closeAudioPlayer(<?php echo $song['song_id']; ?>)"
+                                                onclick="closeAudioPlayer(<?php echo $song['song_id']; ?>)" 
                                                 class="absolute top-2 right-2 bg-black/70 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
                                             >
                                                 <i class="fas fa-times"></i>
@@ -899,6 +1056,73 @@ $conn->close();
                         </div>
                     <?php endforeach; ?>
                 </div>
+                
+                <!-- Pagination -->
+                <?php if ($total_pages > 1): ?>
+                <div class="pagination-container">
+                    <!-- Previous Button -->
+                    <?php if ($current_page > 1): ?>
+                        <a href="<?php echo build_pagination_url($current_page - 1); ?>" class="pagination-btn">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="pagination-btn disabled">
+                            <i class="fas fa-chevron-left"></i>
+                        </span>
+                    <?php endif; ?>
+                    
+                    <!-- Page Numbers -->
+                    <?php 
+                    $start_page = max(1, $current_page - 2);
+                    $end_page = min($total_pages, $start_page + 4);
+                    
+                    // Adjust start page if we're near the end
+                    if ($end_page - $start_page < 4) {
+                        $start_page = max(1, $end_page - 4);
+                    }
+                    
+                    // First page
+                    if ($start_page > 1): ?>
+                        <a href="<?php echo build_pagination_url(1); ?>" class="pagination-btn">1</a>
+                        <?php if ($start_page > 2): ?>
+                            <span class="pagination-ellipsis">...</span>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    
+                    <?php // Page numbers
+                    for ($i = $start_page; $i <= $end_page; $i++): ?>
+                        <a href="<?php echo build_pagination_url($i); ?>" class="pagination-btn <?php echo $i == $current_page ? 'active' : ''; ?>">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                    
+                    <?php // Last page
+                    if ($end_page < $total_pages): ?>
+                        <?php if ($end_page < $total_pages - 1): ?>
+                            <span class="pagination-ellipsis">...</span>
+                        <?php endif; ?>
+                        <a href="<?php echo build_pagination_url($total_pages); ?>" class="pagination-btn">
+                            <?php echo $total_pages; ?>
+                        </a>
+                    <?php endif; ?>
+                    
+                    <!-- Next Button -->
+                    <?php if ($current_page < $total_pages): ?>
+                        <a href="<?php echo build_pagination_url($current_page + 1); ?>" class="pagination-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="pagination-btn disabled">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="page-info">
+                    Showing <?php echo ($offset + 1); ?> to <?php echo min($offset + $items_per_page, $total_count); ?> of <?php echo $total_count; ?> items
+                </div>
+                <?php endif; ?>
+                
             <?php else: ?>
                 <div class="text-center py-12 bg-gray-900 rounded-xl">
                     <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
@@ -931,7 +1155,7 @@ $conn->close();
                 rating: "IMDb 7.8",
                 genre: "Sci-Fi • Adventure",
                 desc: "Jake Sully lives with his newfound family formed on the extrasolar moon Pandora. Once a familiar threat returns to finish what was previously started, Jake must work with Neytiri to protect their home.",
-                image: "https://www.yashrajfilms.com/images/default-source/movies/hrithik-vs-tiger/hrithik-v-s-tiger47bda6a026f56f7f9f64ff0b00090313.jpg?sfvrsn=9e48c9cc_17",
+                image: "https://images.plex.tv/photo?size=large-1280&url=https:%2F%2Fmetadata-static.plex.tv%2F4%2Fgracenote%2F4c234d33a2ce81ea2bdf99e60afb7de3.jpg",
                 cast: "Sam Worthington, Zoe Saldana, Sigourney Weaver",
                 director: "James Cameron"
             },
@@ -1161,7 +1385,6 @@ $conn->close();
                 audio.style.width = "220px";
                 audio.style.height = "38px";
 
-
                 // Play audio
                 setTimeout(() => {
                     audio.play().catch(e => console.log("Audio play failed:", e));
@@ -1276,28 +1499,25 @@ $conn->close();
             startTimer();
         }
 
+        //PLAY BTN
+        function playMovies(playUrl) {
+            // 1. Check if user is logged in
+            if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) {
+                if (typeof openLoginModal !== 'undefined') {
+                    openLoginModal();
+                } else {
+                    alert("Please login to watch movies.");
+                }
+                return;
+            }
 
-
-//PLAY BTN
-            function playMovies(playUrl) {
-    // 1. පරිශීලකයා ලොගින් වී ඇත්දැයි පරීක්ෂා කිරීම
-    // සටහන: මෙහි isLoggedIn යන්න ඔබේ පද්ධතියේ සත්‍ය වශයෙන්ම අර්ථ දක්වා තිබිය යුතුය
-    if (typeof isLoggedIn !== 'undefined' && !isLoggedIn) {
-        if (typeof openLoginModal !== 'undefined') {
-            openLoginModal();
-        } else {
-            alert("Please login to watch movies.");
+            // 2. If play_url is not empty, open it in a new tab
+            if (playUrl && playUrl !== 'NULL' && playUrl !== '') {
+                window.open(playUrl, '_blank');
+            } else {
+                alert("Sorry, the play URL is not available for this movie.");
+            }
         }
-        return;
-    }
-
-    // 2. play_url එක හිස් නොවේ නම් එය අලුත් ටැබ් එකක විවෘත කිරීම
-    if (playUrl && playUrl !== 'NULL' && playUrl !== '') {
-        window.open(playUrl, '_blank');
-    } else {
-        alert("Sorry, the play URL is not available for this movie.");
-    }
-}
     </script>
 </body>
 </html>
@@ -1307,7 +1527,16 @@ $conn->close();
 function remove_filter($filter_name) {
     $params = $_GET;
     unset($params[$filter_name]);
+    $params['page'] = 1; // Reset to page 1 when removing filter
     return 'index.php?' . http_build_query($params);
 }
+
+// Helper function to build pagination URLs
+function build_pagination_url($page_number) {
+    $params = $_GET;
+    $params['page'] = $page_number;
+    return 'index.php?' . http_build_query($params);
+}
+
 include("../include/footer.php");
 ?>

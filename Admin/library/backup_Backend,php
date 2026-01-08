@@ -1,0 +1,80 @@
+<?php
+// library/backup_Backend.php
+session_start();
+require_once '../include/connection.php';
+require_once '../include/functions.php';
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    echo json_encode(['success' => false, 'error' => 'Not authorized']);
+    exit();
+}
+
+$action = $_POST['action'] ?? '';
+
+switch ($action) {
+    case 'create_backup':
+        $result = createDatabaseBackup($pdo);
+        echo json_encode($result);
+        break;
+        
+    case 'get_backups':
+        $backups = getBackupFiles();
+        echo json_encode(['success' => true, 'backups' => $backups]);
+        break;
+        
+    case 'restore_backup':
+        $backupFile = $_POST['backup_file'] ?? '';
+        if (empty($backupFile)) {
+            echo json_encode(['success' => false, 'error' => 'No backup file specified']);
+            exit();
+        }
+        
+        $result = restoreDatabase($pdo, $backupFile);
+        echo json_encode($result);
+        break;
+        
+    case 'delete_backup':
+        $backupFile = $_POST['backup_file'] ?? '';
+        if (empty($backupFile) || !file_exists($backupFile)) {
+            echo json_encode(['success' => false, 'error' => 'Backup file not found']);
+            exit();
+        }
+        
+        if (unlink($backupFile)) {
+            echo json_encode(['success' => true, 'message' => 'Backup deleted']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to delete backup']);
+        }
+        break;
+        
+    case 'get_stats':
+        // Get table count
+        $tableCount = 0;
+        try {
+            $stmt = $pdo->query("SHOW TABLES");
+            $tableCount = $stmt->rowCount();
+        } catch (Exception $e) {
+            $tableCount = 0;
+        }
+        
+        // Get backup stats
+        $backups = getBackupFiles();
+        $totalSize = 0;
+        foreach ($backups as $backup) {
+            $totalSize += $backup['size'];
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'table_count' => $tableCount,
+            'backup_count' => count($backups),
+            'total_size' => $totalSize,
+            'total_size_mb' => round($totalSize / 1024 / 1024, 2)
+        ]);
+        break;
+        
+    default:
+        echo json_encode(['success' => false, 'error' => 'Invalid action']);
+}
+?>

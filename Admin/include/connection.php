@@ -13,3 +13,4 @@ try {
     die("Database connection failed. Please try again later.");
 }
 ?>
+

@@ -1,3 +1,4 @@
+
 <?php 
 // Check if session is not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -39,7 +40,7 @@ $admin_email = $_SESSION['admin_email'] ?? 'admin@movielab.com';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Lab Admin - Sidebar</title>
+    <title>Movie Lab Admin Pannel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
