@@ -201,7 +201,7 @@ include("../include/header.php");
                             </div>
                         </div>
                     </div>
-
+<div class="form-row">
                     <div class="form-group">
                         <label>Genre</label>
                         
@@ -210,11 +210,8 @@ include("../include/header.php");
                             <option value="Action">Action</option>
                             <option value="Adventure">Adventure</option>
                             <option value="Animation">Animation</option>
-                            <option value="Biography">Biography</option>
                             <option value="Comedy">Comedy</option>
                             <option value="Crime">Crime</option>
-                            <option value="Drama">Drama</option>
-                            <option value="Family">Family</option>
                             <option value="Fantasy">Fantasy</option>
                             <option value="History">History</option>
                             <option value="Horror">Horror</option>
@@ -224,7 +221,6 @@ include("../include/header.php");
                             <option value="Sci-Fi">Sci-Fi</option>
                             <option value="Thriller">Thriller</option>
                             <option value="War">War</option>
-                            <option value="Western">Western</option>
                         </select>
 
                         <select id="song_genre" name="genre_song" class="form-control song-only">
@@ -253,7 +249,11 @@ include("../include/header.php");
                             <option value="Latin">Latin</option>
                         </select>
                     </div>
-
+                        <div class="form-group movie-only">
+                                <label>Language</label>
+                                <input type="text" name="languagem" id="editLanguagem" class="form-control">
+                        </div>
+                     </div>
                     <div class="form-group movie-only">
                         <label>Description / Storyline</label>
                         <textarea name="description" id="editDescription" class="form-control" rows="3"></textarea>
@@ -399,6 +399,8 @@ include("../include/header.php");
             showAlert('Content not found');
             return;
         }
+        //ara image eka update aula ta damme
+        document.querySelector('input[name="poster_image"]').value = "";
 
         const modalFrame = document.getElementById('modalFrame');
         modalFrame.className = 'modal-container is-' + type;
@@ -423,6 +425,7 @@ include("../include/header.php");
 
         if (type === 'movie') {
             document.getElementById('movie_genre').value = item.genre || "";
+            document.getElementById('editLanguagem').value = item.language || ""; 
             document.getElementById('editDuration').value = item.duration || "";
             document.getElementById('editRating').value = item.rating || "";
             document.getElementById('editYear').value = item.year || "";

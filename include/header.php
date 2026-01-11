@@ -646,10 +646,8 @@
                       
                     <!-- Primary Desktop Links (Home + Dropdowns) -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-4 lg:space-x-6 items-center">
-                        <!-- HOME Link -->
-                        <a href="../Site/index.php" class="nav-link-underline inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300">
-                            Home
-                        </a>
+                       
+                        
 
                         <!-- Dropdown: Movies -->
                         <div class="relative">
@@ -682,27 +680,11 @@
                                     <a href="javascript:void(0);" onclick="applyContentType('songs')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">All Songs</a>
                                     <a href="javascript:void(0);" onclick="applySortFilter('new')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">New Releases</a>
                                     <a href="javascript:void(0);" onclick="applySortFilter('top')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Top Charts</a>
-                                    <a href="javascript:void(0);" onclick="applySortFilter('playlists')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Playlists</a>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Dropdown: TV Series -->
-                        <div class="relative">
-                            <button onclick="toggleDropdown('tv-series-dropdown')" class="nav-dropdown-btn inline-flex items-center px-1 pt-1 text-sm font-medium text-white transition duration-300 focus:outline-none">
-                                <span class="nav-link-underline">TV Series</span>
-                                <svg class="ml-1 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <div id="tv-series-dropdown" class="absolute hidden mt-3 w-48 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20">
-                                <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="tv-series-menu-button">
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Trending</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">On Air</a>
-                                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Netflix Originals</a>
-                                </div>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
 
@@ -719,19 +701,24 @@
                                 </svg>
                             </button>
                             <div id="genres-dropdown" class="absolute hidden mt-3 w-72 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-24">
-                                <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="genres-menu-button">
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Action')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Action</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Horror')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Horror</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Comedy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Comedy</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Sci-Fi')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Sci-Fi</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Drama')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Drama</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Romance')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Romance</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Thriller')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Thriller</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Documentary')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Documentary</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Animation')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Animation</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Fantasy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Fantasy</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Crime')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Crime</a>
-                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Mystery')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Mystery</a>
+                                <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-2" role="menu" aria-orientation="vertical" aria-labelledby="genres-menu-button">
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Action')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-bolt"></i> Action</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Adventure')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-compass"></i> Adventure</a>
+
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Horror')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-skull"></i> Horror</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Comedy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-face-grin-tears"></i> Comedy</a>
+                                     <a href="javascript:void(0);" onclick="applyFilter('genre', 'Crime')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-handcuffs"></i> Crime</a>
+
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Sci-Fi')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-rocket"></i> Sci-Fi</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'History')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-monument"></i> History</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Romance')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-heart"></i> Romance</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Thriller')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-user-secret"></i> Thriller</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Musical')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-guitar"></i> Musical</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Animation')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-fire"></i> Animation</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Fantasy')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-wand-sparkles"></i> Fantasy</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'Mystery')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-magnifying-glass"></i> Mystery</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('genre', 'War')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem"><i class="fas fa-gun"></i> War</a>
+
                                 </div>
                             </div>
                         </div>
@@ -745,7 +732,10 @@
                                 </svg>
                             </button>
                             <div id="years-dropdown" class="absolute hidden mt-3 w-48 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-8">
-                                <div class="py-1 grid grid-cols-2 gap-x-1 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="years-menu-button">
+                                <div class="py-1 grid grid-cols-3 gap-x-1 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="years-menu-button">
+                                 <a href="javascript:void(0);" onclick="applyFilter('year', '2026')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2026</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2025')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2025</a>
+
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2024')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2024</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2023')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2023</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2022')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2022</a>
@@ -753,6 +743,14 @@
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2020')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2020</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2019')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2019</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('year', '2018')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2018</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2017')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2017</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2016')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2016</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2015')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2015</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2014')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2014</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2013')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2013</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2012')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2012</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2011')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2011</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('year', '2010')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">2010</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('year', 'older')" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150" role="menuitem">Older</a>
                                 </div>
                             </div>
@@ -768,7 +766,7 @@
                             </button>
                             <div id="languages-dropdown" class="absolute hidden mt-3 w-72 rounded-lg shadow-2xl bg-dark-card ring-1 ring-primary-red ring-opacity-20 z-20 -right-16">
                                 <div class="p-2 grid grid-cols-2 gap-x-4 gap-y-1" role="menu" aria-orientation="vertical" aria-labelledby="languages-menu-button">
-                                    <a href="javascript:void(0);" onclick="applyFilter('language', 'All')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">All</a>
+                                    <!-- <a href="javascript:void(0);" onclick="applyFilter('language', 'All')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">All</a> -->
                                     <a href="javascript:void(0);" onclick="applyFilter('language', 'English')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">English</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('language', 'Hindi')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Hindi</a>
                                     <a href="javascript:void(0);" onclick="applyFilter('language', 'Korean')" class="px-4 py-1 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150 rounded-md" role="menuitem">Korean</a>

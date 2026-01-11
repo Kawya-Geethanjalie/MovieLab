@@ -56,7 +56,8 @@ try {
             $year = filter_input(INPUT_POST, 'year', FILTER_VALIDATE_INT);
             $desc = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
             $trailer_url = filter_input(INPUT_POST, 'trailer_url', FILTER_VALIDATE_URL);
-            
+           $languagem = filter_input(INPUT_POST, 'languagem', FILTER_SANITIZE_STRING);
+
             // NEW: Get play_url and download_url - allow empty values
             $play_url = filter_input(INPUT_POST, 'play_url', FILTER_SANITIZE_STRING);
             $download_url = filter_input(INPUT_POST, 'download_url', FILTER_SANITIZE_STRING);
@@ -107,8 +108,8 @@ try {
 
             // Update movie in database - NOW INCLUDES play_url and download_url
             $sql = "UPDATE movies SET title = ?, genre = ?, duration = ?, rating = ?, release_year = ?, 
-                    description = ?, trailer_url = ?, play_url = ?, download_url = ?";
-            $params = [$title, $genre, $duration, $rating, $year, $desc, $trailer_url, $play_url, $download_url];
+                    description = ?, trailer_url = ?, play_url = ?, download_url = ?,language = ? ";
+            $params = [$title, $genre, $duration, $rating, $year, $desc, $trailer_url, $play_url, $download_url,$languagem,];
             
             if ($imagePath) {
                 $sql .= ", poster_image = ?";
@@ -297,8 +298,10 @@ try {
     }
 
     // Fetch all content - NOW INCLUDES play_url and download_url for movies
-    $moviesQuery = "SELECT movie_id as id, title, genre, duration, rating, release_year as year, 
-                   description, poster_image, trailer_url, play_url, download_url, 'movie' as type FROM movies ORDER BY title";
+// content_manage_backend.php හි පහළම ඇති කොටස
+$moviesQuery = "SELECT movie_id as id, title, genre, duration, language, rating, release_year as year, 
+               description, poster_image, trailer_url, play_url, download_url, 'movie' as type 
+               FROM movies ORDER BY title";
     $moviesStmt = $pdo->prepare($moviesQuery);
     $moviesStmt->execute();
     $movies = $moviesStmt->fetchAll(PDO::FETCH_ASSOC);

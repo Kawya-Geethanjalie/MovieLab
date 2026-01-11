@@ -70,7 +70,13 @@ function getMoviesCount($conn, $filter, $genre, $year, $language) {
         $params[] = "%$genre%";
         $types .= "s";
     }
-
+// ... (අනිත් filter වලට පස්සේ මේ කොටස දාන්න)
+    if (!empty($language)) {
+        $sql .= " AND language LIKE ?";
+        $params[] = "%$language%";
+        $types .= "s";
+    }
+    
     if (!empty($year) && $year !== 'older') {
         $sql .= " AND release_year = ?";
         $params[] = $year;
@@ -132,7 +138,11 @@ function getMovies($conn, $filter, $genre, $year, $language, $limit, $offset) {
         $params[] = "%$genre%";
         $types .= "s";
     }
-
+if (!empty($language)) {
+        $sql .= " AND language LIKE ?";
+        $params[] = "%$language%";
+        $types .= "s";
+    }
     if (!empty($year) && $year !== 'older') {
         $sql .= " AND release_year = ?";
         $params[] = $year;
@@ -701,10 +711,10 @@ $conn->close();
         <!-- Active Filter Info -->
         <?php if (!empty($genre) || !empty($year) || !empty($language)): ?>
             <div class="mb-6 p-4 bg-gray-900 rounded-lg">
-                <h3 class="text-lg font-semibold mb-2">Active Filters:</h3>
+                <h3 class="text-lg font-semibold mb-2" style="color:white;">Active Filters:</h3>
                 <div class="flex flex-wrap gap-2">
                     <?php if (!empty($genre)): ?>
-                        <span class="px-3 py-1 bg-red-600 rounded-full text-sm">
+                        <span class="px-3 py-2 bg-red-600 rounded-full text-sm">
                             Genre: <?php echo htmlspecialchars($genre); ?>
                             <a href="<?php echo remove_filter('genre'); ?>" class="ml-1 hover:text-gray-300">×</a>
                         </span>
@@ -727,7 +737,7 @@ $conn->close();
 
         <!-- Content Grid -->
         <section class="mb-10">
-            <h2 class="text-xl md:text-2xl font-bold mb-5">
+            <h2 class="text-xl md:text-2xl font-bold mb-5" style="color:gray;">
                 <?php 
                     if ($content_type === 'movies') {
                         if (!empty($genre)) echo "Movies in " . htmlspecialchars($genre);

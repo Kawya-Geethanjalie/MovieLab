@@ -491,11 +491,9 @@
                                 <option value="Action">Action</option>
                                 <option value="Adventure">Adventure</option>
                                 <option value="Animation">Animation</option>
-                                <option value="Biography">Biography</option>
+                                
                                 <option value="Comedy">Comedy</option>
                                 <option value="Crime">Crime</option>
-                                <option value="Drama">Drama</option>
-                                <option value="Family">Family</option>
                                 <option value="Fantasy">Fantasy</option>
                                 <option value="History">History</option>
                                 <option value="Horror">Horror</option>
@@ -505,7 +503,6 @@
                                 <option value="Sci-Fi">Sci-Fi</option>
                                 <option value="Thriller">Thriller</option>
                                 <option value="War">War</option>
-                                <option value="Western">Western</option>
                             </select>
                         </div>
 
@@ -524,6 +521,12 @@
                                    placeholder="120">
                             <div class="helper-text">Enter duration in minutes (1-500)</div>
                         </div>
+                        <div class="form-group">
+    <label for="movie_language">Language</label>
+    <input type="text" id="movie_language" name="language" 
+           placeholder="e.g. Sinhala, English">
+    <div class="helper-text">Optional: Enter the movie language</div>
+</div>
 
                         <div class="form-group">
                             <label for="trailer_url">Trailer URL</label>
@@ -542,7 +545,7 @@
                         <div class="form-group">
                             <label for="movie_download_url">Download URL</label>
                             <input type="url" id="movie_download_url" name="download_url" 
-                                   placeholder="https://example.com/download/movie123">
+                                   placeholder="https://example.com/download/movie123" style="width:800px;">
                             <div class="helper-text">Optional: Direct download URL for the movie</div>
                         </div>
 

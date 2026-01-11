@@ -99,29 +99,31 @@ function handleMovieSubmission($pdo) {
         if ($upload['success']) $poster_path = $upload['path'];
     }
 
-    // Get play_url and download_url from POST data
+    // අලුතින් එක් කළ Language අගය ලබා ගැනීම
+    $language = isset($_POST['language']) ? trim($_POST['language']) : '';
     $play_url = isset($_POST['play_url']) ? trim($_POST['play_url']) : '';
     $download_url = isset($_POST['download_url']) ? trim($_POST['download_url']) : '';
 
-    // FIXED SQL: Added play_url and download_url fields
-    $sql = "INSERT INTO movies (title, description, release_year, genre, rating, duration, poster_image, trailer_url, play_url, download_url, view_count, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())";
+    // SQL එකට 'language' තීරුව සහ අගය ඇතුළත් කර ඇත
+    $sql = "INSERT INTO movies (title, description, release_year, genre, rating, duration, language, poster_image, trailer_url, play_url, download_url, view_count, created_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())";
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
-        $_POST['title'], 
-        $_POST['description'] ?? '', 
-        $_POST['release_year'] ?? 0, 
-        $_POST['genre'], 
-        $_POST['rating'] ?? null, 
-        $_POST['duration'] ?? 0, 
-        $poster_path, 
+        $_POST['title'],
+        $_POST['description'] ?? '',
+        $_POST['release_year'] ?? 0,
+        $_POST['genre'],
+        $_POST['rating'] ?? null,
+        $_POST['duration'] ?? 0,
+        $language,           // නව language අගය මෙතැනට
+        $poster_path,
         $_POST['trailer_url'] ?? '',
-        $play_url,           // play_url added
-        $download_url        // download_url added
+        $play_url,           // play_url
+        $download_url        // download_url
     ]);
     
-    return ['success' => true, 'message' => 'Movie added successfully with URLs!'];
+    return ['success' => true, 'message' => 'Movie added successfully with Language!'];
 }
 
 function handleSongSubmission($pdo) {
