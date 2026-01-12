@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 12, 2026 at 12:04 PM
+-- Generation Time: Jan 12, 2026 at 06:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,7 +41,9 @@ CREATE TABLE `massages_and_comment` (
 --
 
 INSERT INTO `massages_and_comment` (`id`, `name`, `email`, `subject`, `massage`, `created_at`) VALUES
-(0, 'f', 'gf@gmail.com', 'Comment', 'sdsdd', '2026-01-12 11:02:56');
+(1, 'f', 'gf@gmail.com', 'Comment', 'sdsdd', '2026-01-12 11:02:56'),
+(2, 'as', 'contact.lawya@gmail.com', 'Comment', 'd', '2026-01-12 16:11:08'),
+(3, 'assdss', 'contact.lawya@gmail.com', 'Other', 'gfg', '2026-01-12 16:16:33');
 
 -- --------------------------------------------------------
 
@@ -57,6 +59,7 @@ CREATE TABLE `movies` (
   `genre` varchar(100) DEFAULT NULL,
   `rating` decimal(3,1) DEFAULT NULL,
   `duration` int(11) DEFAULT NULL,
+  `language` varchar(20) NOT NULL,
   `poster_image` varchar(255) DEFAULT NULL,
   `trailer_url` varchar(255) DEFAULT NULL,
   `play_url` varchar(255) DEFAULT NULL,
@@ -70,27 +73,52 @@ CREATE TABLE `movies` (
 -- Dumping data for table `movies`
 --
 
-INSERT INTO `movies` (`movie_id`, `title`, `description`, `release_year`, `genre`, `rating`, `duration`, `poster_image`, `trailer_url`, `play_url`, `download_url`, `created_at`, `updated_at`, `view_count`) VALUES
-(1, 'Avatar: The Way of Water', 'Jake Sully lives with his newfound family formed on the extrasolar moon Pandora.', '2022', 'Sci-Fi', 7.8, 192, '/images/Avatar.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
-(2, 'Oppenheimer', 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.', '2023', 'Biography', 8.6, 180, '/images/Oppenheimer.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-12-23 17:25:06', 0),
-(3, 'Spider-Man: Across the Spider-Verse', 'Miles Morales catapults across the Multiverse.', '2023', 'Animation', 8.9, 140, '/images/SpiderMan.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
-(4, 'Dune: Part Two', 'Paul Atreides unites with Chani and the Fremen.', '2024', 'Sci-Fi', 8.8, 166, '/images/Dune.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
-(8, 'KIck', 'Kick is a 2014 Indian Hindi-language action comedy film produced and directed by Sajid Nadiadwala in his directorial debut under the Nadiadwala Grandson Entertainment banner and starring Salman Khan, Jacqueline Fernandez, Randeep Hooda and Nawazuddin Siddiqui in the lead roles.[4] An official remake of the eponymous 2009 Telugu original, it was made in collaboration with UTV Motion Pictures on a reported budget of ₹55 crore (US$6.5 million).', '2011', 'Romance', 6.8, 120, 'uploads/movies/6944ce3698b4d5.16738709_1766116918.jpeg', 'https://www.youtube.com/watch?v=u-j1nx_HY5o', NULL, NULL, '2025-12-19 04:01:58', '2025-12-27 14:03:33', 0),
-(14, 'Zid', 'Zid (transl. Obstinance) is a 2014 Indian Hindi-language thriller film directed by Vivek Agnihotri and produced by Anubhav Sinha. The film stars Karanvir Sharma, Mannara Chopra and Shraddha Das in the principal roles.\r\n\r\n', '2014', 'Musical', 5.0, 160, 'uploads/movies/69484f4844ce98.04949081.jpg', 'https://www.youtube.com/watch?v=bArdCUba1EI', NULL, NULL, '2025-12-21 19:49:28', '2025-12-27 14:03:38', 0),
-(15, 'Manikarnika', 'Manikarnika: The Queen of Jhansi is a 2019 Indian Hindi-language epic historical drama film[3] based on the life of Rani Lakshmi Bai of Jhansi.[7] It is directed by Krish Jagarlamudi and Kangana Ranaut from a screenplay written by V. Vijayendra Prasad. Produced by Zee Studios, the film stars Ranaut in the title role.[8]\r\n\r\n', '2019', 'History', 9.2, 150, 'uploads/movies/69484fddecd328.00202133.jpg', 'https://www.youtube.com/watch?v=eBw8SPPvGXQ', NULL, NULL, '2025-12-21 19:51:57', '2025-12-27 14:03:45', 0),
-(16, 'Taiger Zinda hai', 'Tiger Zinda Hai (transl. Tiger is Alive) is a 2017 Indian Hindi-language action thriller film written and directed by Ali Abbas Zafar and produced by Aditya Chopra under Yash Raj Films.[1][6][7] It is a sequel to Ek Tha Tiger (2012) and the second instalment in the YRF Spy Universe. The film stars Salman Khan and Katrina Kaif who reprise their roles from the predecessor.[8][9][10] Five years after the events of Ek Tha Tiger, Tiger and Zoya find themselves pulled out of hiding to save nurses held hostage by the ISC, a terrorist organisation based in Iraq.\r\n\r\n', '2012', 'Action', 5.0, 120, 'uploads/movies/694850e8cd3d28.12267734.jpeg', 'https://www.youtube.com/watch?v=ePO5M5DE01I', NULL, NULL, '2025-12-21 19:56:24', '2025-12-27 14:03:54', 0),
-(17, 'Devdas', 'Devdas is a 2002 Indian Hindi-language period romantic drama film directed by Sanjay Leela Bhansali and produced by Bharat Shah under his banner, Mega Bollywood. It stars Shah Rukh Khan, Aishwarya Rai and Madhuri Dixit in lead roles, with Jackie Shroff, Kirron Kher, Smita Jaykar, and Vijayendra Ghatge in supporting roles. Based on the Bengali-language 1917 novel of the same name by Sarat Chandra Chattopadhyay, the film narrates the story of Devdas Mukherjee (Khan), a wealthy law graduate who returns from London to marry his childhood friend, Parvati \"Paro\" (Rai). However, the rejection of their marriage by his own family sparks his descent into alcoholism, ultimately leading to his emotional deterioration and him seeking refuge with the golden-hearted courtesan Chandramukhi (Dixit).\r\n\r\n', '2000', 'Fantasy', 8.2, 136, 'uploads/movies/6948518850d862.22337162.jpeg', 'https://www.youtube.com/watch?v=8tuHQWGMQwY', NULL, NULL, '2025-12-21 19:59:04', '2025-12-27 14:03:59', 0),
-(18, 'Crew', 'Crew is a 2024 Indian Hindi-language heist comedy film directed by Rajesh A Krishnan and written by Nidhi Mehra and Mehul Suri. Produced by Ekta Kapoor, Rhea Kapoor, Anil Kapoor, and Digvijay Purohit under Balaji Motion Pictures and Anil Kapoor Films & Communication Network, it stars Kareena Kapoor Khan, Kriti Sanon, and Tabu with Diljit Dosanjh and Kapil Sharma in supporting roles. In the film, three air hostesses become involved in a gold smuggling operation. The film is noted to be a parody of Vijay Mallya owned Kingfisher Airlines, which closed down due to bankruptcy and non-payment of dues and salaries to employees.[4]\r\n\r\n', '2024', 'Drama', 5.1, 120, 'uploads/movies/694854d7781044.36305323.jpg', 'https://www.youtube.com/watch?v=3uvfq4Cu8R8', NULL, NULL, '2025-12-21 20:13:11', '2025-12-27 14:04:05', 0),
-(19, 'Ashique 2', 'Aashiqui 2 (transl. Romance 2) is a 2013 Indian Hindi-language musical romantic drama film directed by Mohit Suri, and produced by Bhushan Kumar and Mukesh Bhatt under the T-Series Films and Vishesh Films production banners. It is a spiritual successor to the 1990 musical film Aashiqui. The film stars Aditya Roy Kapur and Shraddha Kapoor, with Shaad Randhawa and Mahesh Thakur in supporting roles. The film centers on a turbulent romantic relationship between a failing singer, Rahul Jaykar, and his protege, aspiring singer Aarohi Keshav Shirke, which is affected by Rahul&#39;s issues with alcohol abuse and temperament.[1]\r\n\r\n', '2014', 'Romance', 9.5, 120, 'uploads/movies/1767594914_695b5ba23ed5a.jpg', 'https://www.youtube.com/watch?v=x8blxWAOsaw&list=RDx8blxWAOsaw&start_radio=1', 'https://cinesubz.lk/movies/aashiqui-2-2013-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server1/qmsyfzbjcavekxfuwqbi/Movies/2021-08-22/CineSubz.com%20-%20Aashiqui.2.2013%20720p?ext=mp4', '2025-12-21 20:16:06', '2026-01-05 06:35:14', 0),
-(20, 'Do Dil Bhande Ek Dori se', 'Do Dil Bandhe Ek Dori Se (English: Two Hearts Connected by One Thread) is an Indian Hindi-language drama television series that premiered on 12 August 2013.[1][2] The show aired on Zee TV Monday through Friday nights.[3] The show was musically treated by Dony Hazarika. It replaced Hitler Didi.[4] it was replaced by Jamai Raja in its timeslot.[5]\r\n\r\n', '2013', 'Fantasy', 10.0, 120, 'uploads/movies/1767594684_695b5abca950f.jpg', 'https://www.youtube.com/watch?v=wOBq674bV68', 'https://www.youtube.com/results?search_query=do+dil+bandhe+ek+dori+se', '', '2025-12-21 20:19:45', '2026-01-05 06:31:24', 0),
-(21, 'Anwar', 'Anwar is a 2007 Indian romantic thriller film written and directed by Manish Jha, who is famous for his work in Matrubhoomi. The film stars the siblings Siddharth Koirala and Manisha Koirala along with Rajpal Yadav and Nauheed Cyrusi[2]. The songs \"Maula Mere Maula\" and \"Tose Naina Lage\" are two of the most popular songs of 2007[3]. The movie is most notable for featuring Siddharth Koirala.\r\n\r\n', '2007', 'Fantasy', 5.6, 120, 'uploads/movies/694977ff20ea32.44749749.jpg', 'https://www.youtube.com/watch?v=l5sgIqzlPXc&list=RDl5sgIqzlPXc&start_radio=1', NULL, NULL, '2025-12-22 16:55:27', '2025-12-27 14:03:25', 0),
-(23, 'xx', '11', '2024', 'War', 4.0, 200, 'uploads/movies/1766505930_Screenshot (4).png', '', NULL, NULL, '2025-12-23 16:03:25', '2025-12-23 16:05:30', 0),
-(24, 'Jannat', 'Jannat (transl. Heaven) is a 2008 Indian Hindi-language romantic crime film directed by Kunal Deshmukh, and produced by Mukesh Bhatt. The film stars Emraan Hashmi opposite Sonal Chauhan in lead roles. It was released on 16 May 2008 and was a success worldwide, receiving positive responses from critics. Its sequel Jannat 2, starring Emraan Hashmi, Randeep Hooda and Esha Gupta, was released in 4 May 2012 and It&#39;s Sequel Jannat 3, starting Emraan Hashmi, Gaurav Arora, and Neha Dhupia, Kriti Kharbanda, and Randeep Hooda, was released in 15 May 2026.', '2008', 'Romance', 6.8, 150, 'uploads/movies/1767594540_695b5a2c73d59.jpg', 'https://www.youtube.com/watch?v=K9n-aMlLJlo', 'https://cinesubz.lk/movies/jannat-2008-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server4/new/Jannat.In.Search.Of.Heaven.2008-%5BCineSubz.co%5D-480p?ext=mp4', '2025-12-27 13:48:14', '2026-01-05 06:29:00', 0),
-(25, 'Razz', 'Raaz: Do You Want to Know A Secret…? (transl. Secret) is a 2002 Indian supernatural horror film directed by Vikram Bhatt. The film stars Dino Morea and Bipasha Basu in lead roles, with Malini Sharma and Ashutosh Rana in supporting roles. In the Indian media, the film is widely regarded as a Landmark in the history of Indian cinema and considered one of the best Hindi horror cinemas.[a] The film is an unofficial adaptation of the American film What Lies Beneath (2000).[8][9] American entertainment publication Collider has termed it better than the original.[10][11][12]\r\n\r\n', '2002', 'Horror', 8.0, 120, 'uploads/movies/1767594245_695b590569e56.jpg', 'https://www.youtube.com/watch?v=O6GUoVApVkc', 'https://cinesubz.lk/movies/raaz-2002-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server4/new/Raaz.2002.WEBRip-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-27 13:58:43', '2026-01-05 06:24:05', 0),
-(26, 'Hosefull 2', 'Housefull 2, sometimes called Housefull 2: The Dirty Dozen, is a 2012 Indian Hindi-language action comedy film written and directed by Sajid Khan. It was co-written by brothers Sajid Samji and Farhad Samji based on a story by Sajid Nadiadwala. Produced by Nadiadwala under Nadiadwala Grandson Entertainment and distributed by Eros International, it is a remake of Mattupetty Machan and the second installment of the Housefull franchise, is a standalone sequel to Housefull (2010).', '2010', 'Family', 6.0, 120, 'uploads/movies/1767593876_695b5794bbc97.jpg', 'https://www.youtube.com/watch?v=u-j1nx_HY5o', 'https://cinesubz.lk/movies/housefull-2-2012-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202506/Housefull%202%20(2012)%20BluRay-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:48:27', '2026-01-05 06:17:56', 0),
-(27, 'Housefull', 'sss', '2010', 'Thriller', 7.0, 120, 'uploads/movies/1767593797_695b57450fc62.jpg', 'https://www.youtube.com/watch?v=0eRVTe98Lz4', 'https://cinesubz.lk/movies/housefull-2010-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202506/Housefull%20(2010)%20BluRay-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:50:25', '2026-01-05 06:16:37', 0),
-(29, 'Saiyaraa', 'Saiyaara (lit. &#39;Wanderer star&#39; or &#39;Wandering lover&#39;) is a 2025 Indian Hindi-language musical romantic drama film directed by Mohit Suri.[6] Produced by Yash Raj Films, it is loosely based on the 2004 Korean film A Moment to Remember.[7][8] It stars debutant Ahaan Panday and Aneet Padda in the lead roles of a singer-songwriter duo who fall in love. Originally planned as a spiritual sequel to Suri&#39;s Aashiqui 2 (2013), creative differences with producers Mukesh Bhatt and Bhushan Kumar led to the project being reworked into a standalone film under Yash Raj Films.[9]', '2025', 'History', 5.6, 120, 'uploads/movies/1767593178_695b54da02593.jpg', 'https://www.youtube.com/watch?v=BSJa1UytM8w&list=RDBSJa1UytM8w&start_radio=1', 'https://cinesubz.lk/movies/saiyaara-2025-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202508/Saiyaara%20(2025)%20Hindi%20WEB-DL-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:56:24', '2026-01-05 06:06:18', 0),
-(30, 'Ek Deewane Ki Deewaniyat', 'Ek Deewane Ki Deewaniyat (transl. The obsession of a crazy lover) is a 2025 Indian Hindi-language romantic drama film directed by Milap Zaveri and written by Zaveri and Mushtaq Shiekh.[4] Produced under the banner Desi Movies Factory, the film stars Harshvardhan Rane and Sonam Bajwa in the lead roles.\r\n\r\nThe film was theatrically released on 21 October 2025, coinciding with Diwali. It received generally negative reviews from critics[5] but was a major commercial success, grossing ₹112 crore worldwide and emerged as the 12th highest-grossing Hindi film of 2025.[6]', '2025', 'Romance', 5.3, 150, 'uploads/movies/1767592906_695b53ca7914c.jpg', 'https://www.youtube.com/watch?v=dGb3acfZp2k', 'https://cinesubz.lk/movies/ek-deewane-ki-deewaniyat-2025-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202510/Ek%20Deewane%20Ki%20Deewaniyat%20(2025)%20Hindi%20WEB-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 17:29:28', '2026-01-05 06:01:46', 0);
+INSERT INTO `movies` (`movie_id`, `title`, `description`, `release_year`, `genre`, `rating`, `duration`, `language`, `poster_image`, `trailer_url`, `play_url`, `download_url`, `created_at`, `updated_at`, `view_count`) VALUES
+(1, 'Avatar: The Way of Water', 'Jake Sully lives with his newfound family formed on the extrasolar moon Pandora.', '2022', 'Sci-Fi', 7.8, 192, '', '/images/Avatar.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
+(2, 'Oppenheimer', 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.', '2023', 'Biography', 8.6, 180, '', '/images/Oppenheimer.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-12-23 17:25:06', 0),
+(3, 'Spider-Man: Across the Spider-Verse', 'Miles Morales catapults across the Multiverse.', '2023', 'Animation', 8.9, 140, '', '/images/SpiderMan.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
+(4, 'Dune: Part Two', 'Paul Atreides unites with Chani and the Fremen.', '2024', 'Sci-Fi', 8.8, 166, '', '/images/Dune.jpg', NULL, NULL, NULL, '2025-11-28 10:16:15', '2025-11-28 10:16:15', 0),
+(8, 'KIck', 'Kick is a 2014 Indian Hindi-language action comedy film produced and directed by Sajid Nadiadwala in his directorial debut under the Nadiadwala Grandson Entertainment banner and starring Salman Khan, Jacqueline Fernandez, Randeep Hooda and Nawazuddin Siddiqui in the lead roles.[4] An official remake of the eponymous 2009 Telugu original, it was made in collaboration with UTV Motion Pictures on a reported budget of ₹55 crore (US$6.5 million).', '2011', 'Romance', 6.8, 120, '', 'uploads/movies/6944ce3698b4d5.16738709_1766116918.jpeg', 'https://www.youtube.com/watch?v=u-j1nx_HY5o', NULL, NULL, '2025-12-19 04:01:58', '2025-12-27 14:03:33', 0),
+(14, 'Zid', 'Zid (transl. Obstinance) is a 2014 Indian Hindi-language thriller film directed by Vivek Agnihotri and produced by Anubhav Sinha. The film stars Karanvir Sharma, Mannara Chopra and Shraddha Das in the principal roles.\r\n\r\n', '2014', 'Musical', 5.0, 160, '', 'uploads/movies/69484f4844ce98.04949081.jpg', 'https://www.youtube.com/watch?v=bArdCUba1EI', NULL, NULL, '2025-12-21 19:49:28', '2025-12-27 14:03:38', 0),
+(15, 'Manikarnika', 'Manikarnika: The Queen of Jhansi is a 2019 Indian Hindi-language epic historical drama film[3] based on the life of Rani Lakshmi Bai of Jhansi.[7] It is directed by Krish Jagarlamudi and Kangana Ranaut from a screenplay written by V. Vijayendra Prasad. Produced by Zee Studios, the film stars Ranaut in the title role.[8]\r\n\r\n', '2019', 'History', 9.2, 150, '', 'uploads/movies/69484fddecd328.00202133.jpg', 'https://www.youtube.com/watch?v=eBw8SPPvGXQ', NULL, NULL, '2025-12-21 19:51:57', '2025-12-27 14:03:45', 0),
+(16, 'Taiger Zinda hai', 'Tiger Zinda Hai (transl. Tiger is Alive) is a 2017 Indian Hindi-language action thriller film written and directed by Ali Abbas Zafar and produced by Aditya Chopra under Yash Raj Films.[1][6][7] It is a sequel to Ek Tha Tiger (2012) and the second instalment in the YRF Spy Universe. The film stars Salman Khan and Katrina Kaif who reprise their roles from the predecessor.[8][9][10] Five years after the events of Ek Tha Tiger, Tiger and Zoya find themselves pulled out of hiding to save nurses held hostage by the ISC, a terrorist organisation based in Iraq.\r\n\r\n', '2012', 'Action', 5.0, 120, '', 'uploads/movies/694850e8cd3d28.12267734.jpeg', 'https://www.youtube.com/watch?v=ePO5M5DE01I', NULL, NULL, '2025-12-21 19:56:24', '2025-12-27 14:03:54', 0),
+(17, 'Devdas', 'Devdas is a 2002 Indian Hindi-language period romantic drama film directed by Sanjay Leela Bhansali and produced by Bharat Shah under his banner, Mega Bollywood. It stars Shah Rukh Khan, Aishwarya Rai and Madhuri Dixit in lead roles, with Jackie Shroff, Kirron Kher, Smita Jaykar, and Vijayendra Ghatge in supporting roles. Based on the Bengali-language 1917 novel of the same name by Sarat Chandra Chattopadhyay, the film narrates the story of Devdas Mukherjee (Khan), a wealthy law graduate who returns from London to marry his childhood friend, Parvati \"Paro\" (Rai). However, the rejection of their marriage by his own family sparks his descent into alcoholism, ultimately leading to his emotional deterioration and him seeking refuge with the golden-hearted courtesan Chandramukhi (Dixit).\r\n\r\n', '2000', 'Fantasy', 8.2, 136, '', 'uploads/movies/6948518850d862.22337162.jpeg', 'https://www.youtube.com/watch?v=8tuHQWGMQwY', NULL, NULL, '2025-12-21 19:59:04', '2025-12-27 14:03:59', 0),
+(18, 'Crew', 'Crew is a 2024 Indian Hindi-language heist comedy film directed by Rajesh A Krishnan and written by Nidhi Mehra and Mehul Suri. Produced by Ekta Kapoor, Rhea Kapoor, Anil Kapoor, and Digvijay Purohit under Balaji Motion Pictures and Anil Kapoor Films & Communication Network, it stars Kareena Kapoor Khan, Kriti Sanon, and Tabu with Diljit Dosanjh and Kapil Sharma in supporting roles. In the film, three air hostesses become involved in a gold smuggling operation. The film is noted to be a parody of Vijay Mallya owned Kingfisher Airlines, which closed down due to bankruptcy and non-payment of dues and salaries to employees.[4]\r\n\r\n', '2024', 'Drama', 5.1, 120, '', 'uploads/movies/694854d7781044.36305323.jpg', 'https://www.youtube.com/watch?v=3uvfq4Cu8R8', NULL, NULL, '2025-12-21 20:13:11', '2025-12-27 14:04:05', 0),
+(19, 'Ashique 2', 'Aashiqui 2 (transl. Romance 2) is a 2013 Indian Hindi-language musical romantic drama film directed by Mohit Suri, and produced by Bhushan Kumar and Mukesh Bhatt under the T-Series Films and Vishesh Films production banners. It is a spiritual successor to the 1990 musical film Aashiqui. The film stars Aditya Roy Kapur and Shraddha Kapoor, with Shaad Randhawa and Mahesh Thakur in supporting roles. The film centers on a turbulent romantic relationship between a failing singer, Rahul Jaykar, and his protege, aspiring singer Aarohi Keshav Shirke, which is affected by Rahul&#39;s issues with alcohol abuse and temperament.[1]\r\n\r\n', '2014', 'Romance', 9.5, 120, '', 'uploads/movies/1767594914_695b5ba23ed5a.jpg', 'https://www.youtube.com/watch?v=x8blxWAOsaw&list=RDx8blxWAOsaw&start_radio=1', 'https://cinesubz.lk/movies/aashiqui-2-2013-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server1/qmsyfzbjcavekxfuwqbi/Movies/2021-08-22/CineSubz.com%20-%20Aashiqui.2.2013%20720p?ext=mp4', '2025-12-21 20:16:06', '2026-01-05 06:35:14', 0),
+(20, 'Do Dil Bhande Ek Dori se', 'Do Dil Bandhe Ek Dori Se (English: Two Hearts Connected by One Thread) is an Indian Hindi-language drama television series that premiered on 12 August 2013.[1][2] The show aired on Zee TV Monday through Friday nights.[3] The show was musically treated by Dony Hazarika. It replaced Hitler Didi.[4] it was replaced by Jamai Raja in its timeslot.[5]\r\n\r\n', '2013', 'Fantasy', 10.0, 120, '', 'uploads/movies/1767594684_695b5abca950f.jpg', 'https://www.youtube.com/watch?v=wOBq674bV68', 'https://www.youtube.com/results?search_query=do+dil+bandhe+ek+dori+se', '', '2025-12-21 20:19:45', '2026-01-05 06:31:24', 0),
+(21, 'Anwar', 'Anwar is a 2007 Indian romantic thriller film written and directed by Manish Jha, who is famous for his work in Matrubhoomi. The film stars the siblings Siddharth Koirala and Manisha Koirala along with Rajpal Yadav and Nauheed Cyrusi[2]. The songs \"Maula Mere Maula\" and \"Tose Naina Lage\" are two of the most popular songs of 2007[3]. The movie is most notable for featuring Siddharth Koirala.\r\n\r\n', '2007', 'Fantasy', 5.6, 120, '', 'uploads/movies/694977ff20ea32.44749749.jpg', 'https://www.youtube.com/watch?v=l5sgIqzlPXc&list=RDl5sgIqzlPXc&start_radio=1', NULL, NULL, '2025-12-22 16:55:27', '2025-12-27 14:03:25', 0),
+(23, 'xx', '11', '2024', 'War', 4.0, 200, '', 'uploads/movies/1766505930_Screenshot (4).png', '', NULL, NULL, '2025-12-23 16:03:25', '2025-12-23 16:05:30', 0),
+(24, 'Jannat', 'Jannat (transl. Heaven) is a 2008 Indian Hindi-language romantic crime film directed by Kunal Deshmukh, and produced by Mukesh Bhatt. The film stars Emraan Hashmi opposite Sonal Chauhan in lead roles. It was released on 16 May 2008 and was a success worldwide, receiving positive responses from critics. Its sequel Jannat 2, starring Emraan Hashmi, Randeep Hooda and Esha Gupta, was released in 4 May 2012 and It&#39;s Sequel Jannat 3, starting Emraan Hashmi, Gaurav Arora, and Neha Dhupia, Kriti Kharbanda, and Randeep Hooda, was released in 15 May 2026.', '2008', 'Romance', 6.8, 150, '', 'uploads/movies/1767594540_695b5a2c73d59.jpg', 'https://www.youtube.com/watch?v=K9n-aMlLJlo', 'https://cinesubz.lk/movies/jannat-2008-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server4/new/Jannat.In.Search.Of.Heaven.2008-%5BCineSubz.co%5D-480p?ext=mp4', '2025-12-27 13:48:14', '2026-01-05 06:29:00', 0),
+(25, 'Razz', 'Raaz: Do You Want to Know A Secret…? (transl. Secret) is a 2002 Indian supernatural horror film directed by Vikram Bhatt. The film stars Dino Morea and Bipasha Basu in lead roles, with Malini Sharma and Ashutosh Rana in supporting roles. In the Indian media, the film is widely regarded as a Landmark in the history of Indian cinema and considered one of the best Hindi horror cinemas.[a] The film is an unofficial adaptation of the American film What Lies Beneath (2000).[8][9] American entertainment publication Collider has termed it better than the original.[10][11][12]\r\n\r\n', '2002', 'Horror', 8.0, 120, '', 'uploads/movies/1767594245_695b590569e56.jpg', 'https://www.youtube.com/watch?v=O6GUoVApVkc', 'https://cinesubz.lk/movies/raaz-2002-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server4/new/Raaz.2002.WEBRip-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-27 13:58:43', '2026-01-05 06:24:05', 0),
+(26, 'Hosefull 2', 'Housefull 2, sometimes called Housefull 2: The Dirty Dozen, is a 2012 Indian Hindi-language action comedy film written and directed by Sajid Khan. It was co-written by brothers Sajid Samji and Farhad Samji based on a story by Sajid Nadiadwala. Produced by Nadiadwala under Nadiadwala Grandson Entertainment and distributed by Eros International, it is a remake of Mattupetty Machan and the second installment of the Housefull franchise, is a standalone sequel to Housefull (2010).', '2010', 'Family', 6.0, 120, '', 'uploads/movies/1767593876_695b5794bbc97.jpg', 'https://www.youtube.com/watch?v=u-j1nx_HY5o', 'https://cinesubz.lk/movies/housefull-2-2012-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202506/Housefull%202%20(2012)%20BluRay-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:48:27', '2026-01-05 06:17:56', 0),
+(27, 'Housefull', 'sss', '2010', 'Thriller', 7.0, 120, '', 'uploads/movies/1767593797_695b57450fc62.jpg', 'https://www.youtube.com/watch?v=0eRVTe98Lz4', 'https://cinesubz.lk/movies/housefull-2010-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202506/Housefull%20(2010)%20BluRay-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:50:25', '2026-01-05 06:16:37', 0),
+(29, 'Saiyaraa', 'Saiyaara (lit. &#39;Wanderer star&#39; or &#39;Wandering lover&#39;) is a 2025 Indian Hindi-language musical romantic drama film directed by Mohit Suri.[6] Produced by Yash Raj Films, it is loosely based on the 2004 Korean film A Moment to Remember.[7][8] It stars debutant Ahaan Panday and Aneet Padda in the lead roles of a singer-songwriter duo who fall in love. Originally planned as a spiritual sequel to Suri&#39;s Aashiqui 2 (2013), creative differences with producers Mukesh Bhatt and Bhushan Kumar led to the project being reworked into a standalone film under Yash Raj Films.[9]', '2025', 'History', 5.6, 120, '', 'uploads/movies/1768231583_6965129f95579.jpg', 'https://www.youtube.com/watch?v=BSJa1UytM8w&list=RDBSJa1UytM8w&start_radio=1', 'https://cinesubz.lk/movies/saiyaara-2025-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202508/Saiyaara%20(2025)%20Hindi%20WEB-DL-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 16:56:24', '2026-01-12 15:26:23', 0),
+(30, 'Ek Deewane Ki Deewaniyat', 'Ek Deewane Ki Deewaniyat (transl. The obsession of a crazy lover) is a 2025 Indian Hindi-language romantic drama film directed by Milap Zaveri and written by Zaveri and Mushtaq Shiekh.[4] Produced under the banner Desi Movies Factory, the film stars Harshvardhan Rane and Sonam Bajwa in the lead roles.\r\n\r\nThe film was theatrically released on 21 October 2025, coinciding with Diwali. It received generally negative reviews from critics[5] but was a major commercial success, grossing ₹112 crore worldwide and emerged as the 12th highest-grossing Hindi film of 2025.[6]', '2025', 'Romance', 5.3, 150, 'Hindi', 'uploads/movies/1767592906_695b53ca7914c.jpg', 'https://www.youtube.com/watch?v=dGb3acfZp2k', 'https://cinesubz.lk/movies/ek-deewane-ki-deewaniyat-2025-sinhala-subtitles/', 'https://cloud.sonic-cloud.online/server5/202510/Ek%20Deewane%20Ki%20Deewaniyat%20(2025)%20Hindi%20WEB-%5BCineSubz.co%5D-720p?ext=mp4', '2025-12-30 17:29:28', '2026-01-12 15:07:20', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `newsletter_subscribers`
+--
+
+CREATE TABLE `newsletter_subscribers` (
+  `id` int(11) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `subscribed_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `newsletter_subscribers`
+--
+
+INSERT INTO `newsletter_subscribers` (`id`, `email`, `subscribed_at`) VALUES
+(1, 'contact.lawya@gmail.com', '2026-01-12 16:27:10'),
+(2, 'contact.lk@gmail.com', '2026-01-12 16:27:39'),
+(3, 'contact.kjawya@gmail.com', '2026-01-12 16:28:09'),
+(5, 'contact.hggg@gmail.com', '2026-01-12 16:28:52'),
+(6, 'jjjj.lawya@gmail.com', '2026-01-12 16:30:02'),
+(7, 'zz.lawya@gmail.com', '2026-01-12 16:32:34'),
+(8, 'xzz.kawya@gmail.com', '2026-01-12 16:35:06');
 
 -- --------------------------------------------------------
 
@@ -185,7 +213,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`user_id`, `username`, `email`, `password_hash`, `first_name`, `last_name`, `birthday`, `country`, `profile_image`, `status`, `user_type`, `is_active`, `email_verified`, `created_at`, `updated_at`, `last_login`) VALUES
 (3, 'Lochana', 'nimnalochana@gmail.com', '$2y$10$NbKKkpIG5Na08uxoWN1GcuGPHaBJMB.wn0ya4GVxfQxh0KK61WfEi', 'Nimna', 'lochana', '2006-05-25', 'Sri Lanka', 'profile_69298f68e4787.jpg', 'Active', 'admin', 1, 0, '2025-11-28 12:02:49', '2026-01-05 07:17:43', '2025-12-04 07:39:50'),
 (4, 'samudi', 'contact.leewya@gmail.com', '$2y$10$1zJrcZ7tExXG5zy/I0tuyuhgRKITsp1rcqv666uwHil2J.D74VH7S', 'samudi', 'kawya', '2003-03-10', 'Sri Lanka', 'profile_6944ceaaa96a8.jpeg', 'Active', 'admin', 1, 0, '2025-12-19 04:03:54', '2026-01-05 07:30:38', '2026-01-05 07:30:38'),
-(5, 'manu123', 'manu@gmail.com', '$2y$10$Y5YQcUFnZagms730b0hebutarxggwnheEA.8ZgOJpDNvKMDQjpHb2', 'Manu', 'Srivastava', '1994-06-05', 'Austria', 'profile_695b65502ccb5.png', 'Active', 'normal', 1, 0, '2026-01-05 07:16:32', '2026-01-05 07:19:00', NULL);
+(6, 'amrita', 'amrita@gmail.com', '$2y$10$D0TQnQFfvhPvmFAQHUC72eRG/C7.6GCJhoxsILeIAbg/ZpbM0Adpq', 'amrita', 'kawya', '2007-07-12', 'Austria', NULL, '', 'admin', 1, 0, '2026-01-12 15:03:41', '2026-01-12 16:44:47', '2026-01-12 16:44:47');
 
 -- --------------------------------------------------------
 
@@ -224,7 +252,8 @@ INSERT INTO `user_activity` (`activity_id`, `user_id`, `activity_type`, `descrip
 (16, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 05:41:13'),
 (17, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 07:12:10'),
 (18, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 07:19:55'),
-(19, 4, 'delete_user', 'Deleted user: Sasindu (sasindusanjana88@gmail.com)', '::1', '2026-01-05 07:21:13');
+(19, 4, 'delete_user', 'Deleted user: Sasindu (sasindusanjana88@gmail.com)', '::1', '2026-01-05 07:21:13'),
+(20, 6, 'delete_user', 'Deleted user: manu123 (manu@gmail.com)', '::1', '2026-01-12 15:40:51');
 
 -- --------------------------------------------------------
 
@@ -295,6 +324,13 @@ ALTER TABLE `movies`
   ADD KEY `idx_release_year` (`release_year`);
 
 --
+-- Indexes for table `newsletter_subscribers`
+--
+ALTER TABLE `newsletter_subscribers`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
 -- Indexes for table `songs`
 --
 ALTER TABLE `songs`
@@ -360,10 +396,22 @@ ALTER TABLE `user_subscriptions`
 --
 
 --
+-- AUTO_INCREMENT for table `massages_and_comment`
+--
+ALTER TABLE `massages_and_comment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `movies`
 --
 ALTER TABLE `movies`
   MODIFY `movie_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `newsletter_subscribers`
+--
+ALTER TABLE `newsletter_subscribers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `songs`
@@ -381,13 +429,13 @@ ALTER TABLE `subscription_plans`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `user_activity`
 --
 ALTER TABLE `user_activity`
-  MODIFY `activity_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `activity_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `user_favorites`

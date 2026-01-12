@@ -4,10 +4,11 @@ require_once("../include/connection.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // 2. Form එකෙන් එන දත්ත ලබා ගැනීම
-    $name    = $_POST['user_name'];
-    $email   = $_POST['user_email'];
-    $subject = $_POST['subject'];
-    $message = $_POST['message'];
+   // මේ ආකාරයට වෙනස් කරන්න
+$name    = trim($_POST['user_name']);
+$email   = trim($_POST['user_email']);
+$subject = trim($_POST['subject']);
+$message = trim($_POST['message']);
 
     try {
         // 3. SQL Query එක සකස් කිරීම (PDO Prepared Statements භාවිතා කර ඇත)
@@ -32,11 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-    } catch (PDOException $e) {
-        // ගැටලුවක් ආවොත් මෙතැනින් බලාගත හැක
-        error_log("Insert failed: " . $e->getMessage());
-        header("Location: ../Site/contact_us.php?status=error");
-        exit();
-    }
+   // contact_process.php හි ඇති catch කොටස මෙසේ වෙනස් කරන්න
+} catch (PDOException $e) {
+    // සැබෑ දෝෂය කුමක්දැයි දැනගැනීමට මෙය උපකාරී වේ
+    die("Database Error: " . $e->getMessage()); 
+}
 }
 ?>

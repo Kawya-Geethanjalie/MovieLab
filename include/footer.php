@@ -95,13 +95,33 @@
                     <p class="text-sm text-gray-400 mb-4">
                         Get updates on new releases and exclusive offers.
                     </p>
-                    <form>
-                        <input type="email" placeholder="Your Email Address" 
-                                class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-red focus:border-primary-red mb-3 shadow-lg" required>
-                        <button type="submit" class="w-full bg-primary-red text-white font-bold py-3 rounded-lg hover:bg-red-600 transition duration-300 transform hover:scale-105 shadow-xl shadow-red-900/40">
-                            Subscribe
-                        </button>
-                    </form>
+                    <div class="newsletter-section">
+    <form action="../library/newsletter_process.php" method="POST">
+        <input type="email" name="newsletter_email" placeholder="Your Email Address" 
+               class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 mb-3 shadow-lg" required>
+        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition duration-300">
+            Subscribe
+        </button>
+    </form>
+</div>
+
+<?php
+// URL එකේ ඇති news_status අනුව Alert පෙන්වීම
+if (isset($_GET['news_status'])) {
+    $status = $_GET['news_status'];
+    echo "<script>
+        document.addEventListener('DOMContentLoaded', function() {";
+            if ($status == 'success') {
+                echo "Swal.fire({ icon: 'success', title: 'Subscribed!', text: 'Thank you for joining our newsletter.', background: '#121212', color: '#fff', confirmButtonColor: '#E50914' });";
+            } elseif ($status == 'exists') {
+                echo "Swal.fire({ icon: 'info', title: 'Already Subscribed', text: 'This email is already on our list.', background: '#121212', color: '#fff', confirmButtonColor: '#E50914' });";
+            } else {
+                echo "Swal.fire({ icon: 'error', title: 'Oops...', text: 'Something went wrong. Please try again.', background: '#121212', color: '#fff', confirmButtonColor: '#E50914' });";
+            }
+    echo "    });
+    </script>";
+}
+?>
                 </div>
             </div>
 
@@ -135,8 +155,9 @@
                 </div>
             </div>
         </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            
             document.getElementById('currentYearEN').textContent = new Date().getFullYear();
         </script>
     </footer>

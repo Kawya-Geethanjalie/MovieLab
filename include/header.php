@@ -32,7 +32,38 @@
             color: #FFFFFF; 
             transition: color 0.3s ease;
         }
+/* Dark & Red Premium Styles */
+.modal-glass {
+    background: rgba(15, 15, 15, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
 
+.input-dark {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    transition: 0.3s;
+}
+
+.input-dark:focus {
+    border-color: #e50914 !important;
+    box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+}
+
+.red-glow-border {
+    border: 2px solid #e50914;
+    box-shadow: 0 0 15px rgba(229, 9, 20, 0.4);
+}
+
+/* Scrollbar styling for details */
+#plan-features::-webkit-scrollbar {
+    width: 4px;
+}
+#plan-features::-webkit-scrollbar-thumb {
+    background: #e50914;
+    border-radius: 10px;
+}
         /* Create the pseudo-element for the underline */
         .nav-link-underline::after {
             content: '';
@@ -1025,9 +1056,10 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                             <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> Priority Support</li>
                         </ul>
                         <!-- Button uses the new gradient -->
-                        <button class="pro-button-gradient mt-auto w-full text-white font-bold py-3 rounded-full shadow-lg shadow-theme-orange/40 hover:shadow-theme-orange/80 transform hover:scale-[1.02]">
-                            Get Early Plan
-                        </button>
+                        <button onclick="openCheckout('Early Access Plan', 49.99, 'Annual commitment with 4K streaming.')" 
+    class="pro-button-gradient mt-auto w-full text-white font-bold py-3 rounded-full shadow-lg shadow-theme-orange/40 hover:shadow-theme-orange/80 transform hover:scale-[1.02]">
+    Get Early Plan
+</button>
                     </div>
 
                     <!-- 2. Monthly Tier -->
@@ -1041,9 +1073,10 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                             <li class="flex items-center"><span class="text-primary-red mr-2">•</span> Offline Downloads</li>
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> Standard Support</li>
                         </ul>
-                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
-                            Subscribe Monthly
-                        </button>
+                       <button onclick="openCheckout('Monthly Plan', 5.99, 'Flexible monthly billing, HD streaming.')" 
+    class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
+    Subscribe Monthly
+</button>
                     </div>
 
                     <!-- 3. Weekly Tier (Shortest option) -->
@@ -1057,9 +1090,10 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> No Downloads</li>
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> Standard Support</li>
                         </ul>
-                        <button class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
-                            Get Weekly Pass
-                        </button>
+                        <button onclick="openCheckout('Weekly Pass', 1.99, 'One week access, perfect for binging.')" 
+    class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
+    Get Weekly Pass
+</button>
                     </div>
                 </div>
                 
