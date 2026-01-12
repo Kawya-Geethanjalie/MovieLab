@@ -53,15 +53,16 @@ $content_type = isset($_GET['type']) ? $_GET['type'] : 'all'; // 'all', 'movies'
 $genre = isset($_GET['genre']) ? $_GET['genre'] : '';
 $year = isset($_GET['year']) ? $_GET['year'] : '';
 $language = isset($_GET['language']) ? $_GET['language'] : '';
-
+$search_query = isset($_GET['q']) ? $_GET['q'] : '';
 // Pagination parameters
 $items_per_page = 4; // Each page shows 4 content cards
 $current_page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $offset = ($current_page - 1) * $items_per_page;
 
 // Function to get total count of movies
-function getMoviesCount($conn, $filter, $genre, $year, $language) {
+function getMoviesCount($conn, $filter, $genre, $year, $language, $search_query) { // මෙතනට එකතු කරන්න
     $sql = "SELECT COUNT(*) as total FROM movies WHERE 1=1";
+
     $params = [];
     $types = "";
 
@@ -76,7 +77,12 @@ function getMoviesCount($conn, $filter, $genre, $year, $language) {
         $params[] = "%$language%";
         $types .= "s";
     }
-    
+    if (!empty($search_query)) {
+        $sql .= " AND (title LIKE ? OR description LIKE ?)";
+        $params[] = "%$search_query%";
+        $params[] = "%$search_query%";
+        $types .= "ss";
+    }
     if (!empty($year) && $year !== 'older') {
         $sql .= " AND release_year = ?";
         $params[] = $year;
@@ -98,7 +104,7 @@ function getMoviesCount($conn, $filter, $genre, $year, $language) {
 }
 
 // Function to get total count of songs
-function getSongsCount($conn, $filter, $genre, $language) {
+function getSongsCount($conn, $filter, $genre, $language, $search_query) { // $search_query එකතු කළා
     $sql = "SELECT COUNT(*) as total FROM songs WHERE 1=1";
     $params = [];
     $types = "";
@@ -108,7 +114,12 @@ function getSongsCount($conn, $filter, $genre, $language) {
         $params[] = "%$genre%";
         $types .= "s";
     }
-
+if (!empty($search_query)) {
+        $sql .= " AND (title LIKE ? OR artist LIKE ?)";
+        $params[] = "%$search_query%";
+        $params[] = "%$search_query%";
+        $types .= "ss";
+    }
     if (!empty($language)) {
         $sql .= " AND language LIKE ?";
         $params[] = "%$language%";
@@ -128,7 +139,7 @@ function getSongsCount($conn, $filter, $genre, $language) {
 }
 
 // Function to get paginated movies
-function getMovies($conn, $filter, $genre, $year, $language, $limit, $offset) {
+function getMovies($conn, $filter, $genre, $year, $language, $limit, $offset, $search_query) { // $search_query එකතු කළා
     $sql = "SELECT * FROM movies WHERE 1=1";
     $params = [];
     $types = "";
@@ -143,6 +154,12 @@ if (!empty($language)) {
         $params[] = "%$language%";
         $types .= "s";
     }
+    if (!empty($search_query)) {
+    $sql .= " AND (title LIKE ? OR description LIKE ?)";
+    $params[] = "%$search_query%";
+    $params[] = "%$search_query%";
+    $types .= "ss";
+}
     if (!empty($year) && $year !== 'older') {
         $sql .= " AND release_year = ?";
         $params[] = $year;
@@ -200,7 +217,7 @@ if (!empty($language)) {
 }
 
 // Function to get paginated songs
-function getSongs($conn, $filter, $genre, $language, $limit, $offset) {
+function getSongs($conn, $filter, $genre, $language, $limit, $offset, $search_query) { // $search_query එකතු කළා
     $sql = "SELECT * FROM songs WHERE 1=1";
     $params = [];
     $types = "";
@@ -210,7 +227,12 @@ function getSongs($conn, $filter, $genre, $language, $limit, $offset) {
         $params[] = "%$genre%";
         $types .= "s";
     }
-
+if (!empty($search_query)) {
+        $sql .= " AND (title LIKE ? OR artist LIKE ?)";
+        $params[] = "%$search_query%";
+        $params[] = "%$search_query%";
+        $types .= "ss";
+    }
     if (!empty($language)) {
         $sql .= " AND language LIKE ?";
         $params[] = "%$language%";
@@ -269,14 +291,18 @@ $total_count = 0;
 $movies = [];
 $songs = [];
 
+// index.php හි මැද හරියේ මෙසේ වෙනස් කරන්න:
+
 if ($content_type === 'all' || $content_type === 'movies') {
-    $movies_count = getMoviesCount($conn, $filter, $genre, $year, $language);
-    $movies = getMovies($conn, $filter, $genre, $year, $language, $items_per_page, $offset);
+    // අන්තිමට $search_query එකතු කරන්න
+    $movies_count = getMoviesCount($conn, $filter, $genre, $year, $language, $search_query); 
+    $movies = getMovies($conn, $filter, $genre, $year, $language, $items_per_page, $offset, $search_query); 
 }
 
 if ($content_type === 'all' || $content_type === 'songs') {
-    $songs_count = getSongsCount($conn, $filter, $genre, $language);
-    $songs = getSongs($conn, $filter, $genre, $language, $items_per_page, $offset);
+    // අන්තිමට $search_query එකතු කරන්න
+    $songs_count = getSongsCount($conn, $filter, $genre, $language, $search_query); 
+    $songs = getSongs($conn, $filter, $genre, $language, $items_per_page, $offset, $search_query); 
 }
 
 // Calculate total items

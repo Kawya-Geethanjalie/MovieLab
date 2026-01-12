@@ -426,8 +426,7 @@
             if (searchTerm) {
                 currentSearchTerm = searchTerm;
                 // Redirect to search results page with search term
-                window.location.href = '../Site/search.php?q=' + encodeURIComponent(searchTerm);
-            }
+window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);            }
         }
 
         // Handle real-time search
@@ -569,18 +568,25 @@
             const profileImg = document.getElementById('user-profile-img');
             const userName = document.getElementById('user-name-display');
             
-            if (currentUser) {
-                if (profileImg) {
-                    if (currentUser.profile_image) {
-                        profileImg.src = '../uploads/profile_images/' + currentUser.profile_image;
-                    } else {
-                        profileImg.src = 'https://via.placeholder.com/40x40/E50914/FFFFFF?text=' + currentUser.first_name.charAt(0);
-                    }
-                }
-                if (userName) {
-                    userName.textContent = currentUser.first_name;
-                }
-            }
+           if (currentUser) {
+    if (profileImg) {
+        // 1. පරිශීලකයාට පිංතූරයක් තිබේදැයි පරීක්ෂා කිරීම (null හෝ empty නොවිය යුතුයි)
+        if (currentUser.profile_image && currentUser.profile_image !== 'null' && currentUser.profile_image !== '') {
+            profileImg.src = '../uploads/profile_images/' + currentUser.profile_image;
+        } else {
+            // 2. පිංතූරයක් නැතිනම් නමේ මුල් අකුර සහිත රූපයක් සාදා පෙන්වීම
+            const name = currentUser.first_name || "User";
+            
+            // UI Avatars API එක භාවිතා කර රතු පැහැති පසුබිමක සුදු අකුරින් රූපය සාදයි
+            // background=E50914 යනු ඔබගේ සයිට් එකේ තේමා වර්ණයයි (Red)
+            profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E50914&color=fff&rounded=true&bold=true`;
+        }
+    }
+    
+    if (userName) {
+        userName.textContent = currentUser.first_name;
+    }
+}
         }
 
         // Logout Function
@@ -815,7 +821,7 @@
                         </button>
                         
                         <!-- Profile Dropdown -->
-                        <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2">
+                        <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2 ">
                             <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
                                 <i class="fas fa-user mr-2"></i>Update Profile
                             </a>
@@ -967,14 +973,17 @@
 
                 <!-- Mobile Search -->
                 <div class="mt-4 px-3">
-                    <div class="relative">
-                        <input type="text" 
-                               placeholder="Search..." 
-                               class="w-full bg-dark-card text-white placeholder-gray-500 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red"
-                               oninput="handleRealTimeSearch()">
-                        <i class="fas fa-search absolute left-3 top-2.5 h-5 w-5 text-gray-500"></i>
-                    </div>
-                </div>
+    <form onsubmit="handleMobileSearch(event)" class="relative">
+        <input type="text" 
+               id="search-input-mobile" 
+               placeholder="Search..." 
+               class="w-full bg-dark-card text-white placeholder-gray-500 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary-red"
+        >
+        <button type="submit" class="absolute left-3 top-2.5">
+            <i class="fas fa-search h-5 w-5 text-gray-500"></i>
+        </button>
+    </form>
+</div>
             </div>
         </div>
     </nav>
@@ -1734,7 +1743,18 @@ function togglePassword(fieldId) {
         field.type = "password";
     }
 }
-
+function handleMobileSearch(event) {
+    event.preventDefault(); // පිටුව රීලෝඩ් වීම වළක්වයි
+    
+    // මොබයිල් input එකෙන් සර්ච් පදය ලබා ගැනීම
+    const mobileInput = document.getElementById('search-input-mobile');
+    const searchTerm = mobileInput.value.trim();
+    
+    if (searchTerm) {
+        // index.php වෙත සර්ච් පදය යැවීම
+        window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);
+    }
+}
 </script>
    
 
