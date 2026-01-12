@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 05, 2026 at 07:37 AM
+-- Generation Time: Jan 12, 2026 at 12:04 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,28 @@ SET time_zone = "+00:00";
 --
 -- Database: `movielab`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `massages_and_comment`
+--
+
+CREATE TABLE `massages_and_comment` (
+  `id` int(11) NOT NULL,
+  `name` varchar(30) NOT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `subject` varchar(20) NOT NULL,
+  `massage` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `massages_and_comment`
+--
+
+INSERT INTO `massages_and_comment` (`id`, `name`, `email`, `subject`, `massage`, `created_at`) VALUES
+(0, 'f', 'gf@gmail.com', 'Comment', 'sdsdd', '2026-01-12 11:02:56');
 
 -- --------------------------------------------------------
 
@@ -161,9 +183,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `email`, `password_hash`, `first_name`, `last_name`, `birthday`, `country`, `profile_image`, `status`, `user_type`, `is_active`, `email_verified`, `created_at`, `updated_at`, `last_login`) VALUES
-(2, 'Sasindu', 'sasindusanjana88@gmail.com', '$2y$10$F5rx9Lr2MQG0dmtayvWnJ.4f1kesCtuoubVQq29VxtigrtMj/DS6u', 'Sasindu', 'Sanjana', '2001-02-01', 'Sri Lanka', 'profile_692977df75784.jpg', 'Active', 'normal', 1, 0, '2025-11-28 10:22:23', '2026-01-05 05:48:46', '2025-11-28 10:22:37'),
-(3, 'Lochana', 'nimnalochana@gmail.com', '$2y$10$NbKKkpIG5Na08uxoWN1GcuGPHaBJMB.wn0ya4GVxfQxh0KK61WfEi', 'Nimna', 'lochana', '2006-05-25', 'Sri Lanka', 'profile_69298f68e4787.jpg', '', 'admin', 1, 0, '2025-11-28 12:02:49', '2025-12-04 07:39:50', '2025-12-04 07:39:50'),
-(4, 'samudi', 'contact.leewya@gmail.com', '$2y$10$E7KxxAkcWUw8pWhH2/Ve8O95R3U7AWarq/TqoOym/j2vokqeRrXS6', 'samudi', 'kawya', '2003-03-10', 'Sri Lanka', 'profile_6944ceaaa96a8.jpeg', '', 'admin', 1, 0, '2025-12-19 04:03:54', '2026-01-05 05:55:44', '2026-01-05 05:55:44');
+(3, 'Lochana', 'nimnalochana@gmail.com', '$2y$10$NbKKkpIG5Na08uxoWN1GcuGPHaBJMB.wn0ya4GVxfQxh0KK61WfEi', 'Nimna', 'lochana', '2006-05-25', 'Sri Lanka', 'profile_69298f68e4787.jpg', 'Active', 'admin', 1, 0, '2025-11-28 12:02:49', '2026-01-05 07:17:43', '2025-12-04 07:39:50'),
+(4, 'samudi', 'contact.leewya@gmail.com', '$2y$10$1zJrcZ7tExXG5zy/I0tuyuhgRKITsp1rcqv666uwHil2J.D74VH7S', 'samudi', 'kawya', '2003-03-10', 'Sri Lanka', 'profile_6944ceaaa96a8.jpeg', 'Active', 'admin', 1, 0, '2025-12-19 04:03:54', '2026-01-05 07:30:38', '2026-01-05 07:30:38'),
+(5, 'manu123', 'manu@gmail.com', '$2y$10$Y5YQcUFnZagms730b0hebutarxggwnheEA.8ZgOJpDNvKMDQjpHb2', 'Manu', 'Srivastava', '1994-06-05', 'Austria', 'profile_695b65502ccb5.png', 'Active', 'normal', 1, 0, '2026-01-05 07:16:32', '2026-01-05 07:19:00', NULL);
 
 -- --------------------------------------------------------
 
@@ -199,7 +221,10 @@ INSERT INTO `user_activity` (`activity_id`, `user_id`, `activity_type`, `descrip
 (13, 4, 'logout', 'User logged out successfully', '::1', '2025-12-28 07:04:32'),
 (14, 4, 'logout', 'User logged out successfully', '::1', '2025-12-28 08:08:58'),
 (15, 4, 'delete_user', 'Deleted user: admin (admin@movielab.com)', '::1', '2025-12-30 15:55:57'),
-(16, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 05:41:13');
+(16, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 05:41:13'),
+(17, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 07:12:10'),
+(18, 4, 'logout', 'User logged out successfully', '::1', '2026-01-05 07:19:55'),
+(19, 4, 'delete_user', 'Deleted user: Sasindu (sasindusanjana88@gmail.com)', '::1', '2026-01-05 07:21:13');
 
 -- --------------------------------------------------------
 
@@ -252,6 +277,12 @@ CREATE TABLE `user_subscriptions` (
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `massages_and_comment`
+--
+ALTER TABLE `massages_and_comment`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `movies`
@@ -350,13 +381,13 @@ ALTER TABLE `subscription_plans`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `user_activity`
 --
 ALTER TABLE `user_activity`
-  MODIFY `activity_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `activity_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `user_favorites`
