@@ -822,9 +822,9 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                         
                         <!-- Profile Dropdown -->
                         <div id="profile-dropdown" class="profile-dropdown absolute right-0 top-12 w-48 bg-dark-card rounded-lg shadow-xl border border-primary-red/20 py-2 ">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
-                                <i class="fas fa-user mr-2"></i>Update Profile
-                            </a>
+                          <button onclick="UpdateProfileUser()" class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
+    <i class="fas fa-user-edit mr-2"></i>Update Details
+</button>
                             <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-primary-red hover:text-white transition duration-150">
                                 <i class="fas fa-cog mr-2"></i>Settings
                             </a>
@@ -1070,7 +1070,104 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
     </div>
     <!-- PRO SUBSCRIPTION MODAL END -->
 
+    <div id="update-profile-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+    <div class="fixed inset-0 bg-black/85 backdrop-blur-sm" onclick="closeUpdateModal()"></div>
     
+    <div class="flex items-center justify-center min-h-screen p-2 sm:p-4 relative z-[101]">
+        
+        <div class="bg-dark-card w-full max-w-xl rounded-xl shadow-2xl border border-primary-red/20 flex flex-col max-h-[95vh]">
+            
+            <div class="bg-primary-red p-3 flex justify-between items-center shrink-0">
+                <h3 class="text-lg font-bold text-white"><i class="fas fa-user-cog mr-2"></i>Update User Details</h3>
+                <button onclick="closeUpdateModal()" class="text-white/80 hover:text-white transition"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+                <form id="update-details-form" class="space-y-4" enctype="multipart/form-data">
+                    <input type="hidden" id="up-user-id" name="user_id">
+                    
+                    <div class="flex flex-col items-center pb-2">
+                        <div class="relative">
+                            <img id="modal-preview-img" src="../uploads/profile_images/default.png" 
+                                 class="w-20 h-20 rounded-full border-2 border-primary-red object-cover shadow-md">
+                            <label for="profile_image" class="absolute bottom-0 right-0 bg-primary-red text-white p-1.5 rounded-full cursor-pointer hover:bg-red-700 transition">
+                                <i class="fas fa-camera text-[10px]"></i>
+                                <input type="file" id="profile_image" name="profile_image" class="hidden" accept="image/*" onchange="previewImage(this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">First Name</label>
+                            <input type="text" id="up-first-name" name="first_name" required 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Last Name</label>
+                            <input type="text" id="up-last-name" name="last_name" required 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Username</label>
+                            <input type="text" id="up-username" name="username" required 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Email Address</label>
+                            <input type="email" id="up-email" name="email" required 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-800 my-2"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">New Password</label>
+                            <div class="relative">
+                                <input type="password" id="up-password" name="new_password" placeholder="Optional"
+                                       class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-400 mb-1">Confirm Password</label>
+                            <div class="relative">
+                                <input type="password" id="up-confirm-password" name="confirm_password"
+                                       class="w-full bg-dark-bg border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-primary-red outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 shrink-0">
+                        <button type="button" onclick="closeUpdateModal()" class="px-4 py-2 text-sm rounded-lg border border-gray-700 text-gray-400 hover:bg-gray-800 transition">Cancel</button>
+                        <button type="submit" id="update-save-btn" class="px-6 py-2 text-sm bg-primary-red hover:bg-red-700 text-white font-bold rounded-lg transition shadow-md">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom Scrollbar for the Modal */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #0d0d0d;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #E50914;
+    border-radius: 10px;
+}
+</style>
+
 
 <!-- ============================================= -->
 <!--                 LOGIN MODAL                   -->
@@ -1290,12 +1387,62 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
     </div>
 </div>
 
-
 <!-- ============================================= -->
 <!--                JAVASCRIPT                     -->
 <!-- ============================================= -->
 
 <script>
+    // පිටුව ලෝඩ් වන විට ක්‍රියාත්මක වේ
+window.addEventListener('DOMContentLoaded', (event) => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        isLoggedIn = true;
+        updateNavbarForLoggedInUser(); // Navbar එකේ නම පෙන්වීමට
+    }
+});
+ function UpdateProfileUser() {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+        const user = JSON.parse(savedUser);
+        console.log("Checking User Email:", user.email);
+        console.log("Full User Object:", user);
+        // Input fields වලට දත්ත දැමීම
+        document.getElementById('up-user-id').value = user.id || '';
+        document.getElementById('up-first-name').value = user.first_name || '';
+        document.getElementById('up-last-name').value = user.last_name || '';
+        document.getElementById('up-username').value = user.username || '';
+        document.getElementById('up-email').value = user.email || '';
+        
+        // Modal එක පෙන්වීම
+        document.getElementById('update-profile-modal').classList.remove('hidden');
+        document.getElementById('profile-dropdown').classList.add('hidden');
+    } else {
+        Swal.fire('Error', 'Session lost! Please login again.', 'error');
+    }
+}
+
+// Modal එක වහන function එක
+function closeUpdateModal() {
+    document.getElementById('update-profile-modal').classList.add('hidden');
+}
+
+// Form එක Submit කරන විට ක්‍රියාත්මක වන කොටස
+document.getElementById('update-details-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // මෙතනදී ඔබට Fetch API එක පාවිච්චි කරලා Database එකට දත්ත යවන්න පුළුවන්
+    // දැනට මම පෙන්වන්නේ සාර්ථක වුණාම වෙන දේ:
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Updated!',
+        text: 'Your profile details have been updated.',
+        confirmButtonColor: '#E50914'
+    });
+    
+    closeUpdateModal();
+});
 function openLoginModal(){ 
     const modal = document.getElementById("login-modal");
     modal.classList.remove("hidden"); 
@@ -1687,13 +1834,14 @@ document.getElementById("login-btn").addEventListener("click", function (e) {
 
         if (data.status === "success") {
             // Update global user state
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
             currentUser = data.user;
             isLoggedIn = true;
-            
             Swal.fire({
                 icon: "success",
                 title: "🎬 Welcome to MovieLab!",
                 text: data.message,
+                
                 confirmButtonColor: "#E50914",
                 confirmButtonText: "Let's Go!",
                 showClass: {
