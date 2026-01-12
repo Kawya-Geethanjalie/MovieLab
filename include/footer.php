@@ -75,20 +75,18 @@
                 <div class="col-span-1">
                     <h3 class="text-lg font-semibold text-white mb-4 border-b mr-6 border-gray-700 pb-2">Quick Links</h3>
                     <ul class="space-y-3">
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Home</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Movies</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">TV Series</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Songs</a></li>
+                        <li><a href="../Site/index.php" class="text-gray-400 hover:text-primary-red transition duration-150">Home</a></li>
+                        <li><a href="../Site/contact_us.php" class="text-gray-400 hover:text-primary-red transition duration-150">Contact Us</a></li>
+                        <li><a href="../Site/about_us.php" class="text-gray-400 hover:text-primary-red transition duration-150">About us</a></li>
                     </ul>
                 </div>
 
                 <div class="col-span-1">
                     <h3 class="text-lg font-semibold text-white mb-4 border-b mr-6 border-gray-700 pb-2">Help & Legal</h3>
                     <ul class="space-y-3">
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">FAQ</a></li>
+                        <li><a href="../Site/f_and-q.php" class="text-gray-400 hover:text-primary-red transition duration-150">FAQ</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Privacy Policy</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Terms of Service</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-primary-red transition duration-150">Contact Us</a></li>
                     </ul>
                 </div>
 

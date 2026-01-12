@@ -807,7 +807,7 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                         
 
                      <!-- Sign In Link -->
-                    <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
+                    <button id="sign-in-btn" onclick="openLoginModal()" class="inline-flex items-center px-2 py-1.5 text-sm font-medium text-white rounded-md transition duration-300 hover:bg-red-600 hover:shadow-lg hover:shadow-primary-red/50 border-2 border-red-600">
                         Sign In
                     </button>
 
