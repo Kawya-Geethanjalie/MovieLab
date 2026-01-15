@@ -1055,8 +1055,7 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                             <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> Offline Downloads</li>
                             <li class="flex items-center"><span class="text-theme-orange mr-2">•</span> Priority Support</li>
                         </ul>
-                        <!-- Button uses the new gradient -->
-                        <button onclick="openCheckout('Early Access Plan', 49.99, 'Annual commitment with 4K streaming.')" 
+                     <button onclick="openCheckout('Early Access Plan', 49.99, 'Annual commitment with 4K streaming.')" 
     class="pro-button-gradient mt-auto w-full text-white font-bold py-3 rounded-full shadow-lg shadow-theme-orange/40 hover:shadow-theme-orange/80 transform hover:scale-[1.02]">
     Get Early Plan
 </button>
@@ -1073,10 +1072,12 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
                             <li class="flex items-center"><span class="text-primary-red mr-2">•</span> Offline Downloads</li>
                             <li class="flex items-center text-gray-500"><span class="text-gray-700 mr-2">•</span> Standard Support</li>
                         </ul>
-                       <button onclick="openCheckout('Monthly Plan', 5.99, 'Flexible monthly billing, HD streaming.')" 
+                       <!-- Monthly Plan button -->
+<button onclick="openCheckout('Monthly Plan', 5.99, 'Flexible monthly billing, HD streaming.')" 
     class="mt-auto w-full bg-primary-red text-white font-bold py-3 rounded-full hover:bg-red-600 transition duration-200">
     Subscribe Monthly
 </button>
+
                     </div>
 
                     <!-- 3. Weekly Tier (Shortest option) -->
@@ -1102,6 +1103,385 @@ window.location.href = 'index.php?q=' + encodeURIComponent(searchTerm);         
             </div>
         </div>
     </div>
+    <!-- COMPACT PAYMENT MODAL -->
+<div id="payment-modal" class="fixed inset-0 bg-black/95 hidden z-[999] flex items-center justify-center p-0 sm:p-4">
+    <div class="bg-dark-card w-full h-full sm:h-auto sm:max-w-md sm:rounded-xl border-0 sm:border border-primary-red/20 shadow-xl" onclick="event.stopPropagation()">
+        
+        <!-- Mobile Header (Bottom Sheet Style) -->
+        <div class="sm:hidden bg-gradient-to-r from-primary-red to-red-700 px-4 py-3 flex justify-between items-center sticky top-0">
+            <h3 class="text-base font-bold text-white">
+                <i class="fas fa-credit-card mr-2"></i>Payment
+            </h3>
+            <button onclick="closePaymentModal()" class="text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Desktop Header -->
+      <div class="hidden sm:block bg-gradient-to-r from-primary-red to-red-700 px-4 py-2 rounded-t-xl flex justify-between items-center">
+    <div class="flex items-center justify-between w-full">
+        <h3 class="text-lg font-bold text-white">
+            <i class="fas fa-credit-card mr-2"></i>Complete Payment
+        </h3>
+        
+        <button 
+            onclick="closePaymentModal()" 
+            class="text-white hover:text-gray-200 flex items-center justify-center rounded"
+        >
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+        
+        <!-- Content - Scrollable on Mobile -->
+        <div class="p-4 sm:p-5 h-[calc(100vh-56px)] sm:h-auto overflow-y-auto">
+            <!-- Plan Summary -->
+            <div class="mb-4 p-3 bg-dark-bg/50 rounded-lg border border-gray-700">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h4 id="payment-plan-name" class="font-bold text-white text-sm sm:text-base">Monthly Plan</h4>
+                        <p id="payment-plan-desc" class="text-gray-400 text-xs mt-1">Flexible monthly billing, HD streaming.</p>
+                    </div>
+                    <span id="payment-plan-price" class="text-primary-red font-bold text-base sm:text-lg ml-3">$5.99</span>
+                </div>
+            </div>
+            
+            <!-- Payment Method Selection -->
+            <div class="mb-5">
+                <h4 class="text-white font-medium mb-3 text-sm">Choose Payment Method:</h4>
+                
+                <!-- Radio Buttons for Payment Methods -->
+                <div class="space-y-2">
+                    <!-- PayHere Option -->
+                    <label class="flex items-center p-3 bg-dark-bg/30 rounded-lg border border-gray-700 hover:border-primary-red/50 cursor-pointer transition">
+                        <input type="radio" name="paymentMethod" value="payhere" checked class="mr-3 h-4 w-4 text-primary-red">
+                        <div class="flex items-center gap-2">
+                            <i class="fab fa-cc-paypal text-yellow-500"></i>
+                            <span class="text-white font-medium text-sm">Pay with PayHere</span>
+                        </div>
+                    </label>
+                    
+                    <!-- Credit Card Option -->
+                    <label class="flex items-center p-3 bg-dark-bg/30 rounded-lg border border-gray-700 hover:border-primary-red/50 cursor-pointer transition">
+                        <input type="radio" name="paymentMethod" value="card" class="mr-3 h-4 w-4 text-primary-red">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-credit-card text-gray-300"></i>
+                            <span class="text-white font-medium text-sm">Credit/Debit Card</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- Other Options -->
+                <div class="mt-4 flex gap-2">
+                    <button onclick="selectPayment('paypal')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1">
+                        <i class="fab fa-paypal text-blue-400"></i>
+                        PayPal
+                    </button>
+                    <button onclick="selectPayment('stripe')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 px-3 rounded text-xs flex items-center justify-center gap-1">
+                        <i class="fab fa-stripe text-purple-400"></i>
+                        Stripe
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Card Form (Initially Hidden) -->
+            <div id="card-form" class="hidden">
+                <div class="pt-4 border-t border-gray-800">
+                    <h4 class="text-white font-medium mb-3 text-sm">Enter Card Details</h4>
+                    
+                    <div class="space-y-3">
+                        <!-- Card Number -->
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Card Number</label>
+                            <input type="text" placeholder="1234 5678 9012 3456" 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-primary-red outline-none">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Expiry Date -->
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">Expiry Date</label>
+                                <input type="text" placeholder="MM/YY" 
+                                       class="w-full bg-dark-bg border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-primary-red outline-none">
+                            </div>
+                            
+                            <!-- CVV -->
+                            <div>
+                                <label class="block text-xs text-gray-400 mb-1">CVV</label>
+                                <input type="text" placeholder="123" 
+                                       class="w-full bg-dark-bg border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-primary-red outline-none">
+                            </div>
+                        </div>
+                        
+                        <!-- Cardholder Name -->
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Cardholder Name</label>
+                            <input type="text" placeholder="John Doe" 
+                                   class="w-full bg-dark-bg border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-primary-red outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pay Button -->
+            <button onclick="processPayment()" 
+                    class="w-full bg-gradient-to-r from-primary-red to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 mt-5 flex items-center justify-center gap-2">
+                <i class="fas fa-lock"></i>
+                Complete Payment
+            </button>
+            
+            <!-- Security Note -->
+            <div class="mt-4 pt-3 border-t border-gray-800">
+                <div class="flex items-center justify-center text-xs text-gray-500">
+                    <i class="fas fa-shield-alt text-green-500 mr-2"></i>
+                    <span>Secure 256-bit SSL encryption</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div id="payment-success-modal" class="fixed inset-0 bg-black/95 hidden z-[1000] flex items-center justify-center p-4">
+    <div class="bg-dark-card w-full max-w-xs rounded-xl border border-green-500/20 p-5 text-center" onclick="event.stopPropagation()">
+        <div class="w-12 h-12 bg-green-900/20 text-green-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3">
+            <i class="fas fa-check"></i>
+        </div>
+        
+        <h3 class="text-lg font-bold text-white mb-2">Payment Successful!</h3>
+        <p class="text-gray-300 text-sm mb-4" id="success-message">Your subscription is now active.</p>
+        
+        <button onclick="closeSuccessModal()" 
+                class="w-full bg-primary-red hover:bg-red-600 text-white font-semibold py-2.5 rounded-lg transition text-sm">
+            Continue
+        </button>
+    </div>
+</div>
+
+<script>
+// Payment variables
+let selectedPlan = {
+    name: 'Monthly Plan',
+    price: 5.99,
+    description: 'Flexible monthly billing, HD streaming.'
+};
+
+let selectedPaymentMethod = 'payhere';
+
+// Open Payment Modal
+function openCheckout(planName, price, description) {
+    selectedPlan = { name: planName, price: price, description: description };
+    
+    // Update modal content
+    document.getElementById('payment-plan-name').textContent = planName;
+    document.getElementById('payment-plan-price').textContent = `$${price}`;
+    document.getElementById('payment-plan-desc').textContent = description;
+    
+    // Reset form
+    hideCardForm();
+    document.querySelector('input[name="paymentMethod"][value="payhere"]').checked = true;
+    selectedPaymentMethod = 'payhere';
+    
+    // Show modal
+    document.getElementById('payment-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Close other modals
+    if (document.getElementById('pro-modal')) {
+        document.getElementById('pro-modal').classList.add('hidden');
+    }
+}
+
+// Close Payment Modal
+function closePaymentModal() {
+    document.getElementById('payment-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+    hideCardForm();
+}
+
+// Show/Hide Card Form
+function showCardForm() {
+    document.getElementById('card-form').classList.remove('hidden');
+    selectedPaymentMethod = 'card';
+    // Scroll to card form on mobile
+    if (window.innerWidth < 640) {
+        setTimeout(() => {
+            document.getElementById('card-form').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }, 100);
+    }
+}
+
+function hideCardForm() {
+    document.getElementById('card-form').classList.add('hidden');
+}
+
+// Radio Button Change Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const radios = document.querySelectorAll('input[name="paymentMethod"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectedPaymentMethod = this.value;
+            if (this.value === 'card') {
+                showCardForm();
+            } else {
+                hideCardForm();
+            }
+        });
+    });
+});
+
+// Select Other Payment
+function selectPayment(method) {
+    selectedPaymentMethod = method;
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    
+    // Show loading
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        // Process payment
+        processPayment();
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1000);
+}
+
+// Process Payment
+function processPayment() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    
+    // Show loading
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+    btn.disabled = true;
+    
+    // Simulate payment
+    setTimeout(() => {
+        closePaymentModal();
+        showSuccessModal();
+        updateUserSubscription();
+        
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1500);
+}
+
+// Show Success Modal
+function showSuccessModal() {
+    document.getElementById('success-message').textContent = 
+        `Your ${selectedPlan.name} subscription is now active.`;
+    document.getElementById('payment-success-modal').classList.remove('hidden');
+}
+
+// Close Success Modal
+function closeSuccessModal() {
+    document.getElementById('payment-success-modal').classList.add('hidden');
+    window.location.reload();
+}
+
+// Update User Subscription
+function updateUserSubscription() {
+    console.log('Updating subscription:', selectedPlan);
+    // Add your API call here
+}
+
+// Close Modal on Outside Click
+document.addEventListener('click', function(event) {
+    const paymentModal = document.getElementById('payment-modal');
+    const successModal = document.getElementById('payment-success-modal');
+    
+    if (paymentModal && !paymentModal.classList.contains('hidden') && 
+        !paymentModal.contains(event.target)) {
+        closePaymentModal();
+    }
+    
+    if (successModal && !successModal.classList.contains('hidden') && 
+        !successModal.contains(event.target)) {
+        closeSuccessModal();
+    }
+});
+
+// ESC Key to Close
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePaymentModal();
+        closeSuccessModal();
+    }
+});
+</script>
+
+<style>
+/* Payment Modal Styles */
+#payment-modal {
+    z-index: 999 !important;
+}
+
+#payment-success-modal {
+    z-index: 1000 !important;
+}
+
+/* Mobile Bottom Sheet Effect */
+@media (max-width: 640px) {
+    #payment-modal {
+        align-items: flex-end !important;
+        padding: 0 !important;
+    }
+    
+    #payment-modal > div {
+        border-radius: 16px 16px 0 0 !important;
+        max-height: 85vh !important;
+        height: auto !important;
+        animation: slideUp 0.3s ease-out !important;
+    }
+    
+    #payment-modal .h-\[calc\(100vh-56px\)\] {
+        height: calc(85vh - 56px) !important;
+    }
+    
+    /* Prevent body scroll when modal is open */
+    body.modal-open {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+/* Animations */
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#payment-modal > div {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom Scrollbar */
+#payment-modal > div > div:last-child::-webkit-scrollbar {
+    width: 4px;
+}
+
+#payment-modal > div > div:last-child::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+#payment-modal > div > div:last-child::-webkit-scrollbar-thumb {
+    background: #e50914;
+    border-radius: 10px;
+}
+</style>
     <!-- PRO SUBSCRIPTION MODAL END -->
 
     <div id="update-profile-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
